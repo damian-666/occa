@@ -1,10 +1,14 @@
 #---[ Paths ]-------------------------------------
+rmSlash = $(patsubst %/,%,$(1))
+
+PROJ_DIR := $(call rmSlash,$(PROJ_DIR))
+
 ifdef OCCA_DIR
-  OCCA_DIR:=${OCCA_DIR}
+  OCCA_DIR := $(call rmSlash,${OCCA_DIR})
 endif
 
 ifeq ($(strip $(OCCA_DIR)),)
-  OCCA_DIR:=$(abspath $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/..)
+  OCCA_DIR := $(call rmSlash,$(abspath $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/..))
 endif
 
 bPath = $(PROJ_DIR)/bin

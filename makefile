@@ -1,6 +1,8 @@
 #---[ OCCA_DIR ]----------------------------------
-OCCA_DIR:=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
-PROJ_DIR:=$(OCCA_DIR)
+rmSlash = $(patsubst %/,%,$1)
+
+OCCA_DIR := $(call rmSlash,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
+PROJ_DIR := $(OCCA_DIR)
 
 include $(OCCA_DIR)/scripts/makefile
 
@@ -21,93 +23,84 @@ incPath := $(iPath)
 iPath   := $(iPath)/occa
 #=================================================
 
-#---[ COMPILATION ]-------------------------------
-headers  = $(wildcard $(iPath)/*.hpp)        $(wildcard $(iPath)/*.tpp)
-headers += $(wildcard $(iPath)/parser/*.hpp) $(wildcard $(iPath)/parser/*.tpp)
-headers += $(wildcard $(iPath)/array/*.hpp)  $(wildcard $(iPath)/array/*.tpp)
+#---[ VARIABLES ]---------------------------------
+srcToObject  = $(subst $(DIR)/src,$(DIR)/obj,$(patsubst %.f90,%.o,$(1:.cpp=.o)))
+fsrcToObject = $(subst $(DIR)/src,$(DIR)/obj,$(1:.f90=.o))
+srcToHeader  = $(subst $(DIR)/src,$(DIR)/inc,$(wildcard $(1:.cpp=.hpp)))
 
-sources  = $(wildcard $(sPath)/*.cpp)
-sources += $(wildcard $(sPath)/parser/*.cpp)
+sources  = $(realpath $(shell find . -type f -name '*.cpp'))
+headers  = $(realpath $(shell find . -type f -name '*.hpp'))
+fsources = $(realpath $(shell find . -type f -name '*.f90'))
 
-fsources = $(wildcard $(sPath)/*.f90)
-
-objects = $(subst $(sPath)/,$(oPath)/,$(sources:.cpp=.o))
-outputs = $(lPath)/libocca.so $(bPath)/occa $(bPath)/occainfo
-
-ifdef OCCA_FORTRAN_ENABLED
-ifeq ($(OCCA_FORTRAN_ENABLED), 1)
-  objects += $(subst $(sPath)/,$(oPath)/,$(fsources:.f90=.o))
-endif
+#  ---[ Languages ]-----------
+ifndef OCCA_COMPILE_PYTHON
+	sources := $(filter-out $(OCCA_DIR)/src/lang/python=/%,$(sources))
 endif
 
-ifdef OCCA_LIBPYTHON_DIR
-  ifdef OCCA_LIBPYTHON
-    ifdef OCCA_PYTHON_DIR
-      ifdef OCCA_NUMPY_DIR
-        outputs += $(lPath)/_C_occa.so
-        pyFlags = -I${OCCA_PYTHON_DIR}/ -I${OCCA_NUMPY_DIR} -L${OCCA_LIBPYTHON_DIR} -l${OCCA_LIBPYTHON}
-      endif
-    endif
-  endif
+ifndef OCCA_COMPILE_JAVA
+	sources := $(filter-out $(OCCA_DIR)/src/lang/java/%,$(sources))
 endif
 
-all: objdirs $(outputs)
+ifndef OCCA_COMPILE_OBJC
+	sources := $(filter-out $(OCCA_DIR)/src/lang/objc/%,$(sources))
+endif
 
-objdirs: $(oPath) $(oPath)/parser $(oPath)/python
-$(oPath):
-	mkdir -p $(oPath)
-$(oPath)/parser:
-	mkdir -p $(oPath)/parser
-$(oPath)/python:
-	mkdir -p $(oPath)/python
+ifndef OCCA_COMPILE_FORTRAN
+	sources := $(filter-out $(OCCA_DIR)/src/lang/fortran/%,$(sources))
+endif
+#  ===========================
 
+objects = $(call srcToObject,$(sources))
+
+outputs = $(lPath)/libocca.so $(bPath)/occa
+#=================================================
+
+
+#---[ COMPILE LIBRARY ]---------------------------
+all: $(objects) $(outputs)
+#=================================================
+
+
+#---[ PYTHON ]------------------------------------
+python: $(lPath)/_C_occa.so
+	python $(OCCA_DIR)/scripts/make.py
+#=================================================
+
+
+#---[ BUILDS ]------------------------------------
+#  ---[ libocca ]-------------
 $(lPath)/libocca.so:$(objects) $(headers)
 	$(compiler) $(compilerFlags) $(sharedFlag) -o $(lPath)/libocca.so $(flags) $(objects) $(paths) $(filter-out -locca, $(links))
-
-$(oPath)/%.o:$(sPath)/%.cpp $(iPath)/%.hpp $(wildcard $(subst $(sPath)/,$(iPath)/,$(<:.cpp=.hpp))) $(wildcard $(subst $(sPath)/,$(iPath)/,$(<:.cpp=.tpp)))
-	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
-
-$(oPath)/parser/%.o:$(sPath)/parser/%.cpp $(wildcard $(subst $(sPath)/,$(iPath)/parser/,$(<:.cpp=.hpp))) $(wildcard $(subst $(sPath)/,$(iPath)/parser/,$(<:.cpp=.tpp)))
-	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
-
-$(oPath)/array/%.o:$(sPath)/array/%.cpp $(wildcard $(subst $(sPath)/,$(iPath)/array/,$(<:.cpp=.hpp))) $(wildcard $(subst $(sPath)/,$(iPath)/array/,$(<:.cpp=.tpp)))
-	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
-
-$(oPath)/fTypes.mod:$(sPath)/fTypes.f90 $(oPath)/fTypes.o
-	@true
-
-$(oPath)/fTypes.o:$(sPath)/fTypes.f90
-	$(fCompiler) $(fCompilerFlags) $(fModDirFlag) $(lPath) -o $@ $(fFlags) -c $<
-
-$(oPath)/fBase.o:$(sPath)/fBase.f90 $(sPath)/fTypes.f90 $(oPath)/fTypes.o
-	$(fCompiler) $(fCompilerFlags) $(fModDirFlag) $(lPath) -o $@ $(fFlags) -c $<
-
-$(lPath)/_C_occa.so: $(lPath)/libocca.so $(iPath)/python/_C_occa.h $(sPath)/python/_C_occa.c
-	gcc $(compilerFlags) $(sharedFlag) $(sPath)/python/_C_occa.c -o $@ -I$(incPath) -I$(iPath)/python -L$(lPath) $(pyFlags) -locca
 
 $(bPath)/occa:$(OCCA_DIR)/scripts/occa.cpp $(lPath)/libocca.so
 	$(compiler) $(compilerFlags) -o $(bPath)/occa $(flags) $(OCCA_DIR)/scripts/occa.cpp $(paths) $(links) -L$(OCCA_DIR)/lib -locca
 
-$(bPath)/occainfo:$(OCCA_DIR)/scripts/occaInfo.cpp $(lPath)/libocca.so
-	$(compiler) $(compilerFlags) -o $(bPath)/occainfo $(flags) $(OCCA_DIR)/scripts/occaInfo.cpp $(paths) $(links) -L$(OCCA_DIR)/lib -locca
+#  ---[ C++ ]-----------------
+define compileCpp
+$(call srcToObject,$1):$1 $(call srcToHeader,$1)
+	@mkdir -p $(dir $(call srcToObject,$1))
+	$(compiler) $(compilerFlags) -o $(call srcToObject,$1) $(flags) -c $(paths) $1
+endef
 
-$(oPath)/occaKernelDefines.o:        \
-	$(iPath)/defines/OpenMP.hpp        \
-	$(iPath)/defines/OpenCL.hpp        \
-	$(iPath)/defines/CUDA.hpp          \
-	$(iPath)/defines/Pthreads.hpp      \
-	$(iPath)/defines/COI.hpp           \
-	$(iPath)/defines/occaCOIMain.hpp   \
-	$(iPath)/kernelDefines.hpp	       \
-	$(OCCA_DIR)/scripts/occaKernelDefines.py
-	$(compiler) $(compilerFlags) -o $(oPath)/occa/kernelDefines.o $(flags) -c $(paths) $(sPath)/occa/kernelDefines.cpp
+$(foreach s,$(sources),$(eval $(call compileCpp,$s)))
+#  ===========================
 
-ifdef OCCA_DEVELOPER
-ifeq ($(OCCA_DEVELOPER), 1)
-$(iPath)/occaKernelDefines.hpp:$(OCCA_DIR)/scripts/occaKernelDefines.py
-	python $(OCCA_DIR)/scripts/occaKernelDefines.py
-endif
-endif
+#  ---[ Fortran ]-------------
+define compileF90
+$(call srcToObject,$1):$1 $(call srcToHeader,$1)
+	@mkdir -p $(dir $(call srcToObject,$1))
+	$(fCompiler) $(fCompilerFlags) $(fModDirFlag) $(lPath) -o $@ $(fFlags) -c $<
+endef
+
+$(foreach s,$(fsources),$(eval $(call compileF90,$s)))
+#  ===========================
+
+#  ---[ Python ]-------------
+pyflags = -I${OCCA_PYTHON_DIR}/ -I${OCCA_NUMPY_DIR} -L${OCCA_LIBPYTHON_DIR} -l${OCCA_LIBPYTHON}
+
+$(lPath)/_C_occa.so: $(lPath)/libocca.so $(iPath)/lang/python/_C_occa.h $(iPath)/lang/python/_C_occa.h
+	gcc $(compilerFlags) $(sharedFlag) $(sPath)/python/_C_occa.c -o $@ -I$(incPath) -I$(iPath)/python -L$(lPath) $(pyFlags) -locca
+#  ===========================
 #=================================================
 
 

@@ -1,4 +1,4 @@
-PROJ_DIR:=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+PROJ_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 ifndef OCCA_DIR
   include $(PROJ_DIR)/../../scripts/makefile
 else

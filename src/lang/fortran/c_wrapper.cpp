@@ -8,9 +8,9 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "occa/fDefines.hpp"
+#include "occa/lang/fortran/defines.hpp"
 #include "occa/defines.hpp"
-#include "occa/cBase.hpp"
+#include "occa/lang/c/c_wrapper.hpp"
 #include "occa/base.hpp"
 
 // [-] Keep [int type] as the first entry

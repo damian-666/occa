@@ -3,7 +3,7 @@ import numpy as np
 from distutils import sysconfig
 import os.path as osp
 
-occadir = osp.abspath(osp.dirname(__file__))
+occadir = osp.abspath(osp.join(osp.abspath(osp.dirname(__file__)), '..'))
 
 py_major = str(sys.version_info.major)
 py_minor = str(sys.version_info.minor)
@@ -24,6 +24,7 @@ while occadir[-1] == '/':
 commandLineArgs = ' '.join(sys.argv[1:])
 
 cmd = ('make'                                    +\
+       ' OCCA_COMPILE_PYTHON=1'                  +\
        ' OCCA_LIBPYTHON='     + libpython        +\
        ' OCCA_LIBPYTHON_DIR=' + libpython_dir    +\
        ' OCCA_PYTHON_DIR='    + py_header_dir    +\
@@ -31,11 +32,14 @@ cmd = ('make'                                    +\
        ' ' + commandLineArgs                     +\
        ' -f ' + occadir + '/makefile')
 
-print(cmd)
 os.system(cmd)
 
 try:
     imp.find_module('occa')
 except ImportError:
-    print("Remember to:")
-    print("  export PYTHONPATH=$PYTHONPATH:{}/lib".format(occadir))
+    print """
+---[ Note ]-----------------------------
+ Remember to:
+   export PYTHONPATH=$PYTHONPATH:{}/lib
+========================================
+""".format(occadir)
