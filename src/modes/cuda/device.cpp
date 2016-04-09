@@ -197,7 +197,12 @@ namespace occa {
 
     template <>
     stream_t device_t<CUDA>::createStream(){
+      OCCA_EXTRACT_DATA(CUDA, Device);
+
       CUstream *retStream = new CUstream;
+
+      OCCA_CUDA_CHECK("Device: Setting Context",
+                      cuCtxSetCurrent(data_.context));
 
       OCCA_CUDA_CHECK("Device: createStream",
                       cuStreamCreate(retStream, CU_STREAM_DEFAULT));
@@ -220,7 +225,12 @@ namespace occa {
 
     template <>
     streamTag device_t<CUDA>::tagStream(){
+      OCCA_EXTRACT_DATA(CUDA, Device);
+
       streamTag ret;
+
+      OCCA_CUDA_CHECK("Device: Setting Context",
+                      cuCtxSetCurrent(data_.context));
 
       OCCA_CUDA_CHECK("Device: Tagging Stream (Creating Tag)",
                       cuEventCreate(&cuda::event(ret), CU_EVENT_DEFAULT));
