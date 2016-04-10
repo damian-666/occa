@@ -75,49 +75,23 @@ $(bPath)/occa:$(OCCA_DIR)/scripts/occa.cpp $(lPath)/libocca.so
 #  ===========================
 
 #  ---[ C++ ]-----------------
-$(OCCA_DIR)/obj/modes/threads/%.o:$(OCCA_DIR)/src/modes/threads/%.cpp
-	@mkdir -p $(OCCA_DIR)/obj/modes/threads
+$(OCCA_DIR)/obj/%.o:$(OCCA_DIR)/src/%.cpp $(OCCA_DIR)/include/occa/%.hpp $(OCCA_DIR)/include/occa/%.tpp
+	@mkdir -p $(abspath $(dir $@))
 	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
-$(OCCA_DIR)/obj/operators/%.o:$(OCCA_DIR)/src/operators/%.cpp
-	@mkdir -p $(OCCA_DIR)/obj/operators
+
+$(OCCA_DIR)/obj/%.o:$(OCCA_DIR)/src/%.cpp $(OCCA_DIR)/include/occa/%.hpp
+	@mkdir -p $(abspath $(dir $@))
 	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
-$(OCCA_DIR)/obj/modes/openmp/%.o:$(OCCA_DIR)/src/modes/openmp/%.cpp
-	@mkdir -p $(OCCA_DIR)/obj/modes/openmp
-	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
-$(OCCA_DIR)/obj/modes/serial/%.o:$(OCCA_DIR)/src/modes/serial/%.cpp
-	@mkdir -p $(OCCA_DIR)/obj/modes/serial
-	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
-$(OCCA_DIR)/obj/parser/%.o:$(OCCA_DIR)/src/parser/%.cpp
-	@mkdir -p $(OCCA_DIR)/obj/parser
-	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
-$(OCCA_DIR)/obj/modes/cuda/%.o:$(OCCA_DIR)/src/modes/cuda/%.cpp
-	@mkdir -p $(OCCA_DIR)/obj/modes/cuda
-	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
-$(OCCA_DIR)/obj/lang/c/%.o:$(OCCA_DIR)/src/lang/c/%.cpp
-	@mkdir -p $(OCCA_DIR)/obj/lang/c
-	@echo $(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
-$(OCCA_DIR)/obj/modes/opencl/%.o:$(OCCA_DIR)/src/modes/opencl/%.cpp
-	@mkdir -p $(OCCA_DIR)/obj/modes/opencl
-	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
-$(OCCA_DIR)/obj/lang/fortran/%.o:$(OCCA_DIR)/src/lang/fortran/%.cpp
-	@mkdir -p $(OCCA_DIR)/obj/lang/fortran
-	@echo$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
+
 $(OCCA_DIR)/obj/%.o:$(OCCA_DIR)/src/%.cpp
-	@mkdir -p $(OCCA_DIR)/obj
+	@mkdir -p $(abspath $(dir $@))
 	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
 #  ===========================
 
 #  ---[ Fortran ]-------------
-
-
-
-
-
-
-
-
-
-
+$(OCCA_DIR)/obj/%.o:$(OCCA_DIR)/src/%.f90
+	@mkdir -p $(abspath $(dir $@))
+	$(fCompiler) $(fCompilerFlags) $(fModDirFlag) $(lPath) -o $@ $(fFlags) -c $<
 #  ===========================
 
 #  ---[ Python ]-------------
