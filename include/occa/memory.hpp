@@ -1,9 +1,23 @@
 #ifndef OCCA_MEMORY_HEADER
 #define OCCA_MEMORY_HEADER
 
+#include <iostream>
+
 #include "occa/defines.hpp"
 
 namespace occa {
+  class kernel_v; class kernel;
+  class memory_v; class memory;
+  class device_v; class device;
+  class kernelArg;
+
+  namespace memFlag {
+    static const int none         = 0;
+    static const int isManaged    = (1 << 0);
+    static const int isMapped     = (1 << 1);
+    static const int isAWrapper   = (1 << 2);
+  }
+
   class memory_v {
     friend class occa::memory;
     friend class occa::device;
@@ -32,7 +46,6 @@ namespace occa {
     bool isDirty() const;
 
     virtual void* getMemoryHandle() = 0;
-    virtual void* getTextureHandle() = 0;
 
     virtual void copyFrom(const void *src,
                           const uintptr_t bytes = 0,
@@ -111,23 +124,20 @@ namespace occa {
     memory_v* getMHandle();
     device_v* getDHandle();
 
+    const std::string& mode();
+
     uintptr_t bytes() const;
 
     bool isManaged() const;
     bool isMapped() const;
     bool isAWrapper() const;
 
-    // bool isATexture() const;
     bool inDevice() const;
     bool leftInDevice() const;
     bool isDirty() const;
 
-    // void* textureArg1() const;
-    // void* textureArg2() const;
-
     void* getMappedPointer();
     void* getMemoryHandle();
-    // void* getTextureHandle();
 
     void placeInUva();
     void manage();

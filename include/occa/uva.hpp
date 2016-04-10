@@ -1,3 +1,6 @@
+#ifndef OCCA_UVA_HEADER
+#define OCCA_UVA_HEADER
+
 #include <iostream>
 #include <vector>
 
@@ -7,6 +10,12 @@ namespace occa {
   class device;
   class memory;
   class memory_v;
+
+  namespace uvaFlag {
+    static const int inDevice     = (1 << 4);
+    static const int leftInDevice = (1 << 5);
+    static const int isDirty      = (1 << 6);
+  }
 
   bool hasUvaEnabledByDefault();
   void enableUvaByDefault();
@@ -76,3 +85,5 @@ namespace occa {
 
   void free(void *ptr);
 }
+
+#endif

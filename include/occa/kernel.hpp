@@ -1,7 +1,11 @@
 #ifndef OCCA_KERNEL_HEADER
 #define OCCA_KERNEL_HEADER
 
+#include <iostream>
+#include <stdint.h>
+
 #include "occa/defines.hpp"
+#include "occa/tools.hpp"
 
 namespace occa {
   class kernel_v; class kernel;
@@ -26,15 +30,18 @@ namespace occa {
 
   // [REFACTOR]
   union kernelArgData_t {
-    uint8_t  uint8;
-    uint16_t uint16;
-    uint32_t uint32;
-    uint64_t uint64;
+    uint8_t  uint8_;
+    uint16_t uint16_;
+    uint32_t uint32_;
+    uint64_t uint64_;
 
-    int8_t  int8;
-    int16_t int16;
-    int32_t int32;
-    int64_t int64;
+    int8_t  int8_;
+    int16_t int16_;
+    int32_t int32_;
+    int64_t int64_;
+
+    float float_;
+    double double_;
 
     void* void_;
   };
@@ -100,22 +107,18 @@ namespace occa {
 
   template <> kernelArg::kernelArg(const occa::memory &m);
 
-  template <> kernelArg::kernelArg(const int &arg_);
-  template <> kernelArg::kernelArg(const char &arg_);
-  template <> kernelArg::kernelArg(const short &arg_);
-  template <> kernelArg::kernelArg(const long &arg_);
+  template <> kernelArg::kernelArg(const uint8_t &arg_);
+  template <> kernelArg::kernelArg(const uint16_t &arg_);
+  template <> kernelArg::kernelArg(const uint32_t &arg_);
+  template <> kernelArg::kernelArg(const uint64_t &arg_);
 
-  template <> kernelArg::kernelArg(const unsigned int &arg_);
-  template <> kernelArg::kernelArg(const unsigned char &arg_);
-  template <> kernelArg::kernelArg(const unsigned short &arg_);
+  template <> kernelArg::kernelArg(const int8_t &arg_);
+  template <> kernelArg::kernelArg(const int16_t &arg_);
+  template <> kernelArg::kernelArg(const int32_t &arg_);
+  template <> kernelArg::kernelArg(const int64_t &arg_);
 
   template <> kernelArg::kernelArg(const float &arg_);
   template <> kernelArg::kernelArg(const double &arg_);
-
-#if OCCA_64_BIT
-  // 32 bit: uintptr_t == unsigned int
-  template <> kernelArg::kernelArg(const uintptr_t  &arg_);
-#endif
   //====================================
 
 
@@ -161,9 +164,6 @@ namespace occa {
     kernelArg* argumentsPtr();
     int argumentCount();
 
-    // [REFACTOR]
-    // virtual uintptr_t maximumInnerDimSize() = 0;
-    // virtual int preferredDimSize() = 0;
     virtual int maxDims() = 0;
     virtual dim maxOuterDims() = 0;
     virtual dim maxInnerDims() = 0;
@@ -195,6 +195,7 @@ namespace occa {
 
     kernel_v* getKHandle();
 
+    const std::string& mode();
     const std::string& name();
 
     occa::device getDevice();

@@ -1,12 +1,12 @@
+#include <map>
+
 #include "occa/memory.hpp"
+#include "occa/device.hpp"
+#include "occa/uva.hpp"
 
 namespace occa {
   //---[ memory_v ]---------------------
   memory_v::memory_v(){}
-
-  bool memory_v::isATexture() const {
-    return (memInfo & memFlag::isATexture);
-  }
 
   bool memory_v::isManaged() const {
     return (memInfo & memFlag::isManaged);
@@ -84,17 +84,13 @@ namespace occa {
 
   const std::string& memory::mode() {
     checkIfInitialized();
-    return mHandle->strMode;
+    return device(mHandle->dHandle).mode();
   }
 
   uintptr_t memory::bytes() const {
     if(mHandle == NULL)
       return 0;
     return mHandle->size;
-  }
-
-  bool memory::isATexture() const {
-    return (mHandle->memInfo & memFlag::isATexture);
   }
 
   bool memory::isManaged() const {
@@ -121,24 +117,6 @@ namespace occa {
     return (mHandle->memInfo & uvaFlag::isDirty);
   }
 
-  void* memory::textureArg1() const {
-    checkIfInitialized();
-
-#if !OCCA_CUDA_ENABLED
-    return (void*) mHandle;
-#else
-    if(mHandle->mode() != CUDA)
-      return (void*) mHandle;
-    else
-      return &(((CUDATextureData_t*) mHandle->handle)->surface);
-#endif
-  }
-
-  void* memory::textureArg2() const {
-    checkIfInitialized();
-    return (void*) ((mHandle->textureInfo).arg);
-  }
-
   void* memory::getMappedPointer() {
     checkIfInitialized();
     return mHandle->mappedPtr;
@@ -147,11 +125,6 @@ namespace occa {
   void* memory::getMemoryHandle() {
     checkIfInitialized();
     return mHandle->getMemoryHandle();
-  }
-
-  void* memory::getTextureHandle() {
-    checkIfInitialized();
-    return mHandle->getTextureHandle();
   }
 
   void memory::placeInUva() {
@@ -243,13 +216,14 @@ namespace occa {
     mHandle->copyFrom(src, bytes, offset, async);
   }
 
+  // [REFACTOR]
   void memory::copyFrom(const memory src,
                         const uintptr_t bytes,
                         const uintptr_t destOffset,
                         const uintptr_t srcOffset,
                         const bool async) {
     checkIfInitialized();
-
+#if 0
     if(mHandle->dHandle == src.mHandle->dHandle) {
       mHandle->copyFrom(src.mHandle, bytes, destOffset, srcOffset, async);
     }
@@ -308,6 +282,7 @@ namespace occa {
 #endif
       }
     }
+#endif
   }
 
   void memory::copyTo(void *dest,
@@ -323,85 +298,36 @@ namespace occa {
                       const uintptr_t destOffset,
                       const uintptr_t srcOffset,
                       const bool async) {
-    checkIfInitialized();
 
-    if(mHandle->dHandle == dest.mHandle->dHandle) {
-      mHandle->copyTo(dest.mHandle, bytes, destOffset, srcOffset, async);
-    }
-    else{
-      memory_v *srcHandle  = mHandle;
-      memory_v *destHandle = dest.mHandle;
-
-      const occa::mode modeS = srcHandle->mode();
-      const occa::mode modeD = destHandle->mode();
-
-      if(modeS & onChipMode) {
-        destHandle->copyFrom(srcHandle->getMemoryHandle(),
-                             bytes, srcOffset,
-                             async);
-      }
-      else if(modeD & onChipMode) {
-        srcHandle->copyTo(destHandle->getMemoryHandle(),
-                          bytes, destOffset,
-                          async);
-      }
-      else{
-        OCCA_CHECK(((modeS == CUDA) && (modeD == CUDA)),
-                   "Peer-to-peer is not supported between ["
-                   << modeToStr(modeS) << "] and ["
-                   << modeToStr(modeD) << "]");
-
-#if OCCA_CUDA_ENABLED
-        CUDADeviceData_t &srcDevData  =
-          *((CUDADeviceData_t*) srcHandle->dHandle->data);
-
-        CUDADeviceData_t &destDevData =
-          *((CUDADeviceData_t*) destHandle->dHandle->data);
-
-        CUdeviceptr srcMem  = *(((CUdeviceptr*) srcHandle->handle)  + srcOffset);
-        CUdeviceptr destMem = *(((CUdeviceptr*) destHandle->handle) + destOffset);
-
-        cuda::peerToPeerMemcpy(destDevData.device,
-                               destDevData.context,
-                               destMem,
-
-                               srcDevData.device,
-                               srcDevData.context,
-                               srcMem,
-
-                               bytes,
-                               *((CUstream*) srcHandle->dHandle->currentStream));
-#endif
-      }
-    }
+    dest.copyFrom(*this, bytes, destOffset, srcOffset, async);
   }
 
-  void asyncCopyFrom(const void *src,
-                     const uintptr_t bytes,
-                     const uintptr_t offset) {
+  void memory::asyncCopyFrom(const void *src,
+                             const uintptr_t bytes,
+                             const uintptr_t offset) {
 
     copyFrom(src, bytes, offset, true);
   }
 
-  void asyncCopyFrom(const memory src,
-                     const uintptr_t bytes,
-                     const uintptr_t destOffset,
-                     const uintptr_t srcOffset) {
+  void memory::asyncCopyFrom(const memory src,
+                             const uintptr_t bytes,
+                             const uintptr_t destOffset,
+                             const uintptr_t srcOffset) {
 
     copyFrom(src, bytes, destOffset, srcOffset, true);
   }
 
-  void asyncCopyTo(void *dest,
-                   const uintptr_t bytes,
-                   const uintptr_t offset) {
+  void memory::asyncCopyTo(void *dest,
+                           const uintptr_t bytes,
+                           const uintptr_t offset) {
 
     copyFrom(dest, bytes, offset, true);
   }
 
-  void asyncCopyTo(memory dest,
-                   const uintptr_t bytes,
-                   const uintptr_t destOffset,
-                   const uintptr_t srcOffset) {
+  void memory::asyncCopyTo(memory dest,
+                           const uintptr_t bytes,
+                           const uintptr_t destOffset,
+                           const uintptr_t srcOffset) {
 
     copyFrom(dest, bytes, destOffset, srcOffset, true);
   }
@@ -425,10 +351,7 @@ namespace occa {
       }
     }
 
-    if(!mHandle->isMapped())
-      mHandle->free();
-    else
-      mHandle->mappedFree();
+    mHandle->free();
 
     delete mHandle;
     mHandle = NULL;

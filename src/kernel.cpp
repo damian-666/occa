@@ -1,4 +1,7 @@
 #include "occa/kernel.hpp"
+#include "occa/device.hpp"
+#include "occa/memory.hpp"
+#include "occa/uva.hpp"
 
 namespace occa {
   //---[ KernelArg ]--------------------
@@ -27,39 +30,6 @@ namespace occa {
   }
 
   kernelArg_t::~kernelArg_t() {}
-
-  void kernelArg_t::setupFrom(kernelArg_t &arg, void *arg_,
-                              bool lookAtUva, bool argIsUva) {
-
-    setupFrom(arg, arg_, sizeof(void*), lookAtUva, argIsUva);
-  }
-
-  void kernelArg_t::setupFrom(kernelArg_t &arg, void *arg_, size_t bytes,
-                              bool lookAtUva, bool argIsUva) {
-
-    memory_v *mHandle = NULL;
-    if (argIsUva) {
-      mHandle = arg_;
-    }
-    else if (lookAtUva) {
-      ptrRangeMap_t::iterator it = uvaMap.find(arg_);
-      if (it != uvaMap.end())
-        mHandle = it->second;
-    }
-
-    arg.info = kArgInfo::usePointer;
-    arg.size = bytes;
-
-    if (mHandle) {
-      arg.mHandle = mHandle;
-      arg.dHandle = mHandle->dHandle;
-
-      arg.data.void_ = mHandle->handle;
-    }
-    else {
-      arg.data.void_ = arg_;
-    }
-  }
 
   void* kernelArg_t::ptr() const {
     return ((info & kArgInfo::usePointer) ? data.void_ : (void*) &data);
@@ -101,42 +71,88 @@ namespace occa {
     setupFrom(args[0], m.mHandle->handle, false, argIsUva);
   }
 
-  template <> kernelArg::kernelArg(const int &arg_) {
-    argc = 1; args[0].data.int_ = arg_; args[0].size = sizeof(int);
-  }
-  template <> kernelArg::kernelArg(const char &arg_) {
-    argc = 1; args[0].data.char_ = arg_; args[0].size = sizeof(char);
-  }
-  template <> kernelArg::kernelArg(const short &arg_) {
-    argc = 1; args[0].data.short_ = arg_; args[0].size = sizeof(short);
-  }
-  template <> kernelArg::kernelArg(const long &arg_) {
-    argc = 1; args[0].data.long_ = arg_; args[0].size = sizeof(long);
+  void kernelArg::setupFrom(kernelArg_t &arg, void *arg_,
+                            bool lookAtUva, bool argIsUva) {
+
+    setupFrom(arg, arg_, sizeof(void*), lookAtUva, argIsUva);
   }
 
-  template <> kernelArg::kernelArg(const unsigned int &arg_) {
-    argc = 1; args[0].data.uint_ = arg_; args[0].size = sizeof(unsigned int);
-  }
-  template <> kernelArg::kernelArg(const unsigned char &arg_) {
-    argc = 1; args[0].data.uchar_ = arg_; args[0].size = sizeof(unsigned char);
-  }
-  template <> kernelArg::kernelArg(const unsigned short &arg_) {
-    argc = 1; args[0].data.ushort_ = arg_; args[0].size = sizeof(unsigned short);
+  void kernelArg::setupFrom(kernelArg_t &arg, void *arg_, size_t bytes,
+                            bool lookAtUva, bool argIsUva) {
+
+    memory_v *mHandle = NULL;
+    if (argIsUva) {
+      mHandle = (memory_v*) arg_;
+    }
+    else if (lookAtUva) {
+      ptrRangeMap_t::iterator it = uvaMap.find(arg_);
+      if (it != uvaMap.end())
+        mHandle = it->second;
+    }
+
+    arg.info = kArgInfo::usePointer;
+    arg.size = bytes;
+
+    if (mHandle) {
+      arg.mHandle = mHandle;
+      arg.dHandle = mHandle->dHandle;
+
+      arg.data.void_ = mHandle->handle;
+    }
+    else {
+      arg.data.void_ = arg_;
+    }
   }
 
-  template <> kernelArg::kernelArg(const float &arg_) {
+  template <>
+  kernelArg::kernelArg(const uint8_t &arg_) {
+    argc = 1; args[0].data.uint8_ = arg_; args[0].size = sizeof(uint8_t);
+  }
+
+  template <>
+  kernelArg::kernelArg(const uint16_t &arg_) {
+    argc = 1; args[0].data.uint16_ = arg_; args[0].size = sizeof(uint16_t);
+  }
+
+  template <>
+  kernelArg::kernelArg(const uint32_t &arg_) {
+    argc = 1; args[0].data.uint32_ = arg_; args[0].size = sizeof(uint32_t);
+  }
+
+  template <>
+  kernelArg::kernelArg(const uint64_t &arg_) {
+    argc = 1; args[0].data.uint64_ = arg_; args[0].size = sizeof(uint64_t);
+  }
+
+  template <>
+  kernelArg::kernelArg(const int8_t &arg_) {
+    argc = 1; args[0].data.int8_ = arg_; args[0].size = sizeof(int8_t);
+  }
+
+  template <>
+  kernelArg::kernelArg(const int16_t &arg_) {
+    argc = 1; args[0].data.int16_ = arg_; args[0].size = sizeof(int16_t);
+  }
+
+  template <>
+  kernelArg::kernelArg(const int32_t &arg_) {
+    argc = 1; args[0].data.int32_ = arg_; args[0].size = sizeof(int32_t);
+  }
+
+  template <>
+  kernelArg::kernelArg(const int64_t &arg_) {
+    argc = 1; args[0].data.int64_ = arg_; args[0].size = sizeof(int64_t);
+  }
+
+  template <>
+  kernelArg::kernelArg(const float &arg_) {
     argc = 1; args[0].data.float_ = arg_; args[0].size = sizeof(float);
   }
-  template <> kernelArg::kernelArg(const double &arg_) {
+
+  template <>
+  kernelArg::kernelArg(const double &arg_) {
     argc = 1; args[0].data.double_ = arg_; args[0].size = sizeof(double);
   }
-
-#if OCCA_64_BIT
-  // 32 bit: uintptr_t == unsigned int
-  template <> kernelArg::kernelArg(const uintptr_t &arg_) {
-    argc = 1; args[0].data.uintptr_t_ = arg_; args[0].size = sizeof(uintptr_t);
-  }
-#endif
 
   occa::device kernelArg::getDevice() const {
     return occa::device(args[0].dHandle);
@@ -240,7 +256,7 @@ namespace occa {
 
   const std::string& kernel::mode() {
     checkIfInitialized();
-    return kHandle->strMode;
+    return device(kHandle->dHandle).mode();
   }
 
   const std::string& kernel::name() {
@@ -274,18 +290,19 @@ namespace occa {
     }
   }
 
-  uintptr_t kernel::maximumInnerDimSize() {
+  int kernel::maxDims() {
     checkIfInitialized();
-    return kHandle->maximumInnerDimSize();
+    return kHandle->maxDims();
   }
 
-  int kernel::preferredDimSize() {
+  dim kernel::maxOuterDims() {
     checkIfInitialized();
+    return kHandle->maxOuterDims();
+  }
 
-    if(kHandle->nestedKernelCount())
-      return 0;
-
-    return kHandle->preferredDimSize();
+  dim kernel::maxInnerDims() {
+    checkIfInitialized();
+    return kHandle->maxInnerDims();
   }
 
   void kernel::clearArgumentList() {

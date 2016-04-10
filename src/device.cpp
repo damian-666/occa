@@ -128,9 +128,9 @@ namespace occa {
     return dHandle->bytesAllocated;
   }
 
-  std::string device::mode() {
+  const std::string& device::mode() {
     checkIfInitialized();
-    return getProperty<std::string>("mode");
+    return dHandle->properties["mode"];
   }
 
   void device::setCompiler(const std::string &compiler_) {

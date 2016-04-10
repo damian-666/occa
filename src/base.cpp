@@ -244,15 +244,15 @@ namespace occa {
     currentDevice.setCompilerFlags(compilerFlags_);
   }
 
-  std::string& getCompiler() {
+  std::string getCompiler() {
     return currentDevice.getCompiler();
   }
 
-  std::string& getCompilerEnvScript() {
+  std::string getCompilerEnvScript() {
     return currentDevice.getCompilerEnvScript();
   }
 
-  std::string& getCompilerFlags() {
+  std::string getCompilerFlags() {
     return currentDevice.getCompilerFlags();
   }
 

@@ -200,7 +200,7 @@ namespace occa {
       return dHandle->hasUvaEnabled();
     }
 
-    std::string mode();
+    const std::string& mode();
 
     template <class TM>
     TM getProperty(const std::string &prop) {

@@ -13,22 +13,14 @@
 #  include <xmmintrin.h>
 #endif
 
-// #include "occa/uva.hpp"
-// #include "occa/parser/tools.hpp"
-// #include "occa/texture.hpp"
 #include "occa/device.hpp"
 #include "occa/kernel.hpp"
 #include "occa/memory.hpp"
 
 namespace occa {
-  class kernel_v;
-  class kernel;
-
-  class memory_v;
-  class memory;
-
-  class device_v;
-  class device;
+  class kernel_v; class kernel;
+  class memory_v; class memory;
+  class device_v; class device;
 
   class kernelInfo;
   class deviceInfo;
@@ -162,22 +154,6 @@ namespace occa {
                    const uintptr_t destOffset = 0,
                    const uintptr_t srcOffset = 0);
 
-  //---[ Typedefs ]---------------------
-  namespace memFlag {
-    static const int none         = 0;
-    static const int isATexture   = (1 << 0);
-    static const int isManaged    = (1 << 1);
-    static const int isMapped     = (1 << 2);
-    static const int isAWrapper   = (1 << 3);
-  }
-
-  namespace uvaFlag {
-    static const int inDevice     = (1 << 4);
-    static const int leftInDevice = (1 << 5);
-    static const int isDirty      = (1 << 6);
-  }
-  //====================================
-
 
   //---[ Device Functions ]-------------
   extern device currentDevice;
@@ -193,12 +169,12 @@ namespace occa {
   std::vector<device>& getDeviceList();
 
   template <class TM>
-  inline std::string getDeviceProperty(const std::string &info) {
+  std::string getDeviceProperty(const std::string &info) {
     return currentDevice.getProperty<TM>(info);
   }
 
   template <class TM>
-  inline void setDeviceProperty(const std::string &info, const TM &value) {
+  void setDeviceProperty(const std::string &info, const TM &value) {
     currentDevice.setProperty(info, value);
   }
 
@@ -206,9 +182,9 @@ namespace occa {
   void setCompilerEnvScript(const std::string &compilerEnvScript_);
   void setCompilerFlags(const std::string &compilerFlags_);
 
-  std::string& getCompiler();
-  std::string& getCompilerEnvScript();
-  std::string& getCompilerFlags();
+  std::string getCompiler();
+  std::string getCompilerEnvScript();
+  std::string getCompilerFlags();
 
   void flush();
   void finish();
