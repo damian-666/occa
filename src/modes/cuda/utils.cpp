@@ -274,3 +274,5 @@ namespace occa {
   const int CUDA_ADDRESS_NONE  = 0; // cudaBoundaryModeNone
   const int CUDA_ADDRESS_CLAMP = 1; // cudaBoundaryModeClamp
 }
+
+#endif

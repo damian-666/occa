@@ -23,7 +23,7 @@ namespace occa {
     friend class occa::device;
     friend class occa::kernelArg;
 
-  private:
+  protected:
     int memInfo;
 
     void *handle, *mappedPtr, *uvaPtr;

@@ -86,7 +86,7 @@ namespace occa {
     friend class occa::memory;
     friend class occa::device;
 
-  private:
+  protected:
     argInfoMap properties;
 
     bool uvaEnabled_;
@@ -113,11 +113,7 @@ namespace occa {
 
     virtual void getEnvironmentVariables() = 0;
 
-    virtual void appendAvailableDevices(std::vector<device> &dList) = 0;
-
-    virtual void setCompiler(const std::string &compiler_) = 0;
-    virtual void setCompilerEnvScript(const std::string &compilerEnvScript_) = 0;
-    virtual void setCompilerFlags(const std::string &compilerFlags_) = 0;
+    virtual void appendAvailableDevices(std::vector<occa::device> &dList) = 0;
 
     virtual void flush()  = 0;
     virtual void finish() = 0;
@@ -127,9 +123,9 @@ namespace occa {
 
     virtual void waitFor(streamTag tag) = 0;
 
-    virtual stream_t createStream() = 0;
-    virtual void freeStream(stream_t s) = 0;
-    virtual stream_t wrapStream(void *handle_) = 0;
+    virtual stream createStream() = 0;
+    virtual void freeStream(stream s) = 0;
+    virtual stream wrapStream(void *handle_) = 0;
 
     virtual streamTag tagStream() = 0;
     virtual double timeBetween(const streamTag &startTag, const streamTag &endTag) = 0;
@@ -177,8 +173,8 @@ namespace occa {
     device(deviceInfo &dInfo);
     device(const std::string &infos);
 
-    device(const device &d);
-    device& operator = (const device &d);
+    device(const occa::device &d);
+    device& operator = (const occa::device &d);
 
     inline void checkIfInitialized() const {
       OCCA_CHECK(dHandle != NULL,
@@ -244,41 +240,41 @@ namespace occa {
     //  |=============================
 
     //  |---[ Kernel ]------------------
-    kernel buildKernel(const std::string &str,
-                       const std::string &functionName,
-                       const kernelInfo &info_ = defaultKernelInfo);
+    occa::kernel buildKernel(const std::string &str,
+                             const std::string &functionName,
+                             const kernelInfo &info_ = defaultKernelInfo);
 
-    kernel buildKernelFromString(const std::string &content,
-                                 const std::string &functionName,
-                                 const int language = usingOKL);
+    occa::kernel buildKernelFromString(const std::string &content,
+                                       const std::string &functionName,
+                                       const int language = usingOKL);
 
-    kernel buildKernelFromString(const std::string &content,
-                                 const std::string &functionName,
-                                 const kernelInfo &info_ = defaultKernelInfo,
-                                 const int language = usingOKL);
+    occa::kernel buildKernelFromString(const std::string &content,
+                                       const std::string &functionName,
+                                       const kernelInfo &info_ = defaultKernelInfo,
+                                       const int language = usingOKL);
 
-    kernel buildKernelFromSource(const std::string &filename,
-                                 const std::string &functionName,
-                                 const kernelInfo &info_ = defaultKernelInfo);
+    occa::kernel buildKernelFromSource(const std::string &filename,
+                                       const std::string &functionName,
+                                       const kernelInfo &info_ = defaultKernelInfo);
 
-    kernel buildKernelFromBinary(const std::string &filename,
-                                 const std::string &functionName);
+    occa::kernel buildKernelFromBinary(const std::string &filename,
+                                       const std::string &functionName);
     //  |===============================
 
-    memory wrapMemory(void *handle_,
-                      const uintptr_t bytes);
+    occa::memory wrapMemory(void *handle_,
+                            const uintptr_t bytes);
 
     void wrapManagedMemory(void *handle_,
                            const uintptr_t bytes);
 
-    memory malloc(const uintptr_t bytes,
-                  void *src = NULL);
+    occa::memory malloc(const uintptr_t bytes,
+                        void *src = NULL);
 
     void* managedAlloc(const uintptr_t bytes,
                        void *src = NULL);
 
-    memory mappedAlloc(const uintptr_t bytes,
-                       void *src = NULL);
+    occa::memory mappedAlloc(const uintptr_t bytes,
+                             void *src = NULL);
 
     void* managedMappedAlloc(const uintptr_t bytes,
                              void *src = NULL);

@@ -2,10 +2,8 @@
 #  ifndef OCCA_OPENCL_DEVICE_HEADER
 #  define OCCA_OPENCL_DEVICE_HEADER
 
-#include "occa/base.hpp"
-#include "occa/library.hpp"
-
 #include "occa/defines.hpp"
+#include "occa/base.hpp"
 
 #if   (OCCA_OS & LINUX_OS)
 #  include <CL/cl.h>

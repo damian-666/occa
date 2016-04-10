@@ -2,7 +2,7 @@
 
 #define OCCA_C_EXPORTS
 
-#include "occa/cBase.hpp"
+#include "occa/lang/c/c_wrapper.hpp"
 
 OCCA_START_EXTERN_C
 

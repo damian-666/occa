@@ -127,7 +127,7 @@ namespace occa {
     friend class occa::kernel;
     friend class occa::device;
 
-  private:
+  protected:
     occa::device_v *dHandle;
 
     std::string name;

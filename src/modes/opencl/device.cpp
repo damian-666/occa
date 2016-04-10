@@ -1,6 +1,6 @@
 #if OCCA_OPENCL_ENABLED
 
-#include "occa/OpenCL.hpp"
+#include "occa/modes/opencl/device.hpp"
 
 namespace occa {
   namespace opencl {

@@ -95,13 +95,13 @@ $(OCCA_DIR)/obj/modes/cuda/%.o:$(OCCA_DIR)/src/modes/cuda/%.cpp
 	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
 $(OCCA_DIR)/obj/lang/c/%.o:$(OCCA_DIR)/src/lang/c/%.cpp
 	@mkdir -p $(OCCA_DIR)/obj/lang/c
-	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
+	@echo $(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
 $(OCCA_DIR)/obj/modes/opencl/%.o:$(OCCA_DIR)/src/modes/opencl/%.cpp
 	@mkdir -p $(OCCA_DIR)/obj/modes/opencl
 	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
 $(OCCA_DIR)/obj/lang/fortran/%.o:$(OCCA_DIR)/src/lang/fortran/%.cpp
 	@mkdir -p $(OCCA_DIR)/obj/lang/fortran
-	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
+	@echo$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
 $(OCCA_DIR)/obj/%.o:$(OCCA_DIR)/src/%.cpp
 	@mkdir -p $(OCCA_DIR)/obj
 	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<

@@ -306,7 +306,7 @@ OCCA_LFUNC void OCCA_RFUNC occaKernelRun_(occaKernel kernel,
 OCCA_LFUNC void OCCA_RFUNC occaKernelRunN(occaKernel kernel,
                                           const int argc, struct occaType_t **args);
 
-#include "operators/cKernelOperators.hpp"
+#include "occa/operators/cKernelOperators.hpp"
 
 OCCA_LFUNC void OCCA_RFUNC occaKernelFree(occaKernel kernel);
 
