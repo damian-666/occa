@@ -2,6 +2,8 @@
 
 namespace occa {
   //---[ memory_v ]---------------------
+  memory_v::memory_v(){}
+
   bool memory_v::isATexture() const {
     return (memInfo & memFlag::isATexture);
   }
@@ -235,19 +237,21 @@ namespace occa {
 
   void memory::copyFrom(const void *src,
                         const uintptr_t bytes,
-                        const uintptr_t offset) {
+                        const uintptr_t offset,
+                        const bool async) {
     checkIfInitialized();
-    mHandle->copyFrom(src, bytes, offset);
+    mHandle->copyFrom(src, bytes, offset, async);
   }
 
   void memory::copyFrom(const memory src,
                         const uintptr_t bytes,
                         const uintptr_t destOffset,
-                        const uintptr_t srcOffset) {
+                        const uintptr_t srcOffset,
+                        const bool async) {
     checkIfInitialized();
 
     if(mHandle->dHandle == src.mHandle->dHandle) {
-      mHandle->copyFrom(src.mHandle, bytes, destOffset, srcOffset);
+      mHandle->copyFrom(src.mHandle, bytes, destOffset, srcOffset, async);
     }
     else{
       memory_v *srcHandle  = src.mHandle;
@@ -258,11 +262,13 @@ namespace occa {
 
       if(modeS & onChipMode) {
         destHandle->copyFrom(srcHandle->getMemoryHandle(),
-                             bytes, destOffset);
+                             bytes, destOffset,
+                             async);
       }
       else if(modeD & onChipMode) {
         srcHandle->copyTo(destHandle->getMemoryHandle(),
-                          bytes, srcOffset);
+                          bytes, srcOffset,
+                             async);
       }
       else{
         OCCA_CHECK(((modeS == CUDA) && (modeD == CUDA)),
@@ -306,19 +312,21 @@ namespace occa {
 
   void memory::copyTo(void *dest,
                       const uintptr_t bytes,
-                      const uintptr_t offset) {
+                      const uintptr_t offset,
+                      const bool async) {
     checkIfInitialized();
-    mHandle->copyTo(dest, bytes, offset);
+    mHandle->copyTo(dest, bytes, offset, async);
   }
 
   void memory::copyTo(memory dest,
                       const uintptr_t bytes,
                       const uintptr_t destOffset,
-                      const uintptr_t srcOffset) {
+                      const uintptr_t srcOffset,
+                      const bool async) {
     checkIfInitialized();
 
     if(mHandle->dHandle == dest.mHandle->dHandle) {
-      mHandle->copyTo(dest.mHandle, bytes, destOffset, srcOffset);
+      mHandle->copyTo(dest.mHandle, bytes, destOffset, srcOffset, async);
     }
     else{
       memory_v *srcHandle  = mHandle;
@@ -329,11 +337,13 @@ namespace occa {
 
       if(modeS & onChipMode) {
         destHandle->copyFrom(srcHandle->getMemoryHandle(),
-                             bytes, srcOffset);
+                             bytes, srcOffset,
+                             async);
       }
       else if(modeD & onChipMode) {
         srcHandle->copyTo(destHandle->getMemoryHandle(),
-                          bytes, destOffset);
+                          bytes, destOffset,
+                          async);
       }
       else{
         OCCA_CHECK(((modeS == CUDA) && (modeD == CUDA)),
@@ -366,128 +376,34 @@ namespace occa {
     }
   }
 
-  void memory::asyncCopyFrom(const void *src,
-                             const uintptr_t bytes,
-                             const uintptr_t offset) {
-    checkIfInitialized();
-    mHandle->asyncCopyFrom(src, bytes, offset);
+  void asyncCopyFrom(const void *src,
+                     const uintptr_t bytes,
+                     const uintptr_t offset) {
+
+    copyFrom(src, bytes, offset, true);
   }
 
-  void memory::asyncCopyFrom(const memory src,
-                             const uintptr_t bytes,
-                             const uintptr_t destOffset,
-                             const uintptr_t srcOffset) {
-    checkIfInitialized();
+  void asyncCopyFrom(const memory src,
+                     const uintptr_t bytes,
+                     const uintptr_t destOffset,
+                     const uintptr_t srcOffset) {
 
-    if(mHandle->dHandle == src.mHandle->dHandle) {
-      mHandle->asyncCopyFrom(src.mHandle, bytes, destOffset, srcOffset);
-    }
-    else{
-      memory_v *srcHandle  = src.mHandle;
-      memory_v *destHandle = mHandle;
-
-      const occa::mode modeS = srcHandle->mode();
-      const occa::mode modeD = destHandle->mode();
-
-      if(modeS & onChipMode) {
-        destHandle->asyncCopyFrom(srcHandle->getMemoryHandle(),
-                             bytes, destOffset);
-      }
-      else if(modeD & onChipMode) {
-        srcHandle->asyncCopyTo(destHandle->getMemoryHandle(),
-                          bytes, srcOffset);
-      }
-      else{
-        OCCA_CHECK(((modeS == CUDA) && (modeD == CUDA)),
-                   "Peer-to-peer is not supported between ["
-                   << modeToStr(modeS) << "] and ["
-                   << modeToStr(modeD) << "]");
-
-#if OCCA_CUDA_ENABLED
-        CUDADeviceData_t &srcDevData  =
-          *((CUDADeviceData_t*) srcHandle->dHandle->data);
-
-        CUDADeviceData_t &destDevData =
-          *((CUDADeviceData_t*) destHandle->dHandle->data);
-
-        CUdeviceptr srcMem  = *(((CUdeviceptr*) srcHandle->handle)  + srcOffset);
-        CUdeviceptr destMem = *(((CUdeviceptr*) destHandle->handle) + destOffset);
-
-        cuda::asyncPeerToPeerMemcpy(destDevData.device,
-                                    destDevData.context,
-                                    destMem,
-
-                                    srcDevData.device,
-                                    srcDevData.context,
-                                    srcMem,
-
-                                    bytes,
-                                    *((CUstream*) srcHandle->dHandle->currentStream));
-#endif
-      }
-    }
+    copyFrom(src, bytes, destOffset, srcOffset, true);
   }
 
-  void memory::asyncCopyTo(void *dest,
-                           const uintptr_t bytes,
-                           const uintptr_t offset) {
-    checkIfInitialized();
-    mHandle->asyncCopyTo(dest, bytes, offset);
+  void asyncCopyTo(void *dest,
+                   const uintptr_t bytes,
+                   const uintptr_t offset) {
+
+    copyFrom(dest, bytes, offset, true);
   }
 
-  void memory::asyncCopyTo(memory dest,
-                           const uintptr_t bytes,
-                           const uintptr_t destOffset,
-                           const uintptr_t srcOffset) {
-    checkIfInitialized();
+  void asyncCopyTo(memory dest,
+                   const uintptr_t bytes,
+                   const uintptr_t destOffset,
+                   const uintptr_t srcOffset) {
 
-    if(mHandle->dHandle == dest.mHandle->dHandle) {
-      mHandle->asyncCopyTo(dest.mHandle, bytes, destOffset, srcOffset);
-    }
-    else{
-      memory_v *srcHandle  = mHandle;
-      memory_v *destHandle = dest.mHandle;
-
-      const occa::mode modeS = srcHandle->mode();
-      const occa::mode modeD = destHandle->mode();
-
-      if(modeS & onChipMode) {
-        destHandle->asyncCopyFrom(srcHandle->getMemoryHandle(),
-                                  bytes, destOffset);
-      }
-      else if(modeD & onChipMode) {
-        srcHandle->asyncCopyTo(destHandle->getMemoryHandle(),
-                               bytes, srcOffset);
-      }
-      else{
-        OCCA_CHECK(((modeS == CUDA) && (modeD == CUDA)),
-                   "Peer-to-peer is not supported between ["
-                   << modeToStr(modeS) << "] and ["
-                   << modeToStr(modeD) << "]");
-
-#if OCCA_CUDA_ENABLED
-        CUDADeviceData_t &srcDevData  =
-          *((CUDADeviceData_t*) srcHandle->dHandle->data);
-
-        CUDADeviceData_t &destDevData =
-          *((CUDADeviceData_t*) destHandle->dHandle->data);
-
-        CUdeviceptr srcMem  = *(((CUdeviceptr*) srcHandle->handle)  + srcOffset);
-        CUdeviceptr destMem = *(((CUdeviceptr*) destHandle->handle) + destOffset);
-
-        cuda::asyncPeerToPeerMemcpy(destDevData.device,
-                                    destDevData.context,
-                                    destMem,
-
-                                    srcDevData.device,
-                                    srcDevData.context,
-                                    srcMem,
-
-                                    bytes,
-                                    *((CUstream*) srcHandle->dHandle->currentStream));
-#endif
-      }
-    }
+    copyFrom(dest, bytes, destOffset, srcOffset, true);
   }
 
   void memory::free() {

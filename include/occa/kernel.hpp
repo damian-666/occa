@@ -1,6 +1,8 @@
 #ifndef OCCA_KERNEL_HEADER
 #define OCCA_KERNEL_HEADER
 
+#include "occa/defines.hpp"
+
 namespace occa {
   class kernel_v; class kernel;
   class memory_v; class memory;
@@ -11,6 +13,9 @@ namespace occa {
   static const int usingOKL    = (1 << 0);
   static const int usingOFL    = (1 << 1);
   static const int usingNative = (1 << 2);
+
+  class kernelInfo;
+  extern kernelInfo defaultKernelInfo;
 
   //---[ KernelArg ]--------------------
   namespace kArgInfo {
@@ -65,51 +70,26 @@ namespace occa {
     template <class TM>
     kernelArg(const TM &arg_) {
       argc = 1;
-
-      args[0].data.void_ = const_cast<TM*>(&arg_);
-      args[0].size       = sizeof(TM);
-      args[0].info       = kArgInfo::usePointer;
+      setupFrom(args[0], const_cast<TM*>(&arg_), sizeof(TM), false);
     }
 
     template <class TM>
-    kernelArg::kernelArg(TM *arg_) {
+    kernelArg(TM *arg_) {
       argc = 1;
       setupFrom(args[0], arg_);
     }
 
     template <class TM>
-    kernelArg::kernelArg(const TM *arg_) {
+    kernelArg(const TM *arg_) {
       argc = 1;
       setupFrom(args[0], const_cast<TM*>(arg_));
     }
 
-    template <class TM>
-    void setupFrom(kernelArg_t &arg, TM *arg_,
-                   bool lookAtUva = true, bool argIsUva = false) {
+    void setupFrom(kernelArg_t &arg, void *arg_,
+                   bool lookAtUva = true, bool argIsUva = false);
 
-      memory_v *mHandle = NULL;
-      if (argIsUva) {
-        mHandle = arg_;
-      }
-      else if (lookAtUva) {
-        ptrRangeMap_t::iterator it = uvaMap.find(arg_);
-        if (it != uvaMap.end())
-          mHandle = it->second;
-      }
-
-      arg.info = kArgInfo::usePointer;
-      arg.size = sizeof(void*);
-
-      if (mHandle) {
-        arg.mHandle = mHandle;
-        arg.dHandle = mHandle->dHandle;
-
-        arg.data.void_ = mHandle->handle;
-      }
-      else {
-        arg.data.void_ = arg_;
-      }
-    }
+    void setupFrom(kernelArg_t &arg, void *arg_, size_t bytes,
+                   bool lookAtUva = true, bool argIsUva = false);
 
     occa::device getDevice() const;
 
@@ -158,8 +138,8 @@ namespace occa {
     std::vector<kernelArg> arguments;
 
   public:
-    virtual kernel_v();
-    virtual ~kernel_v();
+    kernel_v();
+    virtual ~kernel_v() = 0;
 
     virtual kernel_v* newKernel() = 0;
 

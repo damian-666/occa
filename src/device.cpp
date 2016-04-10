@@ -1,4 +1,5 @@
 #include "occa/device.hpp"
+#include "occa/base.hpp"
 
 namespace occa {
   //---[ argInfoMap ]-------------------
@@ -82,6 +83,10 @@ namespace occa {
   }
   //====================================
 
+  //---[ device_v ]---------------------
+  device_v::device_v(){}
+  //====================================
+
   //---[ device ]-----------------------
   device::device() {
     dHandle = NULL;
@@ -115,56 +120,6 @@ namespace occa {
     return dHandle;
   }
 
-  void device::setupHandle(occa::mode m) {
-    switch(m) {
-
-    case Serial:{
-      dHandle = new device_t<Serial>();
-      break;
-    }
-    case OpenMP:{
-#if OCCA_OPENMP_ENABLED
-      dHandle = new device_t<OpenMP>();
-#else
-      std::cout << "OCCA mode [OpenMP] is not enabled, defaulting to [Serial] mode\n";
-      dHandle = new device_t<Serial>();
-#endif
-      break;
-    }
-    case OpenCL:{
-#if OCCA_OPENCL_ENABLED
-      dHandle = new device_t<OpenCL>();
-#else
-      std::cout << "OCCA mode [OpenCL] is not enabled, defaulting to [Serial] mode\n";
-      dHandle = new device_t<Serial>();
-#endif
-      break;
-    }
-    case CUDA:{
-#if OCCA_CUDA_ENABLED
-      dHandle = new device_t<CUDA>();
-#else
-      std::cout << "OCCA mode [CUDA] is not enabled, defaulting to [Serial] mode\n";
-      dHandle = new device_t<Serial>();
-#endif
-      break;
-    }
-    case Pthreads:{
-      std::cout << "OCCA mode [Pthreads] is still in development-mode (unstable)\n";
-      dHandle = new device_t<Pthreads>();
-      break;
-    }
-    default:{
-      std::cout << "Unsupported OCCA mode given, defaulting to [Serial] mode\n";
-      dHandle = new device_t<Serial>();
-    }
-    }
-  }
-
-  void device::setupHandle(const std::string &m) {
-    setupHandle( strToMode(m) );
-  }
-
   void device::setup(deviceInfo &dInfo) {
     setup(dInfo.infos);
   }
@@ -175,16 +130,8 @@ namespace occa {
     OCCA_CHECK(aim.has("mode"),
                "OCCA mode not given");
 
-    // Load [mode] from aim
-    occa::mode m = strToMode(aim.get("mode"));
-
-    setupHandle(m);
-
+    dHandle = occa::newModeDevice(aim["mode"])
     dHandle->setup(aim);
-
-    // [REFACTOR]
-    dHandle->modelID_ = 0;
-    dHandle->id_      = 0;
 
     if(aim.has("UVA")) {
       if(upStringCheck(aim.get("UVA"), "enabled"))
@@ -197,53 +144,6 @@ namespace occa {
 
     stream newStream = createStream();
     dHandle->currentStream = newStream.handle;
-  }
-
-  void device::setup(occa::mode m,
-                     const int arg1, const int arg2) {
-    setupHandle(m);
-
-    argInfoMap aim;
-
-    switch(m) {
-    case Serial:{
-      // Do Nothing
-      break;
-    }
-    case OpenMP:{
-      // Do Nothing, maybe add thread order next, dynamic static, etc
-      break;
-    }
-    case OpenCL:{
-      aim.set("platformID", arg1);
-      aim.set("deviceID"  , arg2);
-      break;
-    }
-    case CUDA:{
-      aim.set("deviceID", arg1);
-      break;
-    }
-    case Pthreads:{
-      aim.set("threadCount", arg1);
-      aim.set("pinningInfo", arg2);
-      break;
-    }
-    }
-
-    dHandle->setup(aim);
-
-    // [REFACTOR]
-    dHandle->modelID_ = 0;
-    dHandle->id_      = 0;
-
-    stream newStream = createStream();
-    dHandle->currentStream = newStream.handle;
-  }
-
-
-  void device::setup(const std::string &m,
-                     const int arg1, const int arg2) {
-    setup(strToMode(m), arg1, arg2);
   }
 
   uintptr_t device::memorySize() const {
@@ -304,6 +204,30 @@ namespace occa {
   const std::string& device::mode() {
     checkIfInitialized();
     return dHandle->strMode;
+  }
+
+  void device::setCompiler(const std::string &compiler_) {
+    setProperty("compiler", compiler_);
+  }
+
+  void device::setCompilerEnvScript(const std::string &compilerEnvScript_) {
+    setProperty("compilerEnvScript", compilerEnvScript_);
+  }
+
+  void device::setCompilerFlags(const std::string &compilerFlags_) {
+    setProperty("compilerFlags", compilerFlags_);
+  }
+
+  std::string& device::getCompiler() {
+    return getProperty("compiler");
+  }
+
+  std::string& device::getCompilerEnvScript() {
+    return getProperty("compilerEnvScript");
+  }
+
+  std::string& device::getCompilerFlags() {
+    return getProperty("compilerFlags");
   }
 
   void device::flush() {
@@ -572,32 +496,6 @@ namespace occa {
     mem.manage();
   }
 
-  memory device::wrapTexture(void *handle_,
-                             const int dim, const occa::dim &dims,
-                             occa::formatType type, const int permissions) {
-    checkIfInitialized();
-
-    OCCA_CHECK((dim == 1) || (dim == 2),
-               "Textures of [" << dim << "D] are not supported,"
-               << "only 1D or 2D are supported at the moment");
-
-    memory mem;
-    mem.mHandle = dHandle->wrapTexture(handle_,
-                                       dim, dims,
-                                       type, permissions);
-    mem.mHandle->dHandle = dHandle;
-
-    return mem;
-  }
-
-  void device::wrapManagedTexture(void *handle_,
-                                  const int dim, const occa::dim &dims,
-                                  occa::formatType type, const int permissions) {
-    checkIfInitialized();
-    memory mem = wrapTexture(handle_, dim, dims, type, permissions);
-    mem.manage();
-  }
-
   memory device::malloc(const uintptr_t bytes,
                         void *src) {
     checkIfInitialized();
@@ -616,43 +514,6 @@ namespace occa {
     checkIfInitialized();
 
     memory mem = malloc(bytes, src);
-    mem.manage();
-
-    return mem.mHandle->uvaPtr;
-  }
-
-  memory device::textureAlloc(const int dim, const occa::dim &dims,
-                              void *src,
-                              occa::formatType type, const int permissions) {
-    checkIfInitialized();
-
-    OCCA_CHECK((dim == 1) || (dim == 2),
-               "Textures of [" << dim << "D] are not supported,"
-               << "only 1D or 2D are supported at the moment");
-
-    OCCA_CHECK(src != NULL,
-               "Non-NULL source is required for [textureAlloc] (texture allocation)");
-
-    memory mem;
-
-    mem.mHandle      = dHandle->textureAlloc(dim, dims, src, type, permissions);
-    mem.mHandle->dHandle = dHandle;
-
-    dHandle->bytesAllocated += (type.bytes() *
-                                ((dim == 2) ?
-                                 (dims[0] * dims[1]) :
-                                 (dims[0]          )));
-
-    return mem;
-  }
-
-  void* device::managedTextureAlloc(const int dim, const occa::dim &dims,
-                                    void *src,
-                                    occa::formatType type, const int permissions) {
-    checkIfInitialized();
-
-    memory mem = textureAlloc(dim, dims, src, type, permissions);
-
     mem.manage();
 
     return mem.mHandle->uvaPtr;

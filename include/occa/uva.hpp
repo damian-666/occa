@@ -4,19 +4,9 @@
 #include "occa/defines.hpp"
 
 namespace occa {
-  typedef int mode;
-
-  class kernel_v;
-  template <occa::mode> class kernel_t;
-  class kernel;
-
-  class memory_v;
-  template <occa::mode> class memory_t;
-  class memory;
-
-  class device_v;
-  template <occa::mode> class device_t;
   class device;
+  class memory;
+  class memory_v;
 
   bool hasUvaEnabledByDefault();
   void enableUvaByDefault();

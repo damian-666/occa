@@ -24,13 +24,13 @@ iPath   := $(iPath)/occa
 #=================================================
 
 #---[ VARIABLES ]---------------------------------
-srcToObject  = $(subst $(DIR)/src,$(DIR)/obj,$(patsubst %.f90,%.o,$(1:.cpp=.o)))
-fsrcToObject = $(subst $(DIR)/src,$(DIR)/obj,$(1:.f90=.o))
-srcToHeader  = $(subst $(DIR)/src,$(DIR)/inc,$(wildcard $(1:.cpp=.hpp)))
+srcToObject  = $(subst $(PROJ_DIR)/src,$(PROJ_DIR)/obj,$(patsubst %.f90,%.o,$(1:.cpp=.o)))
+fsrcToObject = $(subst $(PROJ_DIR)/src,$(PROJ_DIR)/obj,$(1:.f90=.o))
+srcToHeader  = $(subst $(PROJ_DIR)/src,$(PROJ_DIR)/inc,$(wildcard $(1:.cpp=.hpp)))
 
-sources  = $(realpath $(shell find . -type f -name '*.cpp'))
-headers  = $(realpath $(shell find . -type f -name '*.hpp'))
-fsources = $(realpath $(shell find . -type f -name '*.f90'))
+sources  = $(realpath $(shell find $(PROJ_DIR)/src     -type f -name '*.cpp'))
+headers  = $(realpath $(shell find $(PROJ_DIR)/include -type f -name '*.hpp'))
+fsources = $(realpath $(shell find $(PROJ_DIR)/src     -type f -name '*.f90'))
 
 #  ---[ Languages ]-----------
 ifndef OCCA_COMPILE_PYTHON

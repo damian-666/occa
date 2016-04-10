@@ -2,7 +2,6 @@
 
 namespace occa {
   //---[ KernelArg ]--------------------
-
   kernelArg_t::kernelArg_t() {
     dHandle = NULL;
     mHandle = NULL;
@@ -28,6 +27,39 @@ namespace occa {
   }
 
   kernelArg_t::~kernelArg_t() {}
+
+  void kernelArg_t::setupFrom(kernelArg_t &arg, void *arg_,
+                              bool lookAtUva, bool argIsUva) {
+
+    setupFrom(arg, arg_, sizeof(void*), lookAtUva, argIsUva);
+  }
+
+  void kernelArg_t::setupFrom(kernelArg_t &arg, void *arg_, size_t bytes,
+                              bool lookAtUva, bool argIsUva) {
+
+    memory_v *mHandle = NULL;
+    if (argIsUva) {
+      mHandle = arg_;
+    }
+    else if (lookAtUva) {
+      ptrRangeMap_t::iterator it = uvaMap.find(arg_);
+      if (it != uvaMap.end())
+        mHandle = it->second;
+    }
+
+    arg.info = kArgInfo::usePointer;
+    arg.size = bytes;
+
+    if (mHandle) {
+      arg.mHandle = mHandle;
+      arg.dHandle = mHandle->dHandle;
+
+      arg.data.void_ = mHandle->handle;
+    }
+    else {
+      arg.data.void_ = arg_;
+    }
+  }
 
   void* kernelArg_t::ptr() const {
     return ((info & kArgInfo::usePointer) ? data.void_ : (void*) &data);
@@ -65,23 +97,8 @@ namespace occa {
   kernelArg::kernelArg(const occa::memory &m) {
     argc = 1;
 
-    if (m.mHandle->dHandle->fakesUva()) {
-      if(!m.isATexture()) {
-        setupFrom(args[0], m.mHandle->handle, false, true);
-      }
-      else {
-        setupFrom(args[0], m.mHandle->handle, false, true);
-        setupFrom(args[1], m.mHandle->handle, false, true);
-
-        args[0].data.void_ = m.textureArg1();
-        args[1].data.void_ = m.textureArg2();
-
-        args[0].info |= kArgInfo::hasTexture;
-      }
-    }
-    else {
-      setupFrom(args[0], m.mHandle->handle, false);
-    }
+    const bool argIsUva = m.mHandle->dHandle->fakesUva();
+    setupFrom(args[0], m.mHandle->handle, false, argIsUva);
   }
 
   template <> kernelArg::kernelArg(const int &arg_) {
@@ -167,6 +184,8 @@ namespace occa {
   //====================================
 
   //---[ kernel_v ]---------------------
+  kernel_v::kernel_v(){}
+
   kernel* kernel_v::nestedKernelsPtr() {
     return &(nestedKernels[0]);
   }

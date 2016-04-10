@@ -13,9 +13,12 @@
 #  include <xmmintrin.h>
 #endif
 
-#include "occa/uva.hpp"
-#include "occa/parser/tools.hpp"
-#include "occa/texture.hpp"
+// #include "occa/uva.hpp"
+// #include "occa/parser/tools.hpp"
+// #include "occa/texture.hpp"
+#include "occa/device.hpp"
+#include "occa/kernel.hpp"
+#include "occa/memory.hpp"
 
 namespace occa {
   class kernel_v;
@@ -56,13 +59,28 @@ namespace occa {
 
 
   //---[ Registration ]-----------------
+  class mode_v;
+
+  typedef std::map<std::string,mode_v*> strToModeMap_t;
+  typedef strToModeMap_t::iterator      strToModeMapIterator;
+
+  extern strToModeMap_t modeMap;
+
+  bool modeExists(const std::string &mode);
+
+  device_v* newModeDevice(const std::string &mode);
+  kernel_v* newModeKernel(const std::string &mode);
+  memory_v* newModeMemory(const std::string &mode);
+
+  void freeModeDevice(device_v *dHandle);
+  void freeModeKernel(kernel_v *kHandle);
+  void freeModeMemory(memory_v *mHandle);
+
   class mode_v {
-  private:
+  protected:
     std::string modeName;
 
   public:
-    virtual mode(std::string modeName_) = 0;
-
     std::string& name() {
       return modeName;
     }
@@ -70,7 +88,7 @@ namespace occa {
     virtual device_v* newDevice() = 0;
     virtual kernel_v* newKernel() = 0;
     virtual memory_v* newMemory() = 0;
-  }
+  };
 
   template <class device_t,
             class kernel_t,
@@ -78,9 +96,8 @@ namespace occa {
   class mode : public mode_v {
 
   public:
-    mode(std::string modeName_) :
-      modeName(modeName_) {
-
+    mode(std::string modeName_) {
+      modeName = modeName_;
       modeMap[modeName] = (void*) this;
     }
 
@@ -96,17 +113,6 @@ namespace occa {
       return new memory_t();
     }
   };
-
-  typedef std::map<std::string,mode_v*> strToModeMap_t;
-  typedef strToModeMap_t::iterator      strToModeMapIterator;
-
-  extern strToModeMap_t modeMap;
-
-  bool modeExists(const std::string &mode);
-
-  device_v* newModeDevice(const std::string &mode);
-  kernel_v* newModeKernel(const std::string &mode);
-  memory_v* newModeDevice(const std::string &mode);
   //====================================
 
 
@@ -186,11 +192,23 @@ namespace occa {
 
   std::vector<device>& getDeviceList();
 
-  // [REFACTOR]
+  template <class TM>
+  inline std::string getDeviceProperty(const std::string &info) {
+    return currentDevice.getProperty<TM>(info);
+  }
+
   template <class TM>
   inline void setDeviceProperty(const std::string &info, const TM &value) {
     currentDevice.setProperty(info, value);
   }
+
+  void setCompiler(const std::string &compiler_);
+  void setCompilerEnvScript(const std::string &compilerEnvScript_);
+  void setCompilerFlags(const std::string &compilerFlags_);
+
+  std::string& getCompiler();
+  std::string& getCompilerEnvScript();
+  std::string& getCompilerFlags();
 
   void flush();
   void finish();
@@ -234,27 +252,11 @@ namespace occa {
   void wrapManagedMemory(void *handle_,
                          const uintptr_t bytes);
 
-  memory wrapTexture(void *handle_,
-                     const int dim, const occa::dim &dims,
-                     occa::formatType type, const int permissions);
-
-  void wrapManagedTexture(void *handle_,
-                          const int dim, const occa::dim &dims,
-                          occa::formatType type, const int permissions);
-
   memory malloc(const uintptr_t bytes,
                 void *src = NULL);
 
   void* managedAlloc(const uintptr_t bytes,
                      void *src = NULL);
-
-  memory textureAlloc(const int dim, const occa::dim &dims,
-                      void *src,
-                      occa::formatType type, const int permissions = readWrite);
-
-  void* managedTextureAlloc(const int dim, const occa::dim &dims,
-                            void *src,
-                            occa::formatType type, const int permissions = readWrite);
 
   memory mappedAlloc(const uintptr_t bytes,
                      void *src = NULL);
@@ -270,7 +272,7 @@ namespace occa {
   void free(memory m);
   //====================================
 
-  void printAvailableDevices() {
+  void printAvailableDevices();
 
   //---[ Class Infos ]------------------
   class deviceInfo {
@@ -288,7 +290,6 @@ namespace occa {
 
   class kernelInfo {
   public:
-    occa::mode mode;
     std::string header, flags;
 
     flags_t parserFlags;
@@ -313,7 +314,7 @@ namespace occa {
     void removeDefine(const std::string &macro);
 
     template <class TM>
-    inline void addDefine(const std::string &macro, const TM &value) {
+    void addDefine(const std::string &macro, const TM &value) {
       std::stringstream ss;
 
       if(isAnOccaDefine(macro))

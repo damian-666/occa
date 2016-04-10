@@ -1,12 +1,24 @@
 #ifndef OCCA_DEVICE_HEADER
 #define OCCA_DEVICE_HEADER
 
+#include <iostream>
+#include <sstream>
+
+#include "occa/defines.hpp"
+
+#include "occa/parser/tools.hpp"
+#include "occa/uva.hpp"
+#include "occa/kernel.hpp"
+
 namespace occa {
   class kernel_v; class kernel;
   class memory_v; class memory;
   class device_v; class device;
+  class deviceInfo;
 
   typedef void* stream_t;
+  class stream;
+  class streamTag;
 
   //---[ argInfoMap ]-------------------
   class argInfoMap {
@@ -43,15 +55,17 @@ namespace occa {
     std::vector<TM> getVector(const std::string &prop) {
       std::vector<TM> ret;
       TM t;
+      char c;
+
       if (has(prop)) {
         std::stringstream ss(iMap[prop].c_str());
         while(ss.peek() != '\0') {
-          if (isWhitespace(c)) {
-            ss.get(1);
+          if (isWhitespace(ss.peek())) {
+            ss.get(c);
           }
           else {
             if (ss.peek() == ',')
-              ss.get(1);
+              ss.get(c);
             if (ss.peek() == '\0') {
               ss >> t;
               ret.push_back(t);
@@ -75,12 +89,6 @@ namespace occa {
   private:
     argInfoMap properties;
 
-    // [REFACTOR]
-    // int modelID_, id_;
-    // void* data;
-    // std::string compiler, compilerEnvScript, compilerFlags;
-    // int simdWidth_;
-
     bool uvaEnabled_;
     ptrRangeMap_t uvaMap;
     memoryVector_t uvaDirtyMemory;
@@ -91,7 +99,7 @@ namespace occa {
     uintptr_t bytesAllocated;
 
   public:
-    virtual device_v() = 0;
+    device_v();
     virtual ~device_v() = 0;
 
     virtual device_v* newDevice() = 0;
@@ -102,7 +110,6 @@ namespace occa {
 
     virtual void addOccaHeadersToInfo(kernelInfo &info) = 0;
     virtual std::string getInfoSalt(const kernelInfo &info) = 0;
-    virtual deviceIdentifier getIdentifier() const = 0;
 
     virtual void getEnvironmentVariables() = 0;
 
@@ -136,23 +143,13 @@ namespace occa {
     virtual kernel_v* buildKernelFromBinary(const std::string &filename,
                                             const std::string &functionName) = 0;
 
-    // [REFACTOR]
-    virtual device_v* wrapDevice(void **info) = 0;
+    virtual device_v* wrapDevice(void *info) = 0;
 
     virtual memory_v* wrapMemory(void *handle_,
                                  const uintptr_t bytes) = 0;
 
-    virtual memory_v* wrapTexture(void *handle_,
-                                  const int dim, const occa::dim &dims,
-                                  occa::formatType type, const int permissions) = 0;
-
     virtual memory_v* malloc(const uintptr_t bytes,
                              void* src) = 0;
-
-    virtual memory_v* textureAlloc(const int dim, const occa::dim &dims,
-                                   void *src,
-                                   occa::formatType type, const int permissions) = 0;
-
     virtual memory_v* mappedAlloc(const uintptr_t bytes,
                                   void *src) = 0;
 
@@ -165,9 +162,9 @@ namespace occa {
 
   //---[ device ]-----------------------
   class device {
-    template <occa::mode> friend class occa::kernel_t;
-    template <occa::mode> friend class occa::memory_t;
-    template <occa::mode> friend class occa::device_t;
+    friend class occa::kernel_v;
+    friend class occa::memory_v;
+    friend class occa::device_v;
 
     friend class occa::memory;
 
@@ -192,17 +189,8 @@ namespace occa {
     void* getContextHandle();
     device_v* getDHandle();
 
-    void setupHandle(occa::mode m);
-    void setupHandle(const std::string &m);
-
     void setup(deviceInfo &dInfo);
     void setup(const std::string &infos);
-
-    void setup(occa::mode m,
-               const int arg1, const int arg2);
-
-    void setup(const std::string &m,
-               const int arg1, const int arg2);
 
     uintptr_t memorySize() const;
     uintptr_t memoryAllocated() const;
@@ -213,12 +201,6 @@ namespace occa {
       return dHandle->hasUvaEnabled();
     }
 
-    deviceIdentifier getIdentifier() const;
-
-    int modelID();
-    int id();
-
-    int modeID();
     const std::string& mode();
 
     template <class TM>
@@ -226,7 +208,7 @@ namespace occa {
       if (dHandle->properties.has(prop)) {
         std::stringstream ss;
         TM t;
-        ss << dHandle->properties.get(prop);
+        ss << dHandle->properties[prop];
         ss >> t;
         return t;
       }
@@ -235,9 +217,16 @@ namespace occa {
 
     template <class TM>
     inline void setProperty(const std::string &info, const TM &value) {
-      dHandle->
-      iMap[info] = toString(value);
+      dHandle->properties[info] = toString(value);
     }
+
+    void setCompiler(const std::string &compiler_);
+    void setCompilerEnvScript(const std::string &compilerEnvScript_);
+    void setCompilerFlags(const std::string &compilerFlags_);
+
+    std::string& getCompiler();
+    std::string& getCompilerEnvScript();
+    std::string& getCompilerFlags();
 
     void flush();
     void finish();
@@ -283,27 +272,11 @@ namespace occa {
     void wrapManagedMemory(void *handle_,
                            const uintptr_t bytes);
 
-    memory wrapTexture(void *handle_,
-                       const int dim, const occa::dim &dims,
-                       occa::formatType type, const int permissions);
-
-    void wrapManagedTexture(void *handle_,
-                            const int dim, const occa::dim &dims,
-                            occa::formatType type, const int permissions);
-
     memory malloc(const uintptr_t bytes,
                   void *src = NULL);
 
     void* managedAlloc(const uintptr_t bytes,
                        void *src = NULL);
-
-    memory textureAlloc(const int dim, const occa::dim &dims,
-                        void *src,
-                        occa::formatType type, const int permissions = readWrite);
-
-    void* managedTextureAlloc(const int dim, const occa::dim &dims,
-                              void *src,
-                              occa::formatType type, const int permissions = readWrite);
 
     memory mappedAlloc(const uintptr_t bytes,
                        void *src = NULL);

@@ -1,6 +1,8 @@
 #ifndef OCCA_MEMORY_HEADER
 #define OCCA_MEMORY_HEADER
 
+#include "occa/defines.hpp"
+
 namespace occa {
   class memory_v {
     friend class occa::memory;
@@ -15,11 +17,9 @@ namespace occa {
 
     uintptr_t size;
 
-    occa::textureInfo_t textureInfo;
-
   public:
-    virtual memory_v();
-    virtual ~memory_v();
+    memory_v();
+    virtual ~memory_v() = 0;
 
     virtual memory_v* newMemory() = 0;
 
@@ -27,8 +27,6 @@ namespace occa {
     bool isMapped() const;
     bool isAWrapper() const;
 
-    // [REFACTOR]
-    // bool isATexture() const;
     bool inDevice() const;
     bool leftInDevice() const;
     bool isDirty() const;
@@ -143,21 +141,25 @@ namespace occa {
 
     void copyFrom(const void *src,
                   const uintptr_t bytes = 0,
-                  const uintptr_t offset = 0);
+                  const uintptr_t offset = 0,
+                  const bool async = false);
 
     void copyFrom(const memory src,
                   const uintptr_t bytes = 0,
                   const uintptr_t destOffset = 0,
-                  const uintptr_t srcOffset = 0);
+                  const uintptr_t srcOffset = 0,
+                  const bool async = false);
 
     void copyTo(void *dest,
                 const uintptr_t bytes = 0,
-                const uintptr_t offset = 0);
+                const uintptr_t offset = 0,
+                const bool async = false);
 
     void copyTo(memory dest,
                 const uintptr_t bytes = 0,
                 const uintptr_t destOffset = 0,
-                const uintptr_t srcOffset = 0);
+                const uintptr_t srcOffset = 0,
+                const bool async = false);
 
     void asyncCopyFrom(const void *src,
                        const uintptr_t bytes = 0,

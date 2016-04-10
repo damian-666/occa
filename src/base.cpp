@@ -8,7 +8,7 @@ namespace occa {
 
   kernelInfo defaultKernelInfo;
 
-  const int autoDetect = (1 << 0_);
+  const int autoDetect = (1 << 0);
   const int srcInUva   = (1 << 1);
   const int destInUva  = (1 << 2);
 
@@ -31,28 +31,46 @@ namespace occa {
   device_v* newModeDevice(const std::string &mode) {
     strToModeMapIterator it = modeMap.find(mode);
 
-    if (it == modeMap.end())
+    if (it == modeMap.end()) {
+      std::cout << "OCCA mode [" << mode << "] is not enabled, defaulting to [Serial] mode\n";
       return newModeDevice("Serial");
+    }
 
-    return it-second->newDevice();
+    return it->second->newDevice();
   }
 
   kernel_v* newModeKernel(const std::string &mode) {
     strToModeMapIterator it = modeMap.find(mode);
 
-    if (it == modeMap.end())
+    if (it == modeMap.end()) {
+      std::cout << "OCCA mode [" << mode << "] is not enabled, defaulting to [Serial] mode\n";
       return newModeKernel("Serial");
+    }
 
-    return it-second->newKernel();
+    return it->second->newKernel();
   }
 
   memory_v* newModeMemory(const std::string &mode) {
     strToModeMapIterator it = modeMap.find(mode);
 
-    if (it == modeMap.end())
+    if (it == modeMap.end()) {
+      std::cout << "OCCA mode [" << mode << "] is not enabled, defaulting to [Serial] mode\n";
       return newModeMemory("Serial");
+    }
 
-    return it-second->newMemory();
+    return it->second->newMemory();
+  }
+
+  void freeModeDevice(device_v *dHandle) {
+    delete dHandle;
+  }
+
+  void freeModeKernel(kernel_v *kHandle) {
+    delete kHandle;
+  }
+
+  void freeModeMemory(memory_v *mHandle) {
+    delete mHandle;
   }
   //====================================
 
@@ -105,26 +123,16 @@ namespace occa {
       ::memcpy(dest, src, bytes);
     }
     else if(usingSrcPtr) {
-      if(!isAsync)
-        destMem->copyFrom(src, bytes, destOff);
-      else
-        destMem->asyncCopyFrom(src, bytes, destOff);
+      destMem->copyFrom(src, bytes, destOff, isAsync);
     }
     else if(usingDestPtr) {
-      if(!isAsync)
-        srcMem->copyTo(dest, bytes, srcOff);
-      else
-        srcMem->asyncCopyTo(dest, bytes, srcOff);
+      srcMem->copyTo(dest, bytes, srcOff, isAsync);
     }
     else {
       // Auto-detects peer-to-peer stuff
       occa::memory srcMemory(srcMem);
       occa::memory destMemory(destMem);
-
-      if(!isAsync)
-        srcMemory.copyTo(destMemory, bytes, destOff, srcOff);
-      else
-        srcMemory.asyncCopyTo(destMemory, bytes, destOff, srcOff);
+      srcMemory.copyTo(destMemory, bytes, destOff, srcOff, isAsync);
     }
   }
 
@@ -158,7 +166,7 @@ namespace occa {
                    const uintptr_t bytes,
                    const uintptr_t offset) {
 
-    dest.asyncCopyFrom(src, bytes, offset);
+    dest.copyFrom(src, bytes, offset, true);
   }
 
   void asyncMemcpy(void *dest,
@@ -166,7 +174,7 @@ namespace occa {
                    const uintptr_t bytes,
                    const uintptr_t offset) {
 
-    src.asyncCopyTo(dest, bytes, offset);
+    src.copyTo(dest, bytes, offset, true);
   }
 
   void asyncMemcpy(memory dest,
@@ -175,7 +183,7 @@ namespace occa {
                    const uintptr_t destOffset,
                    const uintptr_t srcOffset) {
 
-    src.asyncCopyTo(dest, bytes, destOffset, srcOffset);
+    src.copyTo(dest, bytes, destOffset, srcOffset, true);
   }
   //====================================
 
@@ -193,7 +201,7 @@ namespace occa {
   device host() {
     static device _host;
     if (_host.getDHandle() == NULL) {
-      _host = device(new device_t<Serial>());
+      _host = occa::device(newModeDevice("Serial"));
     }
     return _host;
   }
@@ -210,29 +218,16 @@ namespace occa {
   std::vector<device> deviceList;
 
   std::vector<device>& getDeviceList() {
-
     deviceListMutex.lock();
-
-    if(deviceList.size()) {
-      deviceListMutex.unlock();
-      return deviceList;
+    if(deviceList.size() == 0) {
+      strToModeMapIterator it = modeMap.begin();
+      while (it != modeMap.end()) {
+        device_v* dHandle = it->second->newDevice();
+        dHandle->appendAvailableDevices(deviceList);
+        freeModeDevice(dHandle);
+        ++it;
+      }
     }
-
-    device_t<Serial>::appendAvailableDevices(deviceList);
-
-#if OCCA_OPENMP_ENABLED
-    device_t<OpenMP>::appendAvailableDevices(deviceList);
-#endif
-#if OCCA_PTHREADS_ENABLED
-    device_t<Pthreads>::appendAvailableDevices(deviceList);
-#endif
-#if OCCA_OPENCL_ENABLED
-    device_t<OpenCL>::appendAvailableDevices(deviceList);
-#endif
-#if OCCA_CUDA_ENABLED
-    device_t<CUDA>::appendAvailableDevices(deviceList);
-#endif
-
     deviceListMutex.unlock();
 
     return deviceList;
@@ -354,24 +349,6 @@ namespace occa {
     currentDevice.wrapManagedMemory(handle_, bytes);
   }
 
-  memory wrapTexture(void *handle_,
-                     const int dim, const occa::dim &dims,
-                     occa::formatType type, const int permissions) {
-
-    return currentDevice.wrapTexture(handle_,
-                                     dim, dims,
-                                     type, permissions);
-  }
-
-  void wrapManagedTexture(void *handle_,
-                          const int dim, const occa::dim &dims,
-                          occa::formatType type, const int permissions) {
-
-    currentDevice.wrapManagedTexture(handle_,
-                                     dim, dims,
-                                     type, permissions);
-  }
-
   memory malloc(const uintptr_t bytes,
                 void *src) {
 
@@ -382,24 +359,6 @@ namespace occa {
                      void *src) {
 
     return currentDevice.managedAlloc(bytes, src);
-  }
-
-  memory textureAlloc(const int dim, const occa::dim &dims,
-                      void *src,
-                      occa::formatType type, const int permissions) {
-
-    return currentDevice.textureAlloc(dim, dims,
-                                      src,
-                                      type, permissions);
-  }
-
-  void* managedTextureAlloc(const int dim, const occa::dim &dims,
-                            void *src,
-                            occa::formatType type, const int permissions) {
-
-    return currentDevice.managedTextureAlloc(dim, dims,
-                                             src,
-                                             type, permissions);
   }
 
   memory mappedAlloc(const uintptr_t bytes,
@@ -455,17 +414,14 @@ namespace occa {
 
   //---[ Class Infos ]------------------
   kernelInfo::kernelInfo() :
-    mode(NoMode),
     header(""),
     flags("") {}
 
   kernelInfo::kernelInfo(const kernelInfo &p) :
-    mode(p.mode),
     header(p.header),
     flags(p.flags) {}
 
   kernelInfo& kernelInfo::operator = (const kernelInfo &p) {
-    mode   = p.mode;
     header = p.header;
     flags  = p.flags;
 
@@ -483,35 +439,37 @@ namespace occa {
     return (header + flags);
   }
 
+  // [REFACTOR]
   std::string kernelInfo::getModeHeaderFilename() const {
-    if(mode & Serial)   return sys::getFilename("[occa]/defines/Serial.hpp");
-    if(mode & OpenMP)   return sys::getFilename("[occa]/defines/OpenMP.hpp");
-    if(mode & OpenCL)   return sys::getFilename("[occa]/defines/OpenCL.hpp");
-    if(mode & CUDA)     return sys::getFilename("[occa]/defines/CUDA.hpp");
-    if(mode & HSA)      return sys::getFilename("[occa]/defines/HSA.hpp");
-    if(mode & Pthreads) return sys::getFilename("[occa]/defines/Pthreads.hpp");
+    // if(mode & Serial)   return sys::getFilename("[occa]/defines/Serial.hpp");
+    // if(mode & OpenMP)   return sys::getFilename("[occa]/defines/OpenMP.hpp");
+    // if(mode & OpenCL)   return sys::getFilename("[occa]/defines/OpenCL.hpp");
+    // if(mode & CUDA)     return sys::getFilename("[occa]/defines/CUDA.hpp");
+    // if(mode & HSA)      return sys::getFilename("[occa]/defines/HSA.hpp");
+    // if(mode & Pthreads) return sys::getFilename("[occa]/defines/Pthreads.hpp");
 
     return "";
   }
 
+  // [REFACTOR]
   bool kernelInfo::isAnOccaDefine(const std::string &name) {
-    if((name == "OCCA_USING_CPU") ||
-       (name == "OCCA_USING_GPU") ||
+    // if((name == "OCCA_USING_CPU") ||
+    //    (name == "OCCA_USING_GPU") ||
 
-       (name == "OCCA_USING_SERIAL")   ||
-       (name == "OCCA_USING_OPENMP")   ||
-       (name == "OCCA_USING_OPENCL")   ||
-       (name == "OCCA_USING_CUDA")     ||
-       (name == "OCCA_USING_PTHREADS") ||
+    //    (name == "OCCA_USING_SERIAL")   ||
+    //    (name == "OCCA_USING_OPENMP")   ||
+    //    (name == "OCCA_USING_OPENCL")   ||
+    //    (name == "OCCA_USING_CUDA")     ||
+    //    (name == "OCCA_USING_PTHREADS") ||
 
-       (name == "occaInnerDim0") ||
-       (name == "occaInnerDim1") ||
-       (name == "occaInnerDim2") ||
+    //    (name == "occaInnerDim0") ||
+    //    (name == "occaInnerDim1") ||
+    //    (name == "occaInnerDim2") ||
 
-       (name == "occaOuterDim0") ||
-       (name == "occaOuterDim1") ||
-       (name == "occaOuterDim2"))
-      return true;
+    //    (name == "occaOuterDim0") ||
+    //    (name == "occaOuterDim1") ||
+    //    (name == "occaOuterDim2"))
+    //   return true;
 
     return false;
   }
