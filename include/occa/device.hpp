@@ -6,6 +6,67 @@ namespace occa {
   class memory_v; class memory;
   class device_v; class device;
 
+  typedef void* stream_t;
+
+  //---[ argInfoMap ]-------------------
+  class argInfoMap {
+  public:
+    std::map<std::string, std::string> iMap;
+
+    argInfoMap();
+    argInfoMap(const std::string &infos);
+    argInfoMap(argInfoMap &aim);
+    argInfoMap& operator = (argInfoMap &aim);
+
+    std::string& operator [] (const std::string &info);
+
+    bool has(const std::string &info);
+    void remove(const std::string &info);
+
+    template <class TM>
+    void set(const std::string &info, const TM &value) {
+      iMap[info] = toString(value);
+    }
+
+    template <class TM>
+    TM get(const std::string &prop) {
+      TM t;
+      if (has(prop)) {
+        std::stringstream ss;
+        ss << iMap[prop];
+        ss >> t;
+      }
+      return t;
+    }
+
+    template <class TM>
+    std::vector<TM> getVector(const std::string &prop) {
+      std::vector<TM> ret;
+      TM t;
+      if (has(prop)) {
+        std::stringstream ss(iMap[prop].c_str());
+        while(ss.peek() != '\0') {
+          if (isWhitespace(c)) {
+            ss.get(1);
+          }
+          else {
+            if (ss.peek() == ',')
+              ss.get(1);
+            if (ss.peek() == '\0') {
+              ss >> t;
+              ret.push_back(t);
+            }
+          }
+        }
+      }
+      return ret;
+    }
+
+    friend std::ostream& operator << (std::ostream &out, const argInfoMap &m);
+  };
+  //====================================
+
+  //---[ device_v ]---------------------
   class device_v {
     friend class occa::kernel;
     friend class occa::memory;
@@ -98,7 +159,9 @@ namespace occa {
     virtual uintptr_t memorySize() = 0;
     virtual int simdWidth() = 0;
   };
+  //====================================
 
+  //---[ device ]-----------------------
   class device {
     template <occa::mode> friend class occa::kernel_t;
     template <occa::mode> friend class occa::memory_t;
@@ -249,7 +312,9 @@ namespace occa {
 
     void free();
   };
+  //====================================
 
+  //---[ stream ]-----------------------
   class stream {
   public:
     device_v *dHandle;
@@ -290,5 +355,6 @@ namespace occa {
     double tagTime;
     void *handle;
   };
+  //====================================
 }
 #endif

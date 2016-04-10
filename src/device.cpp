@@ -1,6 +1,88 @@
 #include "occa/device.hpp"
 
 namespace occa {
+  //---[ argInfoMap ]-------------------
+  argInfoMap::argInfoMap() {}
+
+  argInfoMap::argInfoMap(const std::string &infos) {
+    if(infos.size() == 0)
+      return;
+
+    parserNS::expNode expRoot = parserNS::createOrganizedExpNodeFrom(infos);
+
+    parserNS::expNode &csvFlatRoot = *(expRoot.makeCsvFlatHandle());
+
+    for(int i = 0; i < csvFlatRoot.leafCount; ++i) {
+      parserNS::expNode &leaf = csvFlatRoot[i];
+
+      std::string &info = (leaf.leafCount ? leaf[0].value : leaf.value);
+
+      if(leaf.value != "=") {
+        std::cout << "Flag [" << info << "] was not set, skipping it\n";
+        continue;
+      }
+
+      iMap[info] = leaf[1].toString();
+    }
+
+    parserNS::expNode::freeFlatHandle(csvFlatRoot);
+  }
+
+  argInfoMap::argInfoMap(argInfoMap &aim) {
+    *this = aim;
+  }
+
+  argInfoMap& argInfoMap::operator = (argInfoMap &aim) {
+    iMap = aim.iMap;
+    return *this;
+  }
+
+  std::string& operator [] (const std::string &info) {
+    return iMap[info];
+  }
+
+  bool argInfoMap::has(const std::string &info) {
+    return (iMap.find(info) != iMap.end());
+  }
+
+  void argInfoMap::remove(const std::string &info) {
+    std::map<std::string, std::string>::iterator it = iMap.find(info);
+
+    if(it != iMap.end())
+      iMap.erase(it);
+  }
+
+  std::string argInfoMap::get(const std::string &info) {
+    std::map<std::string,std::string>::iterator it = iMap.find(info);
+
+    if(it != iMap.end())
+      return it->second;
+
+    return "";
+  }
+
+  void argInfoMap::iGets(const std::string &info, std::vector<int> &entries) {
+    std::map<std::string,std::string>::iterator it = iMap.find(info);
+
+    if(it == iMap.end())
+      return;
+
+    const char *c = (it->second).c_str();
+
+    while(*c != '\0') {
+      skipWhitespace(c);
+
+      if(isANumber(c)) {
+        entries.push_back(atoi(c));
+        skipNumber(c);
+      }
+      else
+        ++c;
+    }
+  }
+  //====================================
+
+  //---[ device ]-----------------------
   device::device() {
     dHandle = NULL;
   }
@@ -620,11 +702,14 @@ namespace occa {
 
     return dHandle->simdWidth();
   }
+  //====================================
 
+  //---[ stream ]-----------------------
   void stream::free() {
     if(dHandle == NULL)
       return;
 
     device(dHandle).freeStream(*this);
   }
+  //====================================
 };

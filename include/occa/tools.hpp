@@ -192,6 +192,33 @@ namespace occa {
   void* ptrOff(void *ptr, uintptr_t offset);
   //==============================================
 
+
+  //---[ Helper Classes ]-------------------------
+  class dim {
+  public:
+    uintptr_t x, y, z;
+
+    dim();
+    dim(uintptr_t x_);
+    dim(uintptr_t x_, uintptr_t y_);
+    dim(uintptr_t x_, uintptr_t y_, uintptr_t z_);
+
+    dim(const dim &d);
+
+    dim& operator = (const dim &d);
+
+    dim operator + (const dim &d);
+    dim operator - (const dim &d);
+    dim operator * (const dim &d);
+    dim operator / (const dim &d);
+
+    bool hasNegativeEntries();
+
+    uintptr_t& operator [] (int i);
+    uintptr_t  operator [] (int i) const;
+  };
+  //==============================================
+
   template <class TM>
   void ignoreResult(const TM &t){
     (void) t;

@@ -1,6 +1,171 @@
 #include "occa/kernel.hpp"
 
 namespace occa {
+  //---[ KernelArg ]--------------------
+
+  kernelArg_t::kernelArg_t() {
+    dHandle = NULL;
+    mHandle = NULL;
+
+    ::memset(&data, 0, sizeof(data));
+    size = 0;
+    info = kArgInfo::none;
+  }
+
+  kernelArg_t::kernelArg_t(const kernelArg_t &k) {
+    *this = k;
+  }
+
+  kernelArg_t& kernelArg_t::operator = (const kernelArg_t &k) {
+    dHandle = k.dHandle;
+    mHandle = k.mHandle;
+
+    ::memcpy(&data, &(k.data), sizeof(data));
+    size = k.size;
+    info = k.info;
+
+    return *this;
+  }
+
+  kernelArg_t::~kernelArg_t() {}
+
+  void* kernelArg_t::ptr() const {
+    return ((info & kArgInfo::usePointer) ? data.void_ : (void*) &data);
+  }
+
+  kernelArg::kernelArg() {
+    argc = 0;
+  }
+
+  kernelArg::~kernelArg() {}
+
+  kernelArg::kernelArg(kernelArg_t &arg_) {
+    argc = 1;
+
+    args[0] = arg_;
+  }
+
+  kernelArg::kernelArg(const kernelArg &k) {
+    argc = k.argc;
+
+    args[0] = k.args[0];
+    args[1] = k.args[1];
+  }
+
+  kernelArg& kernelArg::operator = (const kernelArg &k) {
+    argc = k.argc;
+
+    args[0] = k.args[0];
+    args[1] = k.args[1];
+
+    return *this;
+  }
+
+  template <>
+  kernelArg::kernelArg(const occa::memory &m) {
+    argc = 1;
+
+    if (m.mHandle->dHandle->fakesUva()) {
+      if(!m.isATexture()) {
+        setupFrom(args[0], m.mHandle->handle, false, true);
+      }
+      else {
+        setupFrom(args[0], m.mHandle->handle, false, true);
+        setupFrom(args[1], m.mHandle->handle, false, true);
+
+        args[0].data.void_ = m.textureArg1();
+        args[1].data.void_ = m.textureArg2();
+
+        args[0].info |= kArgInfo::hasTexture;
+      }
+    }
+    else {
+      setupFrom(args[0], m.mHandle->handle, false);
+    }
+  }
+
+  template <> kernelArg::kernelArg(const int &arg_) {
+    argc = 1; args[0].data.int_ = arg_; args[0].size = sizeof(int);
+  }
+  template <> kernelArg::kernelArg(const char &arg_) {
+    argc = 1; args[0].data.char_ = arg_; args[0].size = sizeof(char);
+  }
+  template <> kernelArg::kernelArg(const short &arg_) {
+    argc = 1; args[0].data.short_ = arg_; args[0].size = sizeof(short);
+  }
+  template <> kernelArg::kernelArg(const long &arg_) {
+    argc = 1; args[0].data.long_ = arg_; args[0].size = sizeof(long);
+  }
+
+  template <> kernelArg::kernelArg(const unsigned int &arg_) {
+    argc = 1; args[0].data.uint_ = arg_; args[0].size = sizeof(unsigned int);
+  }
+  template <> kernelArg::kernelArg(const unsigned char &arg_) {
+    argc = 1; args[0].data.uchar_ = arg_; args[0].size = sizeof(unsigned char);
+  }
+  template <> kernelArg::kernelArg(const unsigned short &arg_) {
+    argc = 1; args[0].data.ushort_ = arg_; args[0].size = sizeof(unsigned short);
+  }
+
+  template <> kernelArg::kernelArg(const float &arg_) {
+    argc = 1; args[0].data.float_ = arg_; args[0].size = sizeof(float);
+  }
+  template <> kernelArg::kernelArg(const double &arg_) {
+    argc = 1; args[0].data.double_ = arg_; args[0].size = sizeof(double);
+  }
+
+#if OCCA_64_BIT
+  // 32 bit: uintptr_t == unsigned int
+  template <> kernelArg::kernelArg(const uintptr_t &arg_) {
+    argc = 1; args[0].data.uintptr_t_ = arg_; args[0].size = sizeof(uintptr_t);
+  }
+#endif
+
+  occa::device kernelArg::getDevice() const {
+    return occa::device(args[0].dHandle);
+  }
+
+  void kernelArg::setupForKernelCall(const bool isConst) const {
+    occa::memory_v *mHandle = args[0].mHandle;
+
+    if(mHandle                      &&
+       mHandle->isManaged()         &&
+       !mHandle->leftInDevice()     &&
+       mHandle->dHandle->fakesUva() &&
+       mHandle->dHandle->hasUvaEnabled()) {
+
+      if(!mHandle->inDevice()) {
+        mHandle->copyFrom(mHandle->uvaPtr);
+        mHandle->memInfo |= uvaFlag::inDevice;
+      }
+
+      if(!isConst && !mHandle->isDirty()) {
+        uvaDirtyMemory.push_back(mHandle);
+        mHandle->memInfo |= uvaFlag::isDirty;
+      }
+    }
+  }
+
+  int kernelArg::argumentCount(const int kArgc, const kernelArg *kArgs) {
+    int argc = 0;
+    for(int i = 0; i < kArgc; ++i){
+      argc += kArgs[i].argc;
+    }
+    return argc;
+  }
+
+  std::ostream& operator << (std::ostream &out, const argInfoMap &m) {
+    std::map<std::string,std::string>::const_iterator it = m.iMap.begin();
+
+    while(it != m.iMap.end()) {
+      out << it->first << " = " << it->second << '\n';
+      ++it;
+    }
+
+    return out;
+  }
+  //====================================
+
   //---[ kernel_v ]---------------------
   kernel* kernel_v::nestedKernelsPtr() {
     return &(nestedKernels[0]);
