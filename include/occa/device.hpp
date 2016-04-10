@@ -97,8 +97,6 @@ namespace occa {
     device_v();
     virtual ~device_v() = 0;
 
-    virtual device_v* newDevice() = 0;
-
     virtual void setup(argInfoMap &aim) = 0;
 
     virtual void* getContextHandle() = 0;
@@ -114,7 +112,7 @@ namespace occa {
     virtual void finish() = 0;
 
     virtual bool fakesUva() = 0;
-    virtual bool hasUvaEnabled() = 0;
+    bool hasUvaEnabled();
 
     virtual void waitFor(streamTag tag) = 0;
 

@@ -33,8 +33,6 @@ namespace occa {
 
     void initFrom(const memory_v &m);
 
-    virtual memory_v* newMemory() = 0;
-
     bool isManaged() const;
     bool isMapped() const;
     bool isAWrapper() const;

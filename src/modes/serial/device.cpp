@@ -1,4 +1,6 @@
 #include "occa/modes/serial/device.hpp"
+#include "occa/modes/serial/kernel.hpp"
+#include "occa/modes/serial/memory.hpp"
 #include "occa/base.hpp"
 
 namespace occa {
@@ -136,22 +138,6 @@ namespace occa {
       dList.push_back(occa::device(this));
     }
 
-    // [REFACTOR]
-    // void device::setCompiler(const std::string &compiler_){
-    //   compiler = compiler_;
-    //   vendor = sys::compilerVendor(compiler);
-    //   sys::addSharedBinaryFlagsTo(vendor, compilerFlags);
-    // }
-
-    // void device::setCompilerEnvScript(const std::string &compilerEnvScript_){
-    //   compilerEnvScript = compilerEnvScript_;
-    // }
-
-    // void device::setCompilerFlags(const std::string &compilerFlags_){
-    //   compilerFlags = compilerFlags_;
-    //   sys::addSharedBinaryFlagsTo(vendor, compilerFlags);
-    // }
-
     void device::flush(){}
 
     void device::finish(){}
@@ -195,7 +181,7 @@ namespace occa {
     kernel_v* device::buildKernelFromSource(const std::string &filename,
                                                       const std::string &functionName,
                                                       const kernelInfo &info_){
-      kernel_v *k = new kernel_t<Serial>;
+      kernel *k = new kernel();
       k->dHandle = this;
 
       k->buildFromSource(filename, functionName, info_);
@@ -205,69 +191,15 @@ namespace occa {
 
     kernel_v* device::buildKernelFromBinary(const std::string &filename,
                                                       const std::string &functionName){
-      kernel_v *k = new kernel_t<Serial>;
+      kernel *k = new kernel();
       k->dHandle = this;
       k->buildFromBinary(filename, functionName);
       return k;
     }
 
-    void device::cacheKernelInLibrary(const std::string &filename,
-                                                const std::string &functionName,
-                                                const kernelInfo &info_){
-#if 0
-      //---[ Creating shared library ]----
-      kernel tmpK = occa::device(this).buildKernelFromSource(filename, functionName, info_);
-      tmpK.free();
-
-      kernelInfo info = info_;
-
-      addOccaHeadersToInfo(info);
-
-      std::string cachedBinary = getCachedName(filename, getInfoSalt(info));
-
-#if (OCCA_OS & WINDOWS_OS)
-      // Windows requires .dll extension
-      cachedBinary = cachedBinary + ".dll";
-#endif
-      //==================================
-
-      library::infoID_t infoID;
-
-      infoID.modelID    = modelID_;
-      infoID.kernelName = functionName;
-
-      library::infoHeader_t &header = library::headerMap[infoID];
-
-      header.fileID = -1;
-      header.mode   = Serial;
-
-      const std::string flatDevID = getIdentifier().flattenFlagMap();
-
-      header.flagsOffset = library::addToScratchPad(flatDevID);
-      header.flagsBytes  = flatDevID.size();
-
-      header.contentOffset = library::addToScratchPad(cachedBinary);
-      header.contentBytes  = cachedBinary.size();
-
-      header.kernelNameOffset = library::addToScratchPad(functionName);
-      header.kernelNameBytes  = functionName.size();
-#endif
-    }
-
-    kernel_v* device::loadKernelFromLibrary(const char *cache,
-                                                      const std::string &functionName){
-#if 0
-      kernel_v *k = new kernel_t<Serial>;
-      k->dHandle = this;
-      k->loadFromLibrary(cache, functionName);
-      return k;
-#endif
-      return NULL;
-    }
-
     memory_v* device::wrapMemory(void *handle_,
                                            const uintptr_t bytes){
-      memory_v *mem = new memory_t<Serial>;
+      memory *mem = new memory();
 
       mem->dHandle = this;
       mem->size    = bytes;
@@ -278,33 +210,9 @@ namespace occa {
       return mem;
     }
 
-    memory_v* device::wrapTexture(void *handle_,
-                                            const int dim, const occa::dim &dims,
-                                            occa::formatType type, const int permissions){
-      memory_v *mem = new memory_t<Serial>;
-
-      mem->dHandle = this;
-      mem->size    = ((dim == 1) ? dims.x : (dims.x * dims.y)) * type.bytes();
-
-      mem->memInfo |= (memFlag::isATexture |
-                       memFlag::isAWrapper);
-
-      mem->textureInfo.dim  = dim;
-
-      mem->textureInfo.w = dims.x;
-      mem->textureInfo.h = dims.y;
-      mem->textureInfo.d = dims.z;
-
-      mem->textureInfo.arg = handle_;
-
-      mem->handle = &(mem->textureInfo);
-
-      return mem;
-    }
-
     memory_v* device::malloc(const uintptr_t bytes,
                                        void *src){
-      memory_v *mem = new memory_t<Serial>;
+      memory *mem = new memory();
 
       mem->dHandle = this;
       mem->size    = bytes;
@@ -313,31 +221,6 @@ namespace occa {
 
       if(src != NULL)
         ::memcpy(mem->handle, src, bytes);
-
-      return mem;
-    }
-
-    memory_v* device::textureAlloc(const int dim, const occa::dim &dims,
-                                             void *src,
-                                             occa::formatType type, const int permissions){
-      memory_v *mem = new memory_t<Serial>;
-
-      mem->dHandle = this;
-      mem->size    = ((dim == 1) ? dims.x : (dims.x * dims.y)) * type.bytes();
-
-      mem->memInfo |= memFlag::isATexture;
-
-      mem->textureInfo.dim  = dim;
-
-      mem->textureInfo.w = dims.x;
-      mem->textureInfo.h = dims.y;
-      mem->textureInfo.d = dims.z;
-
-      mem->handle = sys::malloc(mem->size);
-
-      ::memcpy(mem->textureInfo.arg, src, mem->size);
-
-      mem->handle = &(mem->textureInfo);
 
       return mem;
     }
@@ -356,10 +239,5 @@ namespace occa {
     }
 
     void device::free(){}
-
-    int device::simdWidth(){
-      simdWidth_ = OCCA_SIMD_WIDTH;
-      return OCCA_SIMD_WIDTH;
-    }
   }
 }

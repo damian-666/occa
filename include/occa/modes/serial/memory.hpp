@@ -6,6 +6,7 @@
 namespace occa {
   namespace serial {
     class memory : public occa::memory_v {
+    public:
       memory();
       memory(const memory &m);
       memory& operator = (const memory &m);

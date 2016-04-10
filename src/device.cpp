@@ -56,7 +56,11 @@ namespace occa {
   //====================================
 
   //---[ device_v ]---------------------
-  device_v::device_v(){}
+  device_v::device_v(){
+  }
+  bool device_v::hasUvaEnabled() {
+    return uvaEnabled_;
+  }
   //====================================
 
   //---[ device ]-----------------------

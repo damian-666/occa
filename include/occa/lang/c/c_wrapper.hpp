@@ -24,6 +24,9 @@ OCCA_START_EXTERN_C
 
 typedef void* occaDevice;
 typedef void* occaKernel;
+typedef void* occaStream;
+typedef void* occaDeviceInfo;
+typedef void* occaKernelInfo;
 
 struct occaTypePtr_t {
   struct occaType_t *ptr;
@@ -35,15 +38,10 @@ typedef struct occaArgumentList_t* occaArgumentList;
 
 struct occaType_t;
 
-typedef void* occaStream;
-
 typedef struct occaStreamTag_t {
   double tagTime;
   void *handle;
 } occaStreamTag;
-
-typedef void* occaDeviceInfo;
-typedef void* occaKernelInfo;
 
 typedef struct occaDim_t {
   uintptr_t x, y, z;

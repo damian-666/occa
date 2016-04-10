@@ -32,15 +32,17 @@ namespace occa {
       void flush();
       void finish();
 
+      bool fakesUva();
+
       //  |---[ Stream ]----------------
-      stream createStream();
-      void freeStream(stream s);
+      stream_t createStream();
+      void freeStream(stream_t s);
 
       streamTag tagStream();
       void waitFor(streamTag tag);
       double timeBetween(const streamTag &startTag, const streamTag &endTag);
 
-      stream wrapStream(void *handle_);
+      stream_t wrapStream(void *handle_);
       //  |=============================
 
       //  |---[ Kernel ]----------------
