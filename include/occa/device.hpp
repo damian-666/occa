@@ -156,7 +156,6 @@ namespace occa {
     virtual void free() = 0;
 
     virtual uintptr_t memorySize() = 0;
-    virtual int simdWidth() = 0;
   };
   //====================================
 
@@ -201,7 +200,7 @@ namespace occa {
       return dHandle->hasUvaEnabled();
     }
 
-    const std::string& mode();
+    std::string mode();
 
     template <class TM>
     TM getProperty(const std::string &prop) {
@@ -224,9 +223,9 @@ namespace occa {
     void setCompilerEnvScript(const std::string &compilerEnvScript_);
     void setCompilerFlags(const std::string &compilerFlags_);
 
-    std::string& getCompiler();
-    std::string& getCompilerEnvScript();
-    std::string& getCompilerFlags();
+    std::string getCompiler();
+    std::string getCompilerEnvScript();
+    std::string getCompilerFlags();
 
     void flush();
     void finish();

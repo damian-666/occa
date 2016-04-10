@@ -1,5 +1,6 @@
 #include "occa/device.hpp"
 #include "occa/base.hpp"
+#include "occa/parser/parser.hpp"
 
 namespace occa {
   //---[ argInfoMap ]-------------------
@@ -38,7 +39,7 @@ namespace occa {
     return *this;
   }
 
-  std::string& operator [] (const std::string &info) {
+  std::string& argInfoMap::operator [] (const std::string &info) {
     return iMap[info];
   }
 
@@ -51,35 +52,6 @@ namespace occa {
 
     if(it != iMap.end())
       iMap.erase(it);
-  }
-
-  std::string argInfoMap::get(const std::string &info) {
-    std::map<std::string,std::string>::iterator it = iMap.find(info);
-
-    if(it != iMap.end())
-      return it->second;
-
-    return "";
-  }
-
-  void argInfoMap::iGets(const std::string &info, std::vector<int> &entries) {
-    std::map<std::string,std::string>::iterator it = iMap.find(info);
-
-    if(it == iMap.end())
-      return;
-
-    const char *c = (it->second).c_str();
-
-    while(*c != '\0') {
-      skipWhitespace(c);
-
-      if(isANumber(c)) {
-        entries.push_back(atoi(c));
-        skipNumber(c);
-      }
-      else
-        ++c;
-    }
   }
   //====================================
 
@@ -130,11 +102,11 @@ namespace occa {
     OCCA_CHECK(aim.has("mode"),
                "OCCA mode not given");
 
-    dHandle = occa::newModeDevice(aim["mode"])
+    dHandle = occa::newModeDevice(aim["mode"]);
     dHandle->setup(aim);
 
     if(aim.has("UVA")) {
-      if(upStringCheck(aim.get("UVA"), "enabled"))
+      if(upStringCheck(aim["UVA"], "enabled"))
         dHandle->uvaEnabled_ = true;
       else
         dHandle->uvaEnabled_ = false;
@@ -156,54 +128,9 @@ namespace occa {
     return dHandle->bytesAllocated;
   }
 
-  void device::setCompiler(const std::string &compiler_) {
+  std::string device::mode() {
     checkIfInitialized();
-    dHandle->setCompiler(compiler_);
-  }
-
-  void device::setCompilerEnvScript(const std::string &compilerEnvScript_) {
-    checkIfInitialized();
-    dHandle->setCompilerEnvScript(compilerEnvScript_);
-  }
-
-  void device::setCompilerFlags(const std::string &compilerFlags_) {
-    checkIfInitialized();
-    dHandle->setCompilerFlags(compilerFlags_);
-  }
-
-  std::string& device::getCompiler() {
-    checkIfInitialized();
-    return dHandle->compiler;
-  }
-
-  std::string& device::getCompilerEnvScript() {
-    checkIfInitialized();
-    return dHandle->compilerEnvScript;
-  }
-
-  std::string& device::getCompilerFlags() {
-    checkIfInitialized();
-    return dHandle->compilerFlags;
-  }
-
-  int device::modelID() {
-    checkIfInitialized();
-    return dHandle->modelID_;
-  }
-
-  int device::id() {
-    checkIfInitialized();
-    return dHandle->id_;
-  }
-
-  int device::modeID() {
-    checkIfInitialized();
-    return dHandle->mode();
-  }
-
-  const std::string& device::mode() {
-    checkIfInitialized();
-    return dHandle->strMode;
+    return getProperty<std::string>("mode");
   }
 
   void device::setCompiler(const std::string &compiler_) {
@@ -218,16 +145,16 @@ namespace occa {
     setProperty("compilerFlags", compilerFlags_);
   }
 
-  std::string& device::getCompiler() {
-    return getProperty("compiler");
+  std::string device::getCompiler() {
+    return getProperty<std::string>("compiler");
   }
 
-  std::string& device::getCompilerEnvScript() {
-    return getProperty("compilerEnvScript");
+  std::string device::getCompilerEnvScript() {
+    return getProperty<std::string>("compilerEnvScript");
   }
 
-  std::string& device::getCompilerFlags() {
-    return getProperty("compilerFlags");
+  std::string device::getCompilerFlags() {
+    return getProperty<std::string>("compilerFlags");
   }
 
   void device::flush() {
@@ -245,7 +172,7 @@ namespace occa {
         for(size_t i = 0; i < dirtyEntries; ++i) {
           occa::memory_v *mem = uvaDirtyMemory[i];
 
-          mem->asyncCopyTo(mem->uvaPtr);
+          mem->copyTo(mem->uvaPtr, 0, 0, true);
 
           mem->memInfo &= ~uvaFlag::inDevice;
           mem->memInfo &= ~uvaFlag::isDirty;
@@ -394,19 +321,14 @@ namespace occa {
     kernel_v *&k = ker.kHandle;
 
     if(usingParser) {
-#if OCCA_OPENMP_ENABLED
-      if(dHandle->mode() != OpenMP) {
-        k          = new kernel_t<Serial>;
-        k->dHandle = new device_t<Serial>;
+      if (mode() != "OpenMP") {
+        k          = newModeKernel("Serial");
+        k->dHandle = newModeDevice("Serial");
       }
       else {
-        k          = new kernel_t<OpenMP>;
+        k          = newModeKernel("OpenMP");
         k->dHandle = dHandle;
       }
-#else
-      k          = new kernel_t<Serial>;
-      k->dHandle = new device_t<Serial>;
-#endif
 
       const std::string hash = getFileContentHash(realFilename,
                                                   dHandle->getInfoSalt(info_));
@@ -557,12 +479,6 @@ namespace occa {
     delete dHandle;
     dHandle = NULL;
   }
-
-  int device::simdWidth() {
-    checkIfInitialized();
-
-    return dHandle->simdWidth();
-  }
   //====================================
 
   //---[ stream ]-----------------------
@@ -573,4 +489,4 @@ namespace occa {
     device(dHandle).freeStream(*this);
   }
   //====================================
-};
+}

@@ -1,5 +1,4 @@
 #include "occa/base.hpp"
-#include "occa/parser/parser.hpp"
 
 namespace occa {
 
