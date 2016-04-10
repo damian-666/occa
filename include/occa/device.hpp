@@ -94,6 +94,8 @@ namespace occa {
     virtual device_v() = 0;
     virtual ~device_v() = 0;
 
+    virtual device_v* newDevice() = 0;
+
     virtual void setup(argInfoMap &aim) = 0;
 
     virtual void* getContextHandle() = 0;

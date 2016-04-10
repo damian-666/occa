@@ -30,14 +30,14 @@ namespace occa {
   class kernelInfo;
   class deviceInfo;
 
-  //---[ Typedefs ]-----------------------
+  //---[ Typedefs ]---------------------
   typedef std::vector<int>          intVector_t;
   typedef std::vector<intVector_t>  intVecVector_t;
   typedef std::vector<std::string>  stringVector_t;
-  //======================================
+  //====================================
 
 
-  //---[ Globals & Flags ]------------------------
+  //---[ Globals & Flags ]--------------
   extern const int parserVersion;
 
   extern kernelInfo defaultKernelInfo;
@@ -52,10 +52,65 @@ namespace occa {
 
   // [REFACTOR]
   // hasModeEnabled(string mode)
-  //==============================================
+  //====================================
 
 
-  //---[ Memory ]---------------------------------
+  //---[ Registration ]-----------------
+  class mode_v {
+  private:
+    std::string modeName;
+
+  public:
+    virtual mode(std::string modeName_) = 0;
+
+    std::string& name() {
+      return modeName;
+    }
+
+    virtual device_v* newDevice() = 0;
+    virtual kernel_v* newKernel() = 0;
+    virtual memory_v* newMemory() = 0;
+  }
+
+  template <class device_t,
+            class kernel_t,
+            class memory_t>
+  class mode : public mode_v {
+
+  public:
+    mode(std::string modeName_) :
+      modeName(modeName_) {
+
+      modeMap[modeName] = (void*) this;
+    }
+
+    device_v* newDevice() {
+      return new device_t();
+    }
+
+    kernel_v* newKernel() {
+      return new kernel_t();
+    }
+
+    memory_v* newMemory() {
+      return new memory_t();
+    }
+  };
+
+  typedef std::map<std::string,mode_v*> strToModeMap_t;
+  typedef strToModeMap_t::iterator      strToModeMapIterator;
+
+  extern strToModeMap_t modeMap;
+
+  bool modeExists(const std::string &mode);
+
+  device_v* newModeDevice(const std::string &mode);
+  kernel_v* newModeKernel(const std::string &mode);
+  memory_v* newModeDevice(const std::string &mode);
+  //====================================
+
+
+  //---[ Memory ]-----------------------
   void memcpy(void *dest, void *src,
               const uintptr_t bytes,
               const int flags,

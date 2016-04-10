@@ -21,6 +21,8 @@ namespace occa {
     virtual memory_v();
     virtual ~memory_v();
 
+    virtual memory_v* newMemory() = 0;
+
     bool isManaged() const;
     bool isMapped() const;
     bool isAWrapper() const;

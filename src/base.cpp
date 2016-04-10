@@ -3,12 +3,12 @@
 
 namespace occa {
 
-  //---[ Globals & Flags ]------------------------
+  //---[ Globals & Flags ]--------------
   const int parserVersion = 100;
 
   kernelInfo defaultKernelInfo;
 
-  const int autoDetect = (1 << 0);
+  const int autoDetect = (1 << 0_);
   const int srcInUva   = (1 << 1);
   const int destInUva  = (1 << 2);
 
@@ -18,9 +18,46 @@ namespace occa {
   void setVerboseCompilation(const bool value) {
     verboseCompilation_f = value;
   }
-  //==============================================
+  //====================================
 
-  //---[ Memory ]---------------------------------
+
+  //---[ Registration ]-----------------
+  strToModeMap_t modeMap;
+
+  bool modeExists(const std::string &mode) {
+    return (modeMap.find(mode) != modeMap.end());
+  }
+
+  device_v* newModeDevice(const std::string &mode) {
+    strToModeMapIterator it = modeMap.find(mode);
+
+    if (it == modeMap.end())
+      return newModeDevice("Serial");
+
+    return it-second->newDevice();
+  }
+
+  kernel_v* newModeKernel(const std::string &mode) {
+    strToModeMapIterator it = modeMap.find(mode);
+
+    if (it == modeMap.end())
+      return newModeKernel("Serial");
+
+    return it-second->newKernel();
+  }
+
+  memory_v* newModeMemory(const std::string &mode) {
+    strToModeMapIterator it = modeMap.find(mode);
+
+    if (it == modeMap.end())
+      return newModeMemory("Serial");
+
+    return it-second->newMemory();
+  }
+  //====================================
+
+
+  //---[ Memory ]-----------------------
   void memcpy(void *dest, void *src,
               const uintptr_t bytes,
               const int flags) {
@@ -140,7 +177,7 @@ namespace occa {
 
     src.asyncCopyTo(dest, bytes, destOffset, srcOffset);
   }
-  //==============================================
+  //====================================
 
 
   //---[ Device Functions ]-------------
@@ -551,7 +588,7 @@ namespace occa {
 
     if(value2[value2.size() - 1] != '\n')
       value2 += '\n';
-    //  |=========================================
+    //  |===============================
 
     ss << "#define " << macro << " " << value2 << '\n';
 
@@ -584,7 +621,7 @@ namespace occa {
     header = ss.str() + header;
   }
 
-  //  |---[ Device Info ]-------------------------
+  //  |---[ Device Info ]---------------
   deviceInfo::deviceInfo() {}
 
   deviceInfo::deviceInfo(const deviceInfo &dInfo) :
