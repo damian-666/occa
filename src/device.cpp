@@ -482,6 +482,29 @@ namespace occa {
   //====================================
 
   //---[ stream ]-----------------------
+  stream::stream() :
+    dHandle(NULL),
+    handle(NULL) {}
+
+  stream::stream(device_v *dHandle_, stream_t handle_) :
+    dHandle(dHandle_),
+    handle(handle_) {}
+
+  stream::stream(const stream &s) :
+    dHandle(s.dHandle),
+    handle(s.handle) {}
+
+  stream& stream::operator = (const stream &s) {
+    dHandle = s.dHandle;
+    handle  = s.handle;
+
+    return *this;
+  }
+
+  void* stream::getStreamHandle() {
+    return handle;
+  }
+
   void stream::free() {
     if(dHandle == NULL)
       return;

@@ -123,9 +123,9 @@ namespace occa {
 
     virtual void waitFor(streamTag tag) = 0;
 
-    virtual stream createStream() = 0;
-    virtual void freeStream(stream s) = 0;
-    virtual stream wrapStream(void *handle_) = 0;
+    virtual stream_t createStream() = 0;
+    virtual void freeStream(stream_t s) = 0;
+    virtual stream_t wrapStream(void *handle_) = 0;
 
     virtual streamTag tagStream() = 0;
     virtual double timeBetween(const streamTag &startTag, const streamTag &endTag) = 0;
@@ -290,28 +290,12 @@ namespace occa {
     device_v *dHandle;
     stream_t handle;
 
-    inline stream() :
-      dHandle(NULL),
-      handle(NULL) {}
+    stream();
+    stream(device_v *dHandle_, stream_t handle_);
+    stream(const stream &s);
+    stream& operator = (const stream &s);
 
-    inline stream(device_v *dHandle_, stream_t handle_) :
-      dHandle(dHandle_),
-      handle(handle_) {}
-
-    inline stream(const stream &s) :
-      dHandle(s.dHandle),
-      handle(s.handle) {}
-
-    inline stream& operator = (const stream &s) {
-      dHandle = s.dHandle;
-      handle  = s.handle;
-
-      return *this;
-    }
-
-    inline void* getStreamHandle() {
-      return handle;
-    }
+    void* getStreamHandle();
 
     void free();
   };
