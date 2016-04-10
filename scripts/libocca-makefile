@@ -75,49 +75,11 @@ $(bPath)/occa:$(OCCA_DIR)/scripts/occa.cpp $(lPath)/libocca.so
 #  ===========================
 
 #  ---[ C++ ]-----------------
-$(OCCA_DIR)/obj/modes/threads/%.o:$(OCCA_DIR)/src/modes/threads/%.cpp
-	@mkdir -p $(OCCA_DIR)/obj/modes/threads
-	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
-$(OCCA_DIR)/obj/operators/%.o:$(OCCA_DIR)/src/operators/%.cpp
-	@mkdir -p $(OCCA_DIR)/obj/operators
-	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
-$(OCCA_DIR)/obj/modes/openmp/%.o:$(OCCA_DIR)/src/modes/openmp/%.cpp
-	@mkdir -p $(OCCA_DIR)/obj/modes/openmp
-	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
-$(OCCA_DIR)/obj/modes/serial/%.o:$(OCCA_DIR)/src/modes/serial/%.cpp
-	@mkdir -p $(OCCA_DIR)/obj/modes/serial
-	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
-$(OCCA_DIR)/obj/parser/%.o:$(OCCA_DIR)/src/parser/%.cpp
-	@mkdir -p $(OCCA_DIR)/obj/parser
-	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
-$(OCCA_DIR)/obj/modes/cuda/%.o:$(OCCA_DIR)/src/modes/cuda/%.cpp
-	@mkdir -p $(OCCA_DIR)/obj/modes/cuda
-	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
-$(OCCA_DIR)/obj/lang/c/%.o:$(OCCA_DIR)/src/lang/c/%.cpp
-	@mkdir -p $(OCCA_DIR)/obj/lang/c
-	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
-$(OCCA_DIR)/obj/modes/opencl/%.o:$(OCCA_DIR)/src/modes/opencl/%.cpp
-	@mkdir -p $(OCCA_DIR)/obj/modes/opencl
-	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
-$(OCCA_DIR)/obj/lang/fortran/%.o:$(OCCA_DIR)/src/lang/fortran/%.cpp
-	@mkdir -p $(OCCA_DIR)/obj/lang/fortran
-	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
-$(OCCA_DIR)/obj/%.o:$(OCCA_DIR)/src/%.cpp
-	@mkdir -p $(OCCA_DIR)/obj
-	$(compiler) $(compilerFlags) -o $@ $(flags) -c $(paths) $<
+{{cpp_rules}}
 #  ===========================
 
 #  ---[ Fortran ]-------------
-
-
-
-
-
-
-
-
-
-
+{{f90_rules}}
 #  ===========================
 
 #  ---[ Python ]-------------
