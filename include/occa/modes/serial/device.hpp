@@ -5,20 +5,13 @@
 
 namespace occa {
   namespace serial {
-    //---[ Data Structs ]---------------
-    struct SerialKernelData_t {
-      void *dlHandle;
-      handleFunction_t handle;
-
-      void *vArgs[2*OCCA_MAX_ARGS];
-    };
-    //==================================
-
     class device : public occa::device_v {
+    private:
       int vendor;
 
       std::string compiler, compilerFlags, compilerEnvScript;
 
+    public:
       device();
       device(const device &k);
       device& operator = (const device &k);

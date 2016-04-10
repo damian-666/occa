@@ -1,28 +1,26 @@
-#include "occa/Serial.hpp"
+#include "occa/modes/serial/kernel.hpp"
+#include "occa/base.hpp"
 
 namespace occa {
   namespace serial {
-    template <>
-    kernel_t<Serial>::kernel_t(){
-      strMode = "Serial";
-
-      data    = NULL;
+    kernel::kernel(){
       dHandle = NULL;
+      dlHandle = NULL;
+      handle   = NULL;
 
       dims  = 1;
       inner = occa::dim(1,1,1);
       outer = occa::dim(1,1,1);
     }
 
-    template <>
-    kernel_t<Serial>::kernel_t(const kernel_t<Serial> &k){
+    kernel::kernel(const kernel &k){
       *this = k;
     }
 
-    template <>
-    kernel_t<Serial>& kernel_t<Serial>::operator = (const kernel_t<Serial> &k){
-      data    = k.data;
-      dHandle = k.dHandle;
+    kernel& kernel::operator = (const kernel &k){
+      dHandle  = k.dHandle;
+      dlHandle = k.dlHandle;
+      handle   = k.handle;
 
       metaInfo = k.metaInfo;
 
@@ -32,32 +30,26 @@ namespace occa {
 
       nestedKernels = k.nestedKernels;
 
+      for (int i = 0; i < 2*OCCA_MAX_ARGS; ++i) {
+        vArgs[i] = k.vArgs[i];
+      }
+
       return *this;
     }
 
-    template <>
-    kernel_t<Serial>::~kernel_t(){}
+    kernel::~kernel(){}
 
-    template <>
-    void* kernel_t<Serial>::getKernelHandle(){
-      OCCA_EXTRACT_DATA(Serial, Kernel);
-
+    void* kernel::getKernelHandle(){
       void *ret;
-
-      ::memcpy(&ret, &data_.handle, sizeof(void*));
-
+      ::memcpy(&ret, &handle, sizeof(void*));
       return ret;
     }
 
-    template <>
-    void* kernel_t<Serial>::getProgramHandle(){
-      OCCA_EXTRACT_DATA(Serial, Kernel);
-
-      return data_.dlHandle;
+    void* kernel::getProgramHandle(){
+      return dlHandle;
     }
 
-    template <>
-    std::string kernel_t<Serial>::fixBinaryName(const std::string &filename){
+    std::string kernel::fixBinaryName(const std::string &filename){
 #if (OCCA_OS & (LINUX_OS | OSX_OS))
       return filename;
 #else
@@ -65,10 +57,9 @@ namespace occa {
 #endif
     }
 
-    template <>
-    kernel_t<Serial>* kernel_t<Serial>::buildFromSource(const std::string &filename,
-                                                        const std::string &functionName,
-                                                        const kernelInfo &info_){
+    void kernel::buildFromSource(const std::string &filename,
+                                 const std::string &functionName,
+                                 const kernelInfo &info_){
 
       name = functionName;
 
@@ -95,21 +86,20 @@ namespace occa {
         if(verboseCompilation_f)
           std::cout << "Found cached binary of [" << compressFilename(filename) << "] in [" << compressFilename(binaryFile) << "]\n";
 
-        return buildFromBinary(binaryFile, functionName);
+        buildFromBinary(binaryFile, functionName);
       }
-
-      data = new SerialKernelData_t;
 
       createSourceFileFrom(filename, hashDir, info);
 
+      occa::device device(dHandle);
       std::stringstream command;
-
-      if(dHandle->compilerEnvScript.size())
-        command << dHandle->compilerEnvScript << " && ";
+      std::string compilerEnvScript = device.getCompilerEnvScript();
+      if(compilerEnvScript.size())
+        command << compilerEnvScript << " && ";
 
 #if (OCCA_OS & (LINUX_OS | OSX_OS))
-      command << dHandle->compiler
-              << ' '    << dHandle->compilerFlags
+      command << device.getCompiler()
+              << ' '    << device.getCompilerFlags()
               << ' '    << info.flags
               << ' '    << sourceFile
               << " -o " << binaryFile
@@ -175,56 +165,34 @@ namespace occa {
         OCCA_CHECK(false, "Compilation error");
       }
 
-      OCCA_EXTRACT_DATA(Serial, Kernel);
-
-      data_.dlHandle = sys::dlopen(binaryFile, hash);
-      data_.handle   = sys::dlsym(data_.dlHandle, functionName, hash);
+      dlHandle = sys::dlopen(binaryFile, hash);
+      handle   = sys::dlsym(dlHandle, functionName, hash);
 
       releaseHash(hash, 0);
-
-      return this;
     }
 
-    template <>
-    kernel_t<Serial>* kernel_t<Serial>::buildFromBinary(const std::string &filename,
-                                                        const std::string &functionName){
+    void kernel::buildFromBinary(const std::string &filename,
+                                 const std::string &functionName){
 
       name = functionName;
 
-      data = new SerialKernelData_t;
-
-      OCCA_EXTRACT_DATA(Serial, Kernel);
-
-      data_.dlHandle = sys::dlopen(filename);
-      data_.handle   = sys::dlsym(data_.dlHandle, functionName);
-
-      return this;
+      dlHandle = sys::dlopen(filename);
+      handle   = sys::dlsym(dlHandle, functionName);
     }
 
-    template <>
-    kernel_t<Serial>* kernel_t<Serial>::loadFromLibrary(const char *cache,
-                                                        const std::string &functionName){
-      name = functionName;
-
-      return buildFromBinary(cache, functionName);
+    int kernel::maxDims() {
+      return 3;
     }
 
-    template <>
-    uintptr_t kernel_t<Serial>::maximumInnerDimSize(){
-      return ((uintptr_t) -1);
+    dim kernel::maxOuterDims() {
+      return dim(-1,-1,-1);
     }
 
-    // [-] Missing
-    template <>
-    int kernel_t<Serial>::preferredDimSize(){
-      preferredDimSize_ = OCCA_SIMD_WIDTH;
-      return OCCA_SIMD_WIDTH;
+    dim kernel::maxInnerDims() {
+      return dim(-1,-1,-1);
     }
 
-    template <>
-    void kernel_t<Serial>::runFromArguments(const int kArgc, const kernelArg *kArgs){
-      SerialKernelData_t &data_ = *((SerialKernelData_t*) data);
-      handleFunction_t tmpKernel = (handleFunction_t) data_.handle;
+    void kernel::runFromArguments(const int kArgc, const kernelArg *kArgs){
       int occaKernelArgs[6];
 
       occaKernelArgs[0] = outer.z; occaKernelArgs[3] = inner.z;
@@ -234,22 +202,20 @@ namespace occa {
       int argc = 0;
       for(int i = 0; i < kArgc; ++i){
         for(int j = 0; j < kArgs[i].argc; ++j){
-          data_.vArgs[argc++] = kArgs[i].args[j].ptr();
+          vArgs[argc++] = kArgs[i].args[j].ptr();
         }
       }
 
       int occaInnerId0 = 0, occaInnerId1 = 0, occaInnerId2 = 0;
 
-      sys::runFunction(tmpKernel,
+      sys::runFunction(handle,
                        occaKernelArgs,
                        occaInnerId0, occaInnerId1, occaInnerId2,
-                       argc, data_.vArgs);
+                       argc, vArgs);
     }
 
-    template <>
-    void kernel_t<Serial>::free(){
-      OCCA_EXTRACT_DATA(Serial, Kernel);
-      sys::dlclose(data_.dlHandle);
+    void kernel::free(){
+      sys::dlclose(dlHandle);
     }
   }
 }

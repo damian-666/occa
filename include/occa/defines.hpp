@@ -296,28 +296,6 @@
 //======================================
 
 
-//---[ Base ]---------------------------
-#define OCCA_KERNEL_ARG_CONSTRUCTOR(TYPE)         \
-  template <>                                     \
-  inline kernelArg::kernelArg(const TYPE &arg_){  \
-    argc                 = 1;                     \
-    args[0].data.TYPE##_ = arg_;                  \
-    args[0].size         = sizeof(TYPE);          \
-  }
-
-#define OCCA_KERNEL_ARG_CONSTRUCTOR_ALIAS(TYPE, ALIAS)  \
-  template <>                                           \
-  inline kernelArg::kernelArg(const TYPE &arg_){        \
-    argc                  = 1;                          \
-    args[0].data.ALIAS##_ = arg_;                       \
-    args[0].size          = sizeof(TYPE);               \
-  }
-
-#define OCCA_EXTRACT_DATA(MODE, CLASS)                          \
-  MODE##CLASS##Data_t &data_ = *((MODE##CLASS##Data_t*) data);
-//======================================
-
-
 //---[ OpenCL ]-------------------------
 #if OCCA_CHECK_ENABLED
 #  define OCCA_CL_CHECK( _str , _statement ) OCCA_CL_CHECK2( _str , _statement , __FILE__ , __LINE__ )

@@ -28,129 +28,71 @@ namespace occa {
     };
 
     struct OpenCLDeviceData_t {
+    };
+    //====================================
+
+    class device : public occa::device_v {
       int platform, device;
 
       cl_platform_id platformID;
       cl_device_id   deviceID;
       cl_context     context;
+
+      device();
+      device(const device &k);
+      device& operator = (const device &k);
+      void free();
+
+      void* getContextHandle();
+
+      void setup(argInfoMap &aim);
+
+      void addOccaHeadersToInfo(kernelInfo &info_);
+
+      std::string getInfoSalt(const kernelInfo &info_);
+
+      void getEnvironmentVariables();
+
+      void appendAvailableDevices(std::vector<occa::device> &dList);
+
+      void flush();
+      void finish();
+
+      //  |---[ Stream ]----------------
+      stream createStream();
+      void freeStream(stream s);
+
+      streamTag tagStream();
+      void waitFor(streamTag tag);
+      double timeBetween(const streamTag &startTag, const streamTag &endTag);
+
+      stream wrapStream(void *handle_);
+      //  |=============================
+
+      //  |---[ Kernel ]----------------
+      std::string fixBinaryName(const std::string &filename);
+
+      kernel_v* buildKernelFromSource(const std::string &filename,
+                                      const std::string &functionName,
+                                      const kernelInfo &info_);
+
+      kernel_v* buildKernelFromBinary(const std::string &filename,
+                                      const std::string &functionName);
+      //  |=============================
+
+      //  |---[ Kernel ]----------------
+      memory_v* wrapMemory(void *handle_,
+                           const uintptr_t bytes);
+
+      memory_v* malloc(const uintptr_t bytes,
+                       void *src);
+
+      memory_v* mappedAlloc(const uintptr_t bytes,
+                            void *src);
+
+      uintptr_t memorySize();
+      //  |=============================
     };
-    //====================================
-
-
-    template <>
-    device_t<OpenCL>::device_t();
-
-    template <>
-    device_t<OpenCL>::device_t(const device_t<OpenCL> &k);
-
-    template <>
-    device_t<OpenCL>& device_t<OpenCL>::operator = (const device_t<OpenCL> &k);
-
-    template <>
-    void* device_t<OpenCL>::getContextHandle();
-
-    template <>
-    void device_t<OpenCL>::setup(argInfoMap &aim);
-
-    template <>
-    void device_t<OpenCL>::addOccaHeadersToInfo(kernelInfo &info_);
-
-    template <>
-    std::string device_t<OpenCL>::getInfoSalt(const kernelInfo &info_);
-
-    template <>
-    deviceIdentifier device_t<OpenCL>::getIdentifier() const;
-
-    template <>
-    void device_t<OpenCL>::getEnvironmentVariables();
-
-    template <>
-    void device_t<OpenCL>::appendAvailableDevices(std::vector<device> &dList);
-
-    template <>
-    void device_t<OpenCL>::setCompiler(const std::string &compiler_);
-
-    template <>
-    void device_t<OpenCL>::setCompilerEnvScript(const std::string &compilerEnvScript_);
-
-    template <>
-    void device_t<OpenCL>::setCompilerFlags(const std::string &compilerFlags_);
-
-    template <>
-    void device_t<OpenCL>::flush();
-
-    template <>
-    void device_t<OpenCL>::finish();
-
-    template <>
-    void device_t<OpenCL>::waitFor(streamTag tag);
-
-    template <>
-    stream_t device_t<OpenCL>::createStream();
-
-    template <>
-    void device_t<OpenCL>::freeStream(stream_t s);
-
-    template <>
-    stream_t device_t<OpenCL>::wrapStream(void *handle_);
-
-    template <>
-    streamTag device_t<OpenCL>::tagStream();
-
-    template <>
-    double device_t<OpenCL>::timeBetween(const streamTag &startTag, const streamTag &endTag);
-
-    template <>
-    std::string device_t<OpenCL>::fixBinaryName(const std::string &filename);
-
-    template <>
-    kernel_v* device_t<OpenCL>::buildKernelFromSource(const std::string &filename,
-                                                      const std::string &functionName,
-                                                      const kernelInfo &info_);
-
-    template <>
-    kernel_v* device_t<OpenCL>::buildKernelFromBinary(const std::string &filename,
-                                                      const std::string &functionName);
-
-    template <>
-    void device_t<OpenCL>::cacheKernelInLibrary(const std::string &filename,
-                                                const std::string &functionName,
-                                                const kernelInfo &info_);
-
-    template <>
-    kernel_v* device_t<OpenCL>::loadKernelFromLibrary(const char *cache,
-                                                      const std::string &functionName);
-
-    template <>
-    memory_v* device_t<OpenCL>::wrapMemory(void *handle_,
-                                           const uintptr_t bytes);
-
-    template <>
-    memory_v* device_t<OpenCL>::wrapTexture(void *handle_,
-                                            const int dim, const occa::dim &dims,
-                                            occa::formatType type, const int permissions);
-
-    template <>
-    memory_v* device_t<OpenCL>::malloc(const uintptr_t bytes,
-                                       void *src);
-
-    template <>
-    memory_v* device_t<OpenCL>::textureAlloc(const int dim, const occa::dim &dims,
-                                             void *src,
-                                             occa::formatType type, const int permissions);
-
-    template <>
-    memory_v* device_t<OpenCL>::mappedAlloc(const uintptr_t bytes,
-                                            void *src);
-
-    template <>
-    uintptr_t device_t<OpenCL>::memorySize();
-
-    template <>
-    void device_t<OpenCL>::free();
-
-    template <>
-    int device_t<OpenCL>::simdWidth();
   }
 }
 

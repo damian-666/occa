@@ -18,12 +18,9 @@ namespace occa {
     static const int isAWrapper   = (1 << 2);
   }
 
+  //---[ memory_v ]---------------------
   class memory_v {
-    friend class occa::memory;
-    friend class occa::device;
-    friend class occa::kernelArg;
-
-  protected:
+  public:
     int memInfo;
 
     void *handle, *mappedPtr, *uvaPtr;
@@ -31,9 +28,10 @@ namespace occa {
 
     uintptr_t size;
 
-  public:
     memory_v();
     virtual ~memory_v() = 0;
+
+    void initFrom(const memory_v &m);
 
     virtual memory_v* newMemory() = 0;
 
@@ -101,7 +99,9 @@ namespace occa {
                                   const uintptr_t bytes,
                                   const uintptr_t offset);
   };
+  //====================================
 
+  //---[ memory ]-----------------------
   class memory {
     friend class occa::device;
     friend class occa::kernelArg;
@@ -191,6 +191,7 @@ namespace occa {
 
     void free();
   };
+  //====================================
 }
 
 #endif

@@ -82,11 +82,7 @@ namespace occa {
 
   //---[ device_v ]---------------------
   class device_v {
-    friend class occa::kernel;
-    friend class occa::memory;
-    friend class occa::device;
-
-  protected:
+  public:
     argInfoMap properties;
 
     bool uvaEnabled_;
@@ -98,7 +94,6 @@ namespace occa {
 
     uintptr_t bytesAllocated;
 
-  public:
     device_v();
     virtual ~device_v() = 0;
 

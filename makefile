@@ -16,6 +16,7 @@ endif
 
 # [-L$OCCA_DIR/lib -locca] are kept for applications
 #   using $OCCA_DIR/scripts/makefile
+paths += -I$(sPath)
 paths := $(filter-out -L$(OCCA_DIR)/lib,$(paths))
 links := $(filter-out -locca,$(links))
 
@@ -29,6 +30,8 @@ srcToObject  = $(subst $(PROJ_DIR)/src,$(PROJ_DIR)/obj,$(patsubst %.f90,%.o,$(1:
 sources  = $(realpath $(shell find $(PROJ_DIR)/src     -type f -name '*.cpp'))
 headers  = $(realpath $(shell find $(PROJ_DIR)/include -type f -name '*.hpp'))
 fsources = $(realpath $(shell find $(PROJ_DIR)/src     -type f -name '*.f90'))
+
+sources := $(filter-out $(OCCA_DIR)/src/operator/%,$(sources))
 
 #  ---[ Languages ]-----------
 ifndef OCCA_COMPILE_PYTHON

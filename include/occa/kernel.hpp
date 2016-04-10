@@ -124,10 +124,7 @@ namespace occa {
 
   //---[ kernel_v ]---------------------
   class kernel_v {
-    friend class occa::kernel;
-    friend class occa::device;
-
-  protected:
+  public:
     occa::device_v *dHandle;
 
     std::string name;
@@ -140,7 +137,6 @@ namespace occa {
     std::vector<kernel> nestedKernels;
     std::vector<kernelArg> arguments;
 
-  public:
     kernel_v();
     virtual ~kernel_v() = 0;
 

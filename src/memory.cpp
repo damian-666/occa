@@ -6,7 +6,27 @@
 
 namespace occa {
   //---[ memory_v ]---------------------
-  memory_v::memory_v(){}
+  memory_v::memory_v(){
+    memInfo = memFlag::none;
+
+    handle    = NULL;
+    mappedPtr = NULL;
+    uvaPtr    = NULL;
+
+    dHandle = NULL;
+    size    = 0;
+  }
+
+  void memory_v::initFrom(const memory_v &m) {
+    memInfo = m.memInfo;
+
+    handle    = m.handle;
+    mappedPtr = m.mappedPtr;
+    uvaPtr    = m.uvaPtr;
+
+    dHandle = m.dHandle;
+    size    = m.size;
+  }
 
   bool memory_v::isManaged() const {
     return (memInfo & memFlag::isManaged);
