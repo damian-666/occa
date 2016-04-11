@@ -1,6 +1,6 @@
 #include "occa/modes/threads/device.hpp"
 #include "occa/modes/threads/kernel.hpp"
-#include "occa/modes/threads/memory.hpp"
+#include "occa/modes/serial/memory.hpp"
 #include "occa/modes/threads/utils.hpp"
 #include "occa/base.hpp"
 
@@ -86,29 +86,28 @@ namespace occa {
         schedule = manual;
       }
 
-      for(int p = 0; p < threads; ++p){
+      for(int t = 0; t < threads; ++t){
         workerData_t *args = new workerData_t;
 
-        args->rank  = p;
+        args->rank  = t;
         args->count = threads;
 
         // [-] Need to know number of sockets
         if(schedule & compact)
-          args->pinnedCore = (p % coreCount);
+          args->pinnedCore = (t % coreCount);
         else if(schedule & scatter)
-          args->pinnedCore = (p % coreCount);
+          args->pinnedCore = (t % coreCount);
         else // Manual
-          args->pinnedCore = pinnedCores[p];
+          args->pinnedCore = pinnedCores[t];
 
-        args->jobs = &jobs;
+        args->jobs = &(jobs[t]);
 
-        args->jobMutex    = &(jobMutex);
-        args->kernelMutex = &(kernelMutex);
+        args->jobMutex = &(jobMutex);
 
 #if (OCCA_OS & (LINUX_OS | OSX_OS))
-        pthread_create(&tid[p], NULL, threads::limbo, args);
+        pthread_create(&tid[t], NULL, threads::limbo, args);
 #else
-        CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) threads::limbo, args, 0, &tid[p]);
+        CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) threads::limbo, args, 0, &tid[t]);
 #endif
       }
     }
@@ -206,8 +205,15 @@ namespace occa {
     void device::flush(){}
 
     void device::finish(){
-      // Fence local data (incase of out-of-socket updates)
-      while(jobs.size()){
+      bool done = false;
+      while (!done) {
+        done = true;
+        for (int t = 0; t < threads; ++t) {
+          if (jobs[t].size()) {
+            done = false;
+            break;
+          }
+        }
         OCCA_LFENCE;
       }
     }
@@ -273,7 +279,7 @@ namespace occa {
     //---[ Memory ]---------------------
     memory_v* device::wrapMemory(void *handle_,
                                  const uintptr_t bytes){
-      memory *mem = new memory();
+      serial::memory *mem = new serial::memory();
 
       mem->dHandle = this;
       mem->size    = bytes;
@@ -286,7 +292,7 @@ namespace occa {
 
     memory_v* device::malloc(const uintptr_t bytes,
                              void *src){
-      memory *mem = new memory();
+      serial::memory *mem = new serial::memory();
 
       mem->dHandle = this;
       mem->size    = bytes;
@@ -313,14 +319,13 @@ namespace occa {
     void device::free(){
       finish();
       jobMutex.free();
-      kernelMutex.free();
     }
     //==================================
 
     //---[ Custom ]---------------------
     void device::addJob(job_t &job) {
       jobMutex.lock();
-      jobs.push(job);
+      jobs[job.rank].push(job);
       jobMutex.unlock();
     }
     //==================================

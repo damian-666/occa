@@ -23,9 +23,9 @@ namespace occa {
       DWORD tid[50];
 #endif
 
-      std::queue<job_t> jobs;
+      std::queue<job_t> jobs[50];
 
-      mutex_t jobMutex, kernelMutex;
+      mutex_t jobMutex;
 
       device();
       device(const device &k);

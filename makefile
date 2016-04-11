@@ -31,7 +31,7 @@ sources  = $(realpath $(shell find $(PROJ_DIR)/src     -type f -name '*.cpp'))
 headers  = $(realpath $(shell find $(PROJ_DIR)/include -type f -name '*.hpp'))
 fsources = $(realpath $(shell find $(PROJ_DIR)/src     -type f -name '*.f90'))
 
-sources := $(filter-out $(OCCA_DIR)/src/operator/%,$(sources))
+sources := $(filter-out $(OCCA_DIR)/src/operators/%,$(sources))
 
 #  ---[ Languages ]-----------
 ifndef OCCA_COMPILE_PYTHON
@@ -58,7 +58,7 @@ outputs = $(lPath)/libocca.so $(bPath)/occa
 
 
 #---[ COMPILE LIBRARY ]---------------------------
-all: $(objects) $(outputs) MAKE_OBJ
+all: $(objects) $(outputs)
 #=================================================
 
 

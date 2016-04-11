@@ -1,3 +1,5 @@
+#include "occa/modes/threads/utils.hpp"
+
 namespace occa {
   namespace threads {
     //---[ Types ]----------------------
@@ -19,6 +21,8 @@ namespace occa {
       outer = k.outer;
 
       args = k.args;
+
+      return *this;
     }
     //==================================
 
@@ -38,51 +42,48 @@ namespace occa {
       // BOOL SetProcessAffinityMask(HANDLE hProcess,DWORD_PTR dwProcessAffinityMask);
 #endif
 
+      bool hasJob;
+      job_t job;
+
       while(true){
         // Fence local data (incase of out-of-socket updates)
         OCCA_LFENCE;
 
-        if( *(data.pendingJobs) ){
-          data.kernelMutex->lock();
-          PthreadKernelInfo_t &pkInfo = *(data.pKernelInfo->front());
-          data.pKernelInfo->pop();
-          data.kernelMutex->unlock();
+        hasJob = false;
+        data.jobMutex->lock();
+        if (data.jobs->size()) {
+          hasJob = true;
+          job    = data.jobs->front();
+          data.jobs->pop();
+        }
+        data.jobMutex->unlock();
 
-          run(pkInfo);
-
-          //---[ Barrier ]----------------
-          data.pendingJobsMutex->lock();
-          --( *(data.pendingJobs) );
-          data.pendingJobsMutex->unlock();
-
-          while((*data.pendingJobs) % data.count){
-            OCCA_LFENCE;
-          }
-          //==============================
+        if (hasJob) {
+          run(job);
         }
       }
 
       return NULL;
     }
 
-    void run(PthreadKernelInfo_t &pkInfo){
-      handleFunction_t tmpKernel = (handleFunction_t) pkInfo.kernelHandle;
+    void run(job_t &job){
+      handleFunction_t tmpKernel = (handleFunction_t) job.handle;
 
-      int dp           = pkInfo.dims - 1;
-      occa::dim &outer = pkInfo.outer;
-      occa::dim &inner = pkInfo.inner;
+      int dp           = job.dims - 1;
+      occa::dim &outer = job.outer;
+      occa::dim &inner = job.inner;
 
       occa::dim start(0,0,0), end(outer);
 
-      int loops     = (outer[dp] / pkInfo.count);
-      int coolRanks = (outer[dp] - loops*pkInfo.count);
+      int loops     = (outer[dp] / job.count);
+      int coolRanks = (outer[dp] - loops*job.count);
 
-      if(pkInfo.rank < coolRanks){
-        start[dp] = (pkInfo.rank)*(loops + 1);
+      if(job.rank < coolRanks){
+        start[dp] = (job.rank)*(loops + 1);
         end[dp]   = start[dp] + (loops + 1);
       }
       else{
-        start[dp] = pkInfo.rank*loops + coolRanks;
+        start[dp] = job.rank*loops + coolRanks;
         end[dp]   = start[dp] + loops;
       }
 
@@ -101,10 +102,7 @@ namespace occa {
       sys::runFunction(tmpKernel,
                        occaKernelArgs,
                        occaInnerId0, occaInnerId1, occaInnerId2,
-                       pkInfo.argc, pkInfo.args);
-
-      delete [] pkInfo.args;
-      delete &pkInfo;
+                       (int) job.args.size(), &(job.args[0]));
     }
     //==================================
   }

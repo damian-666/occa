@@ -46,13 +46,13 @@ namespace occa {
 
       std::queue<job_t> *jobs;
 
-      mutex_t *jobMutex, *kernelMutex;
+      mutex_t *jobMutex;
     };
     //==================================
 
     //---[ Functions ]------------------
     void* limbo(void *args);
-    void run(job_t &pArgs);
+    void run(job_t &job);
     //==================================
   }
 }

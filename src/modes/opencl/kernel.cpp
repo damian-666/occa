@@ -115,6 +115,64 @@ namespace occa {
       clKernel  = clInfo.clKernel;
     }
 
+    int kernel::maxDims() {
+      static cl_uint dims = 0;
+      if (dims == 0) {
+        size_t bytes;
+        OCCA_CL_CHECK("Kernel: Max Dims",
+                      clGetDeviceInfo(clDeviceID,
+                                      CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS,
+                                      0, NULL, &bytes));
+        OCCA_CL_CHECK("Kernel: Max Dims",
+                      clGetDeviceInfo(clDeviceID,
+                                      CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS,
+                                      bytes, &dims, NULL));
+      }
+      return (int) dims;
+    }
+
+    dim kernel::maxOuterDims() {
+      static occa::dim outerDims(0);
+      if (outerDims.x == 0) {
+        int dims = maxDims();
+        size_t *od = new size_t[dims];
+        size_t bytes;
+        OCCA_CL_CHECK("Kernel: Max Outer Dims",
+                      clGetDeviceInfo(clDeviceID,
+                                      CL_DEVICE_MAX_WORK_ITEM_SIZES,
+                                      0, NULL, &bytes));
+        OCCA_CL_CHECK("Kernel: Max Outer Dims",
+                      clGetDeviceInfo(clDeviceID,
+                                      CL_DEVICE_MAX_WORK_ITEM_SIZES,
+                                      bytes, &od, NULL));
+        for (int i = 0; i < dims; ++i) {
+          outerDims[i] = od[i];
+        }
+        delete [] od;
+      }
+      return outerDims;
+    }
+
+    dim kernel::maxInnerDims() {
+      static occa::dim innerDims(0);
+      if (innerDims.x == 0) {
+        size_t dims;
+        size_t bytes;
+        OCCA_CL_CHECK("Kernel: Max Inner Dims",
+                      clGetKernelWorkGroupInfo(clKernel,
+                                               clDeviceID,
+                                               CL_KERNEL_WORK_GROUP_SIZE,
+                                               0, NULL, &bytes));
+        OCCA_CL_CHECK("Kernel: Max Inner Dims",
+                      clGetKernelWorkGroupInfo(clKernel,
+                                               clDeviceID,
+                                               CL_KERNEL_WORK_GROUP_SIZE,
+                                               bytes, &dims, NULL));
+        innerDims.x = dims;
+      }
+      return innerDims;
+    }
+
     void kernel::runFromArguments(const int kArgc, const kernelArg *kArgs){
       occa::dim fullOuter = outer*inner;
 

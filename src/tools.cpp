@@ -518,10 +518,11 @@ namespace occa {
               readFile(env::OCCA_DIR + "/include/occa/defines/vector.hpp"),
               "vectorDefines");
 
-    std::string mode = modeToStr(info.mode);
-    cacheFile(info.getModeHeaderFilename(),
-              readFile(env::OCCA_DIR + "/include/occa/defines/" + mode + ".hpp"),
-              mode + "Defines");
+    // [REFACTOR]
+    // std::string mode = modeToStr(info.mode);
+    // cacheFile(info.getModeHeaderFilename(),
+    //           readFile(env::OCCA_DIR + "/include/occa/defines/" + mode + ".hpp"),
+    //           mode + "Defines");
   }
 
   void cacheFile(const std::string &filename,
@@ -571,12 +572,12 @@ namespace occa {
     fs << "#include \"" << info.getModeHeaderFilename() << "\"\n"
        << "#include \"" << sys::getFilename("[occa]/primitives.hpp") << "\"\n";
 
-    if (info.mode & (Serial | OpenMP | Pthreads | CUDA)) {
-      fs << "#if defined(OCCA_IN_KERNEL) && !OCCA_IN_KERNEL\n"
-         << "using namespace occa;\n"
-         << "#endif\n";
-    }
-
+    // [REFACTOR]
+    // if (info.mode & (Serial | OpenMP | Pthreads | CUDA)) {
+    //   fs << "#if defined(OCCA_IN_KERNEL) && !OCCA_IN_KERNEL\n"
+    //      << "using namespace occa;\n"
+    //      << "#endif\n";
+    // }
 
     fs << info.header
        << readFile(filename);

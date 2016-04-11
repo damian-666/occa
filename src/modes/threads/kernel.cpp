@@ -142,6 +142,18 @@ namespace occa {
       handle   = sys::dlsym(dlHandle, functionName);
     }
 
+    int kernel::maxDims() {
+      return 3;
+    }
+
+    dim kernel::maxOuterDims() {
+      return dim(-1,-1,-1);
+    }
+
+    dim kernel::maxInnerDims() {
+      return dim(-1,-1,-1);
+    }
+
     void kernel::runFromArguments(const int kArgc, const kernelArg *kArgs){
       job_t job;
 
