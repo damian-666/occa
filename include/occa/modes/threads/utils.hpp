@@ -14,14 +14,7 @@ namespace occa {
       compact, scatter, manual
     };
 
-    std::string toString(schedule_t s) {
-      switch(s) {
-      case compact: return "compact";
-      case scatter: return "scatter";
-      case manual : return "manual";
-      }
-      return "compact";
-    }
+    std::string toString(schedule_t s);
 
     class job_t {
     public:

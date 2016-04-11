@@ -17,6 +17,8 @@ namespace occa {
     size    = 0;
   }
 
+  memory_v::~memory_v(){}
+
   void memory_v::initFrom(const memory_v &m) {
     memInfo = m.memInfo;
 

@@ -25,6 +25,8 @@ namespace occa {
       return *this;
     }
 
+    device::~device(){}
+
     void* device::getContextHandle(){
       return NULL;
     }

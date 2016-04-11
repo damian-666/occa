@@ -208,6 +208,8 @@ namespace occa {
     outer = occa::dim(1,1,1);
   }
 
+  kernel_v::~kernel_v(){}
+
   void kernel_v::initFrom(const kernel_v &m) {
     dHandle = m.dHandle;
 

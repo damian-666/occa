@@ -4,19 +4,7 @@
 #  ifndef OCCA_OPENMP_DEVICE_HEADER
 #  define OCCA_OPENMP_DEVICE_HEADER
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <string.h>
-#include <fcntl.h>
-
-#include "occa/base.hpp"
-#include "occa/library.hpp"
-
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
-#  include <dlfcn.h>
-#else
-#  include <windows.h>
-#endif
+#include "occa/devices.hpp"
 
 namespace occa {
   namespace openmp {
@@ -29,6 +17,7 @@ namespace occa {
       device();
       device(const device &k);
       device& operator = (const device &k);
+      ~device();
       void free();
 
       void* getContextHandle();

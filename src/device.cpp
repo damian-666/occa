@@ -62,6 +62,8 @@ namespace occa {
       bytesAllocated = 0;
   }
 
+  device_v::~device_v(){}
+
   void device_v::initFrom(const device_v &m) {
     properties = m.properties;
 

@@ -7,12 +7,6 @@
 #include "occa/tools.hpp"
 
 #include "occa/base.hpp"
-#include "occa/timer.hpp"
-
-#include "occa/Serial.hpp"
-#include "occa/OpenCL.hpp"
-#include "occa/CUDA.hpp"
-#include "occa/HSA.hpp"
 
 #include "occa/defines/vector.hpp"
 

@@ -3,6 +3,15 @@
 namespace occa {
   namespace threads {
     //---[ Types ]----------------------
+    std::string toString(schedule_t s) {
+      switch(s) {
+      case compact: return "compact";
+      case scatter: return "scatter";
+      case manual : return "manual";
+      }
+      return "compact";
+    }
+
     job_t::job_t() {}
 
     job_t::job_t(const job_t &k) {

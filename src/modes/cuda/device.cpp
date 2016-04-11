@@ -38,6 +38,8 @@ namespace occa {
       return *this;
     }
 
+    device::~device(){}
+
     void* device::getContextHandle(){
       OCCA_EXTRACT_DATA(CUDA, Device);
 

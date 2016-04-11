@@ -27,8 +27,6 @@ namespace occa {
       return *this;
     }
 
-    kernel::~kernel(){}
-
     info_t kernel::makeCLInfo() {
       info_t info;
       info.clDeviceID = clDeviceID;
@@ -37,6 +35,8 @@ namespace occa {
       info.clKernel   = clKernel;
       return info;
     }
+
+    kernel::~kernel(){}
 
     void* kernel::getKernelHandle(){
       return clKernel;

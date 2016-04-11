@@ -20,6 +20,7 @@ namespace occa {
       device();
       device(const device &k);
       device& operator = (const device &k);
+      ~device();
       void free();
 
       void* getContextHandle();
