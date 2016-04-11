@@ -22,30 +22,39 @@
 
 namespace occa {
   namespace threads {
-    //---[ Data Structs ]-----------------
-    struct PthreadKernelInfo_t;
-    typedef void (*PthreadLaunchHandle_t)(PthreadKernelInfo_t &args);
+    class memory : public occa::memory_v {
+    public:
+      memory();
+      memory(const memory &m);
+      memory& operator = (const memory &m);
+      ~memory();
 
-    // [-] Hard-coded for now
-    struct PthreadsDeviceData_t {
-      int vendor;
+      void* getMemoryHandle();
 
-      int coreCount;
+      void copyFrom(const void *src,
+                    const uintptr_t bytes,
+                    const uintptr_t offset,
+                    const bool async);
 
-      int pThreadCount;
-      int schedule;
+      void copyFrom(const memory_v *src,
+                    const uintptr_t bytes,
+                    const uintptr_t destOffset,
+                    const uintptr_t srcOffset,
+                    const bool async);
 
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
-      pthread_t tid[50];
-#else
-      DWORD tid[50];
-#endif
+      void copyTo(void *dest,
+                  const uintptr_t bytes,
+                  const uintptr_t destOffset,
+                  const bool async);
 
-      int pendingJobs;
+      void copyTo(memory_v *dest,
+                  const uintptr_t bytes,
+                  const uintptr_t srcOffset,
+                  const uintptr_t offset,
+                  const bool async);
 
-      std::queue<PthreadKernelInfo_t*> pKernelInfo[50];
-
-      mutex_t pendingJobsMutex, kernelMutex;
+      void free();
+    };
     };
 
     struct PthreadsKernelData_t {

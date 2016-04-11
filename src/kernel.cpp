@@ -200,7 +200,28 @@ namespace occa {
   //====================================
 
   //---[ kernel_v ]---------------------
-  kernel_v::kernel_v(){}
+  kernel_v::kernel_v(){
+    dHandle = NULL;
+
+    dims  = 1;
+    inner = occa::dim(1,1,1);
+    outer = occa::dim(1,1,1);
+  }
+
+  void kernel_v::initFrom(const kernel_v &m) {
+    dHandle = m.dHandle;
+
+    name = m.name;
+
+    metaInfo = m.metaInfo;
+
+    dims = m.dims;
+    inner = m.inner;
+    outer = m.outer;
+
+    nestedKernels = m.nestedKernels;
+    arguments = m.arguments;
+  }
 
   kernel* kernel_v::nestedKernelsPtr() {
     return &(nestedKernels[0]);

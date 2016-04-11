@@ -34,7 +34,7 @@ namespace occa {
     *this = aim;
   }
 
-  argInfoMap& argInfoMap::operator = (argInfoMap &aim) {
+  argInfoMap& argInfoMap::operator = (const argInfoMap &aim) {
     iMap = aim.iMap;
     return *this;
   }
@@ -57,7 +57,24 @@ namespace occa {
 
   //---[ device_v ]---------------------
   device_v::device_v(){
+      uvaEnabled_ = uvaEnabledByDefault_f;
+      currentStream = NULL;
+      bytesAllocated = 0;
   }
+
+  void device_v::initFrom(const device_v &m) {
+    properties = m.properties;
+
+    uvaEnabled_    = m.uvaEnabled_;
+    uvaMap         = m.uvaMap;
+    uvaDirtyMemory = m.uvaDirtyMemory;
+
+    currentStream = m.currentStream;
+    streams       = m.streams;
+
+    bytesAllocated = m.bytesAllocated;
+  }
+
   bool device_v::hasUvaEnabled() {
     return uvaEnabled_;
   }

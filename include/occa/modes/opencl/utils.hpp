@@ -2,8 +2,17 @@
 #  ifndef OCCA_OPENCL_UTILS_HEADER
 #  define OCCA_OPENCL_UTILS_HEADER
 
+#include "occa/modes/opencl/headers.hpp"
+
 namespace occa {
   namespace opencl {
+    struct info_t {
+      cl_device_id clDeviceID;
+      cl_context   clContext;
+      cl_program   clProgram;
+      cl_kernel    clKernel;
+    };
+
     namespace info {
       static const int CPU     = (1 << 0);
       static const int GPU     = (1 << 1);
@@ -29,10 +38,10 @@ namespace occa {
 
     cl_platform_id platformID(int pID);
 
-    int getDeviceCount(int type = cl::info::any);
-    int getDeviceCountInPlatform(int pID, int type = cl::info::any);
+    int getDeviceCount(int type = info::any);
+    int getDeviceCountInPlatform(int pID, int type = info::any);
 
-    cl_device_id deviceID(int pID, int dID, int type = cl::info::any);
+    cl_device_id deviceID(int pID, int dID, int type = info::any);
 
     std::string deviceStrInfo(cl_device_id clDID,
                               cl_device_info clInfo);
@@ -50,7 +59,7 @@ namespace occa {
 
     std::string getDeviceListInfo();
 
-    void buildKernelFromSource(OpenCLKernelData_t &data_,
+    void buildKernelFromSource(info_t &data_,
                                const char *content,
                                const size_t contentBytes,
                                const std::string &functionName,
@@ -58,13 +67,13 @@ namespace occa {
                                const std::string &hash = "",
                                const std::string &sourceFile = "");
 
-    void buildKernelFromBinary(OpenCLKernelData_t &data_,
+    void buildKernelFromBinary(info_t &data_,
                                const unsigned char *content,
                                const size_t contentBytes,
                                const std::string &functionName,
                                const std::string &flags = "");
 
-    void saveProgramBinary(OpenCLKernelData_t &data_,
+    void saveProgramBinary(info_t &data_,
                            const std::string &binaryFile,
                            const std::string &hash = "");
 
@@ -74,19 +83,8 @@ namespace occa {
 
     cl_event& event(streamTag tag);
 
-    bool imageFormatIsSupported(cl_image_format &f,
-                                cl_image_format *fs,
-                                const int formatCount);
-
-    void printImageFormat(cl_image_format &imageFormat);
-
     std::string error(int e);
   }
-
-  extern const cl_channel_type clFormats[8];
-
-  template <>
-  void* formatType::format<occa::OpenCL>() const;
 }
 
 #  endif

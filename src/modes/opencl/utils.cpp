@@ -25,10 +25,10 @@ namespace occa {
     cl_device_type deviceType(int type){
       cl_device_type ret = 0;
 
-      if(type & cl::info::CPU)     ret |= CL_DEVICE_TYPE_CPU;
-      if(type & cl::info::GPU)     ret |= CL_DEVICE_TYPE_GPU;
-      if(type & cl::info::FPGA)    ret |= CL_DEVICE_TYPE_ACCELERATOR;
-      if(type & cl::info::XeonPhi) ret |= CL_DEVICE_TYPE_ACCELERATOR;
+      if(type & info::CPU)     ret |= CL_DEVICE_TYPE_CPU;
+      if(type & info::GPU)     ret |= CL_DEVICE_TYPE_GPU;
+      if(type & info::FPGA)    ret |= CL_DEVICE_TYPE_ACCELERATOR;
+      if(type & info::XeonPhi) ret |= CL_DEVICE_TYPE_ACCELERATOR;
 
       return ret;
     }
@@ -166,9 +166,9 @@ namespace occa {
                                     sizeof(clDeviceType), &clDeviceType, NULL));
 
       if(clDeviceType & CL_DEVICE_TYPE_CPU)
-        ret |= cl::info::CPU;
+        ret |= info::CPU;
       else if(clDeviceType & CL_DEVICE_TYPE_GPU)
-        ret |= cl::info::GPU;
+        ret |= info::GPU;
 
       return ret;
     }
@@ -183,18 +183,18 @@ namespace occa {
          vendor.find("Advanced Micro Devices") != std::string::npos ||
          vendor.find("ATI")                    != std::string::npos){
 
-        ret |= cl::info::AMD;
+        ret |= info::AMD;
       }
       else if(vendor.find("Intel") != std::string::npos){
-        ret |= cl::info::Intel;
+        ret |= info::Intel;
       }
       else if(vendor.find("Altera") != std::string::npos){
-        ret |= cl::info::Altera;
+        ret |= info::Altera;
       }
       else if(vendor.find("Nvidia") != std::string::npos ||
               vendor.find("NVIDIA") != std::string::npos){
 
-        ret |= cl::info::NVIDIA;
+        ret |= info::NVIDIA;
       }
 
       return ret;
@@ -249,7 +249,7 @@ namespace occa {
             ss << "    OpenCL    |  Device Name          | " << deviceName(pID, dID) << '\n';
           }
 
-          ss << "              |  Driver Vendor        | " << cl::info::vendor(deviceVendor(pID,dID)) << '\n'
+          ss << "              |  Driver Vendor        | " << info::vendor(deviceVendor(pID,dID)) << '\n'
              << "              |  Platform ID          | " << pID      << '\n'
              << "              |  Device ID            | " << dID      << '\n'
              << "              |  Memory               | " << bytesStr << '\n';
@@ -260,7 +260,7 @@ namespace occa {
       return ss.str();
     }
 
-    void buildKernelFromSource(OpenCLKernelData_t &data_,
+    void buildKernelFromSource(info_t &info_,
                                const char *content,
                                const size_t contentBytes,
                                const std::string &functionName,
@@ -269,10 +269,10 @@ namespace occa {
                                const std::string &sourceFile){
       cl_int error;
 
-      data_.program = clCreateProgramWithSource(data_.context, 1,
-                                                (const char **) &content,
-                                                &contentBytes,
-                                                &error);
+      info_.clProgram = clCreateProgramWithSource(info_.clContext, 1,
+                                                  (const char **) &content,
+                                                  &contentBytes,
+                                                  &error);
 
       if(error && hash.size())
         releaseHash(hash, 0);
@@ -293,8 +293,8 @@ namespace occa {
 
       OCCA_CL_CHECK("Kernel (" + functionName + ") : Constructing Program", error);
 
-      error = clBuildProgram(data_.program,
-                             1, &data_.deviceID,
+      error = clBuildProgram(info_.clProgram,
+                             1, &info_.clDeviceID,
                              flags.c_str(),
                              NULL, NULL);
 
@@ -303,12 +303,12 @@ namespace occa {
         char *log;
         uintptr_t logSize;
 
-        clGetProgramBuildInfo(data_.program, data_.deviceID, CL_PROGRAM_BUILD_LOG, 0, NULL, &logSize);
+        clGetProgramBuildInfo(info_.clProgram, info_.clDeviceID, CL_PROGRAM_BUILD_LOG, 0, NULL, &logSize);
 
         if(logSize > 2){
           log = new char[logSize+1];
 
-          logError = clGetProgramBuildInfo(data_.program, data_.deviceID, CL_PROGRAM_BUILD_LOG, logSize, log, NULL);
+          logError = clGetProgramBuildInfo(info_.clProgram, info_.clDeviceID, CL_PROGRAM_BUILD_LOG, logSize, log, NULL);
           OCCA_CL_CHECK("Kernel (" + functionName + ") : Building Program", logError);
           log[logSize] = '\0';
 
@@ -323,7 +323,7 @@ namespace occa {
 
       OCCA_CL_CHECK("Kernel (" + functionName + ") : Building Program", error);
 
-      data_.kernel = clCreateKernel(data_.program, functionName.c_str(), &error);
+      info_.clKernel = clCreateKernel(info_.clProgram, functionName.c_str(), &error);
 
       if(error && hash.size())
         releaseHash(hash, 0);
@@ -344,24 +344,24 @@ namespace occa {
       }
     }
 
-    void buildKernelFromBinary(OpenCLKernelData_t &data_,
+    void buildKernelFromBinary(info_t &info_,
                                const unsigned char *content,
                                const size_t contentBytes,
                                const std::string &functionName,
                                const std::string &flags){
       cl_int error, binaryError;
 
-      data_.program = clCreateProgramWithBinary(data_.context,
-                                                1, &(data_.deviceID),
-                                                &contentBytes,
-                                                (const unsigned char**) &content,
-                                                &binaryError, &error);
+      info_.clProgram = clCreateProgramWithBinary(info_.clContext,
+                                                  1, &(info_.clDeviceID),
+                                                  &contentBytes,
+                                                  (const unsigned char**) &content,
+                                                  &binaryError, &error);
 
       OCCA_CL_CHECK("Kernel (" + functionName + ") : Constructing Program", binaryError);
       OCCA_CL_CHECK("Kernel (" + functionName + ") : Constructing Program", error);
 
-      error = clBuildProgram(data_.program,
-                             1, &data_.deviceID,
+      error = clBuildProgram(info_.clProgram,
+                             1, &info_.clDeviceID,
                              flags.c_str(),
                              NULL, NULL);
 
@@ -370,12 +370,12 @@ namespace occa {
         char *log;
         uintptr_t logSize;
 
-        clGetProgramBuildInfo(data_.program, data_.deviceID, CL_PROGRAM_BUILD_LOG, 0, NULL, &logSize);
+        clGetProgramBuildInfo(info_.clProgram, info_.clDeviceID, CL_PROGRAM_BUILD_LOG, 0, NULL, &logSize);
 
         if(logSize > 2){
           log = new char[logSize+1];
 
-          logError = clGetProgramBuildInfo(data_.program, data_.deviceID, CL_PROGRAM_BUILD_LOG, logSize, log, NULL);
+          logError = clGetProgramBuildInfo(info_.clProgram, info_.clDeviceID, CL_PROGRAM_BUILD_LOG, logSize, log, NULL);
           OCCA_CL_CHECK("Kernel (" + functionName + ") : Building Program", logError);
           log[logSize] = '\0';
 
@@ -387,17 +387,17 @@ namespace occa {
 
       OCCA_CL_CHECK("Kernel (" + functionName + ") : Building Program", error);
 
-      data_.kernel = clCreateKernel(data_.program, functionName.c_str(), &error);
+      info_.clKernel = clCreateKernel(info_.clProgram, functionName.c_str(), &error);
       OCCA_CL_CHECK("Kernel (" + functionName + "): Creating Kernel", error);
     }
 
-    void saveProgramBinary(OpenCLKernelData_t &data_,
+    void saveProgramBinary(info_t &info_,
                            const std::string &binaryFile,
                            const std::string &hash){
       size_t binarySize;
       char *binary;
 
-      cl_int error = clGetProgramInfo(data_.program, CL_PROGRAM_BINARY_SIZES, sizeof(size_t), &binarySize, NULL);
+      cl_int error = clGetProgramInfo(info_.clProgram, CL_PROGRAM_BINARY_SIZES, sizeof(size_t), &binarySize, NULL);
 
       if(error && hash.size())
         releaseHash(hash, 0);
@@ -406,7 +406,7 @@ namespace occa {
 
       binary = new char[binarySize + 1];
 
-      error = clGetProgramInfo(data_.program, CL_PROGRAM_BINARIES, sizeof(char*), &binary, NULL);
+      error = clGetProgramInfo(info_.clProgram, CL_PROGRAM_BINARIES, sizeof(char*), &binary, NULL);
 
       if(error && hash.size())
         releaseHash(hash, 0);
@@ -422,76 +422,6 @@ namespace occa {
 
     cl_event& event(streamTag tag) {
       return (cl_event&) tag.handle;
-    }
-
-    bool imageFormatIsSupported(cl_image_format &f,
-                                cl_image_format *fs,
-                                const int formatCount){
-
-      for(int i = 0; i < formatCount; ++i){
-        cl_image_format &f2 = fs[i];
-
-        const bool orderSupported = (f.image_channel_order ==
-                                     (f.image_channel_order &
-                                      f2.image_channel_order));
-
-        const bool typeSupported = (f.image_channel_data_type ==
-                                    (f.image_channel_data_type &
-                                     f2.image_channel_data_type));
-
-        if(orderSupported && typeSupported)
-          return true;
-      }
-
-      return false;
-    }
-
-    void printImageFormat(cl_image_format &imageFormat){
-      std::cout << "---[ OpenCL Image Format ]--------------\n"
-                << "Supported Channel Formats:\n";
-
-#define OCCA_CL_PRINT_CHANNEL_INFO(X)                                   \
-      if(imageFormat.image_channel_order & X) std::cout << "  " #X "\n"
-
-      OCCA_CL_PRINT_CHANNEL_INFO(CL_R);
-      OCCA_CL_PRINT_CHANNEL_INFO(CL_Rx);
-      OCCA_CL_PRINT_CHANNEL_INFO(CL_A);
-      OCCA_CL_PRINT_CHANNEL_INFO(CL_INTENSITY);
-      OCCA_CL_PRINT_CHANNEL_INFO(CL_RG);
-      OCCA_CL_PRINT_CHANNEL_INFO(CL_RGx);
-      OCCA_CL_PRINT_CHANNEL_INFO(CL_RA);
-      OCCA_CL_PRINT_CHANNEL_INFO(CL_RGB);
-      OCCA_CL_PRINT_CHANNEL_INFO(CL_RGBx);
-      OCCA_CL_PRINT_CHANNEL_INFO(CL_RGBA);
-      OCCA_CL_PRINT_CHANNEL_INFO(CL_ARGB);
-      OCCA_CL_PRINT_CHANNEL_INFO(CL_BGRA);
-
-#undef OCCA_CL_PRINT_CHANNEL_INFO
-
-      std::cout << "\nSupported Channel Types:\n";
-
-#define OCCA_CL_PRINT_CHANNEL_TYPE(X)                                   \
-      if(imageFormat.image_channel_data_type & X) std::cout << "  " #X "\n"
-
-      OCCA_CL_PRINT_CHANNEL_TYPE(CL_SNORM_INT8);
-      OCCA_CL_PRINT_CHANNEL_TYPE(CL_SNORM_INT16);
-      OCCA_CL_PRINT_CHANNEL_TYPE(CL_UNORM_INT8);
-      OCCA_CL_PRINT_CHANNEL_TYPE(CL_UNORM_INT16);
-      OCCA_CL_PRINT_CHANNEL_TYPE(CL_UNORM_SHORT_565);
-      OCCA_CL_PRINT_CHANNEL_TYPE(CL_UNORM_SHORT_555);
-      OCCA_CL_PRINT_CHANNEL_TYPE(CL_UNORM_INT_101010);
-      OCCA_CL_PRINT_CHANNEL_TYPE(CL_SIGNED_INT8);
-      OCCA_CL_PRINT_CHANNEL_TYPE(CL_SIGNED_INT16);
-      OCCA_CL_PRINT_CHANNEL_TYPE(CL_SIGNED_INT32);
-      OCCA_CL_PRINT_CHANNEL_TYPE(CL_UNSIGNED_INT8);
-      OCCA_CL_PRINT_CHANNEL_TYPE(CL_UNSIGNED_INT16);
-      OCCA_CL_PRINT_CHANNEL_TYPE(CL_UNSIGNED_INT32);
-      OCCA_CL_PRINT_CHANNEL_TYPE(CL_HALF_FLOAT);
-      OCCA_CL_PRINT_CHANNEL_TYPE(CL_FLOAT);
-
-#undef OCCA_CL_PRINT_CHANNEL_TYPE
-
-      std::cout << "========================================\n";
     }
 
     std::string error(int e){
@@ -549,20 +479,6 @@ namespace occa {
       default:                                           return "UNKNOWN ERROR";
       };
     }
-  }
-
-  const cl_channel_type clFormats[8] = {CL_UNSIGNED_INT8,
-                                        CL_UNSIGNED_INT16,
-                                        CL_UNSIGNED_INT32,
-                                        CL_SIGNED_INT8,
-                                        CL_SIGNED_INT16,
-                                        CL_SIGNED_INT32,
-                                        CL_HALF_FLOAT,
-                                        CL_FLOAT};
-
-  template <>
-  void* formatType::format<occa::OpenCL>() const {
-    return ((void*) &(clFormats[format_]));
   }
 }
 

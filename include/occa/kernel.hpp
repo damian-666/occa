@@ -140,6 +140,8 @@ namespace occa {
     kernel_v();
     virtual ~kernel_v() = 0;
 
+    void initFrom(const kernel_v &m);
+
     virtual void* getKernelHandle() = 0;
     virtual void* getProgramHandle() = 0;
 

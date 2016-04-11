@@ -3,14 +3,9 @@
 
 namespace occa {
   namespace serial {
-    kernel::kernel(){
-      dHandle = NULL;
+    kernel::kernel() : occa::kernel_v() {
       dlHandle = NULL;
       handle   = NULL;
-
-      dims  = 1;
-      inner = occa::dim(1,1,1);
-      outer = occa::dim(1,1,1);
     }
 
     kernel::kernel(const kernel &k){
@@ -18,17 +13,9 @@ namespace occa {
     }
 
     kernel& kernel::operator = (const kernel &k){
-      dHandle  = k.dHandle;
+      initFrom(k);
       dlHandle = k.dlHandle;
       handle   = k.handle;
-
-      metaInfo = k.metaInfo;
-
-      dims  = k.dims;
-      inner = k.inner;
-      outer = k.outer;
-
-      nestedKernels = k.nestedKernels;
 
       for (int i = 0; i < 2*OCCA_MAX_ARGS; ++i) {
         vArgs[i] = k.vArgs[i];

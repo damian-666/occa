@@ -22,120 +22,36 @@
 
 namespace occa {
   namespace threads {
-    //---[ Data Structs ]-----------------
-    struct PthreadKernelInfo_t;
-    typedef void (*PthreadLaunchHandle_t)(PthreadKernelInfo_t &args);
-
-    // [-] Hard-coded for now
-    struct PthreadsDeviceData_t {
-      int vendor;
-
-      int coreCount;
-
-      int pThreadCount;
-      int schedule;
-
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
-      pthread_t tid[50];
-#else
-      DWORD tid[50];
-#endif
-
-      int pendingJobs;
-
-      std::queue<PthreadKernelInfo_t*> pKernelInfo[50];
-
-      mutex_t pendingJobsMutex, kernelMutex;
-    };
-
-    struct PthreadsKernelData_t {
-      void *dlHandle;
-      handleFunction_t handle;
-
-      int pThreadCount;
-      int *pendingJobs;
-
-      std::queue<PthreadKernelInfo_t*> *pKernelInfo[50];
-
-      mutex_t *pendingJobsMutex, *kernelMutex;
-    };
-
-    struct PthreadWorkerData_t {
-      int rank, count;
-      int pinnedCore;
-
-      int *pendingJobs;
-
-      std::queue<PthreadKernelInfo_t*> *pKernelInfo;
-
-      mutex_t *pendingJobsMutex, *kernelMutex;
-    };
-
-    struct PthreadKernelInfo_t {
+    class kernel : public occa::kernel_v {
+    private:
       int rank, count;
 
-      handleFunction_t kernelHandle;
+    public:
+      kernel();
+      kernel(const kernel &k);
+      kernel& operator = (const kernel &k);
+      ~kernel();
 
-      int dims;
-      occa::dim inner, outer;
+      void* getKernelHandle();
+      void* getProgramHandle();
 
-      int argc;
-      void **args;
+      std::string fixBinaryName(const std::string &filename);
+
+      void buildFromSource(const std::string &filename,
+                           const std::string &functionName,
+                           const kernelInfo &info_);
+
+      void buildFromBinary(const std::string &filename,
+                           const std::string &functionName);
+
+      int maxDims();
+      dim maxOuterDims();
+      dim maxInnerDims();
+
+      void runFromArguments(const int kArgc, const kernelArg *kArgs);
+
+      void free();
     };
-
-    static const int compact = (1 << 10);
-    static const int scatter = (1 << 11);
-    static const int manual  = (1 << 12);
-    //====================================
-
-    template <>
-    kernel_t<Pthreads>::kernel_t();
-
-    template <>
-    kernel_t<Pthreads>::kernel_t(const kernel_t &k);
-
-    template <>
-    kernel_t<Pthreads>& kernel_t<Pthreads>::operator = (const kernel_t<Pthreads> &k);
-
-    template <>
-    kernel_t<Pthreads>::kernel_t(const kernel_t<Pthreads> &k);
-
-    template <>
-    void* kernel_t<Pthreads>::getKernelHandle();
-
-    template <>
-    void* kernel_t<Pthreads>::getProgramHandle();
-
-    template <>
-    void* kernel_t<Pthreads>::getProgramHandle();
-
-    template <>
-    std::string kernel_t<Pthreads>::fixBinaryName(const std::string &filename);
-
-    template <>
-    kernel_t<Pthreads>* kernel_t<Pthreads>::buildFromSource(const std::string &filename,
-                                                            const std::string &functionName,
-                                                            const kernelInfo &info_);
-
-    template <>
-    kernel_t<Pthreads>* kernel_t<Pthreads>::buildFromBinary(const std::string &filename,
-                                                            const std::string &functionName);
-
-    template <>
-    kernel_t<Pthreads>* kernel_t<Pthreads>::loadFromLibrary(const char *cache,
-                                                            const std::string &functionName);
-
-    template <>
-    uintptr_t kernel_t<Pthreads>::maximumInnerDimSize();
-
-    template <>
-    int kernel_t<Pthreads>::preferredDimSize();
-
-    template <>
-    void kernel_t<Pthreads>::runFromArguments(const int kArgc, const kernelArg *kArgs);
-
-    template <>
-    void kernel_t<Pthreads>::free();
   }
 }
 

@@ -309,7 +309,7 @@
       std::cout << "Error\n"                                            \
                 << "    File    : " << file << '\n'                     \
                 << "    Line    : " << line << '\n'                     \
-                << "    Error   : OpenCL Error [ " << _error << " ]: " << occa::openclError(_error) << '\n' \
+                << "    Error   : OpenCL Error [ " << _error << " ]: " << occa::opencl::error(_error) << '\n' \
                 << "    Message : " << _str << '\n';                    \
       OCCA_THROW;                                                       \
     }                                                                   \
@@ -331,7 +331,7 @@
       std::cout << "Error\n"                                            \
                 << "    File    : " << file << '\n'                     \
                 << "    Line    : " << line << '\n'                     \
-                << "    Error   : CUDA Error [ " << errorCode << " ]: " << occa::cudaError(errorCode) << '\n' \
+                << "    Error   : CUDA Error [ " << errorCode << " ]: " << occa::cuda::error(errorCode) << '\n' \
                 << "    Message : " << _str << '\n';                    \
       OCCA_THROW;                                                       \
     }                                                                   \
@@ -351,7 +351,7 @@
       std::cout << "Error\n"                                            \
                 << "    File    : " << file << '\n'                     \
                 << "    Line    : " << line << '\n'                     \
-                << "    Error   : HSA Error [ " << _error << " ]: " << occa::hsaError(_error) << '\n' \
+                << "    Error   : HSA Error [ " << _error << " ]: " << occa::hsa::error(_error) << '\n' \
                 << "    Message : " << _str << '\n';                    \
       OCCA_THROW;                                                       \
     }                                                                   \

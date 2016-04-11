@@ -22,187 +22,69 @@
 
 namespace occa {
   namespace threads {
-    //---[ Data Structs ]-----------------
-    struct PthreadKernelInfo_t;
-    typedef void (*PthreadLaunchHandle_t)(PthreadKernelInfo_t &args);
-
-    // [-] Hard-coded for now
-    struct PthreadsDeviceData_t {
+    class device : public occa::device_v {
+    private:
       int vendor;
+      std::string compiler, compilerFlags, compilerEnvScript;
 
-      int coreCount;
+    public:
+      device();
+      device(const device &k);
+      device& operator = (const device &k);
+      void free();
 
-      int pThreadCount;
-      int schedule;
+      void* getContextHandle();
 
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
-      pthread_t tid[50];
-#else
-      DWORD tid[50];
-#endif
+      void setup(argInfoMap &aim);
 
-      int pendingJobs;
+      void addOccaHeadersToInfo(kernelInfo &info_);
 
-      std::queue<PthreadKernelInfo_t*> pKernelInfo[50];
+      std::string getInfoSalt(const kernelInfo &info_);
 
-      mutex_t pendingJobsMutex, kernelMutex;
+      void getEnvironmentVariables();
+
+      void appendAvailableDevices(std::vector<occa::device> &dList);
+
+      void flush();
+      void finish();
+
+      bool fakesUva();
+
+      //  |---[ Stream ]----------------
+      stream_t createStream();
+      void freeStream(stream_t s);
+
+      streamTag tagStream();
+      void waitFor(streamTag tag);
+      double timeBetween(const streamTag &startTag, const streamTag &endTag);
+
+      stream_t wrapStream(void *handle_);
+      //  |=============================
+
+      //  |---[ Kernel ]----------------
+      std::string fixBinaryName(const std::string &filename);
+
+      kernel_v* buildKernelFromSource(const std::string &filename,
+                                      const std::string &functionName,
+                                      const kernelInfo &info_);
+
+      kernel_v* buildKernelFromBinary(const std::string &filename,
+                                      const std::string &functionName);
+      //  |=============================
+
+      //  |---[ Kernel ]----------------
+      memory_v* wrapMemory(void *handle_,
+                           const uintptr_t bytes);
+
+      memory_v* malloc(const uintptr_t bytes,
+                       void *src);
+
+      memory_v* mappedAlloc(const uintptr_t bytes,
+                            void *src);
+
+      uintptr_t memorySize();
+      //  |=============================
     };
-
-    struct PthreadsKernelData_t {
-      void *dlHandle;
-      handleFunction_t handle;
-
-      int pThreadCount;
-      int *pendingJobs;
-
-      std::queue<PthreadKernelInfo_t*> *pKernelInfo[50];
-
-      mutex_t *pendingJobsMutex, *kernelMutex;
-    };
-
-    struct PthreadWorkerData_t {
-      int rank, count;
-      int pinnedCore;
-
-      int *pendingJobs;
-
-      std::queue<PthreadKernelInfo_t*> *pKernelInfo;
-
-      mutex_t *pendingJobsMutex, *kernelMutex;
-    };
-
-    struct PthreadKernelInfo_t {
-      int rank, count;
-
-      handleFunction_t kernelHandle;
-
-      int dims;
-      occa::dim inner, outer;
-
-      int argc;
-      void **args;
-    };
-
-    static const int compact = (1 << 10);
-    static const int scatter = (1 << 11);
-    static const int manual  = (1 << 12);
-    //====================================
-
-
-    template <>
-    device_t<Pthreads>::device_t();
-
-    template <>
-    device_t<Pthreads>::device_t(const device_t<Pthreads> &k);
-
-    template <>
-    device_t<Pthreads>& device_t<Pthreads>::operator = (const device_t<Pthreads> &k);
-
-    template <>
-    void* device_t<Pthreads>::getContextHandle();
-
-    template <>
-    void device_t<Pthreads>::setup(argInfoMap &aim);
-
-    template <>
-    void device_t<Pthreads>::addOccaHeadersToInfo(kernelInfo &info_);
-
-    template <>
-    std::string device_t<Pthreads>::getInfoSalt(const kernelInfo &info_);
-
-    template <>
-    deviceIdentifier device_t<Pthreads>::getIdentifier() const;
-
-    template <>
-    void device_t<Pthreads>::getEnvironmentVariables();
-
-    template <>
-    void device_t<Pthreads>::appendAvailableDevices(std::vector<device> &dList);
-
-    template <>
-    void device_t<Pthreads>::setCompiler(const std::string &compiler_);
-
-    template <>
-    void device_t<Pthreads>::setCompilerEnvScript(const std::string &compilerEnvScript_);
-
-    template <>
-    void device_t<Pthreads>::setCompilerFlags(const std::string &compilerFlags_);
-
-    template <>
-    void device_t<Pthreads>::flush();
-
-    template <>
-    void device_t<Pthreads>::finish();
-
-    template <>
-    void device_t<Pthreads>::waitFor(streamTag tag);
-
-    template <>
-    stream_t device_t<Pthreads>::createStream();
-
-    template <>
-    void device_t<Pthreads>::freeStream(stream_t s);
-
-    template <>
-    stream_t device_t<Pthreads>::wrapStream(void *handle_);
-
-    template <>
-    streamTag device_t<Pthreads>::tagStream();
-
-    template <>
-    double device_t<Pthreads>::timeBetween(const streamTag &startTag, const streamTag &endTag);
-
-    template <>
-    std::string device_t<Pthreads>::fixBinaryName(const std::string &filename);
-
-    template <>
-    kernel_v* device_t<Pthreads>::buildKernelFromSource(const std::string &filename,
-                                                        const std::string &functionName,
-                                                        const kernelInfo &info_);
-
-    template <>
-    kernel_v* device_t<Pthreads>::buildKernelFromBinary(const std::string &filename,
-                                                        const std::string &functionName);
-
-    template <>
-    void device_t<Pthreads>::cacheKernelInLibrary(const std::string &filename,
-                                                  const std::string &functionName,
-                                                  const kernelInfo &info_);
-
-    template <>
-    kernel_v* device_t<Pthreads>::loadKernelFromLibrary(const char *cache,
-                                                        const std::string &functionName);
-
-    template <>
-    uintptr_t device_t<Pthreads>::memorySize();
-
-    template <>
-    void device_t<Pthreads>::free();
-
-    template <>
-    memory_v* device_t<Pthreads>::wrapMemory(void *handle_,
-                                             const uintptr_t bytes);
-
-    template <>
-    memory_v* device_t<Pthreads>::wrapTexture(void *handle_,
-                                              const int dim, const occa::dim &dims,
-                                              occa::formatType type, const int permissions);
-
-    template <>
-    memory_v* device_t<Pthreads>::malloc(const uintptr_t bytes,
-                                         void *src);
-
-    template <>
-    memory_v* device_t<Pthreads>::textureAlloc(const int dim, const occa::dim &dims,
-                                               void *src,
-                                               occa::formatType type, const int permissions);
-
-    template <>
-    memory_v* device_t<Pthreads>::mappedAlloc(const uintptr_t bytes,
-                                              void *src);
-
-    template <>
-    int device_t<Pthreads>::simdWidth();
   }
 }
 

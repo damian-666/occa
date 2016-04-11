@@ -2,42 +2,22 @@
 #  ifndef OCCA_OPENCL_DEVICE_HEADER
 #  define OCCA_OPENCL_DEVICE_HEADER
 
-#include "occa/defines.hpp"
-#include "occa/base.hpp"
-
-#if   (OCCA_OS & LINUX_OS)
-#  include <CL/cl.h>
-#  include <CL/cl_gl.h>
-#elif (OCCA_OS & OSX_OS)
-#  include <OpenCL/OpenCl.h>
-#else
-#  include "CL/opencl.h"
-#endif
+#include "occa/device.hpp"
+#include "occa/modes/opencl/headers.hpp"
 
 namespace occa {
   namespace opencl {
-    //---[ Data Structs ]-----------------
-    struct OpenCLKernelData_t {
-      int platform, device;
-
-      cl_platform_id platformID;
-      cl_device_id   deviceID;
-      cl_context     context;
-      cl_program     program;
-      cl_kernel      kernel;
-    };
-
-    struct OpenCLDeviceData_t {
-    };
-    //====================================
-
     class device : public occa::device_v {
-      int platform, device;
+    private:
+      int platformID, deviceID;
 
-      cl_platform_id platformID;
-      cl_device_id   deviceID;
-      cl_context     context;
+      cl_platform_id clPlatformID;
+      cl_device_id clDeviceID;
+      cl_context clContext;
 
+      std::string compilerFlags;
+
+    public:
       device();
       device(const device &k);
       device& operator = (const device &k);
@@ -58,15 +38,17 @@ namespace occa {
       void flush();
       void finish();
 
+      bool fakesUva();
+
       //  |---[ Stream ]----------------
-      stream createStream();
-      void freeStream(stream s);
+      stream_t createStream();
+      void freeStream(stream_t s);
 
       streamTag tagStream();
       void waitFor(streamTag tag);
       double timeBetween(const streamTag &startTag, const streamTag &endTag);
 
-      stream wrapStream(void *handle_);
+      stream_t wrapStream(void *handle_);
       //  |=============================
 
       //  |---[ Kernel ]----------------

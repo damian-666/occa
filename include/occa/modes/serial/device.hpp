@@ -8,7 +8,6 @@ namespace occa {
     class device : public occa::device_v {
     private:
       int vendor;
-
       std::string compiler, compilerFlags, compilerEnvScript;
 
     public:

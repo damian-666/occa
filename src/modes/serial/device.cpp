@@ -5,12 +5,8 @@
 
 namespace occa {
   namespace serial {
-    device::device(){
-      uvaEnabled_ = false;
-      bytesAllocated = 0;
-
+    device::device() : occa::device_v() {
       getEnvironmentVariables();
-
       sys::addSharedBinaryFlagsTo(compiler, compilerFlags);
     }
 
@@ -19,14 +15,12 @@ namespace occa {
     }
 
     device& device::operator = (const device &d){
-      uvaEnabled_    = d.uvaEnabled_;
-      uvaMap         = d.uvaMap;
-      uvaDirtyMemory = d.uvaDirtyMemory;
+      initFrom(d);
 
-      compiler      = d.compiler;
+      vendor = d.vendor;
+      compiler = d.compiler;
       compilerFlags = d.compilerFlags;
-
-      bytesAllocated = d.bytesAllocated;
+      compilerEnvScript = d.compilerEnvScript;
 
       return *this;
     }
@@ -179,18 +173,16 @@ namespace occa {
     }
 
     kernel_v* device::buildKernelFromSource(const std::string &filename,
-                                                      const std::string &functionName,
-                                                      const kernelInfo &info_){
+                                            const std::string &functionName,
+                                            const kernelInfo &info_){
       kernel *k = new kernel();
       k->dHandle = this;
-
       k->buildFromSource(filename, functionName, info_);
-
       return k;
     }
 
     kernel_v* device::buildKernelFromBinary(const std::string &filename,
-                                                      const std::string &functionName){
+                                            const std::string &functionName){
       kernel *k = new kernel();
       k->dHandle = this;
       k->buildFromBinary(filename, functionName);
@@ -198,7 +190,7 @@ namespace occa {
     }
 
     memory_v* device::wrapMemory(void *handle_,
-                                           const uintptr_t bytes){
+                                 const uintptr_t bytes){
       memory *mem = new memory();
 
       mem->dHandle = this;
@@ -211,7 +203,7 @@ namespace occa {
     }
 
     memory_v* device::malloc(const uintptr_t bytes,
-                                       void *src){
+                             void *src){
       memory *mem = new memory();
 
       mem->dHandle = this;
@@ -226,7 +218,7 @@ namespace occa {
     }
 
     memory_v* device::mappedAlloc(const uintptr_t bytes,
-                                            void *src){
+                                  void *src){
       memory_v *mem = malloc(bytes, src);
 
       mem->mappedPtr = mem->handle;

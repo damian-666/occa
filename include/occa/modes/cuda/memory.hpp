@@ -2,23 +2,46 @@
 #  ifndef OCCA_CUDA_MEMORY_HEADER
 #  define OCCA_CUDA_MEMORY_HEADER
 
-#include "occa/base.hpp"
-#include "occa/library.hpp"
-
 #include "occa/defines.hpp"
+#include "occa/memory.hpp"
 
 #include <cuda.h>
 
 namespace occa {
   namespace cuda {
-    //---[ Data Structs ]---------------
-    struct CUDAKernelData_t {
-      CUdevice   device;
-      CUcontext  context;
-      CUmodule   module;
-      CUfunction function;
+    class memory : public occa::memory_v {
+    public:
+      memory();
+      memory(const memory &m);
+      memory& operator = (const memory &m);
+      ~memory();
 
-      void **vArgs;
+      void* getMemoryHandle();
+
+      void copyFrom(const void *src,
+                    const uintptr_t bytes,
+                    const uintptr_t offset,
+                    const bool async);
+
+      void copyFrom(const memory_v *src,
+                    const uintptr_t bytes,
+                    const uintptr_t destOffset,
+                    const uintptr_t srcOffset,
+                    const bool async);
+
+      void copyTo(void *dest,
+                  const uintptr_t bytes,
+                  const uintptr_t destOffset,
+                  const bool async);
+
+      void copyTo(memory_v *dest,
+                  const uintptr_t bytes,
+                  const uintptr_t srcOffset,
+                  const uintptr_t offset,
+                  const bool async);
+
+      void free();
+    };
     };
 
     struct CUDADeviceData_t {
@@ -34,69 +57,54 @@ namespace occa {
     //==================================
 
 
-    template <>
     memory_t<CUDA>::memory_t();
 
-    template <>
     memory_t<CUDA>::memory_t(const memory_t &m);
 
-    template <>
     memory_t<CUDA>& memory_t<CUDA>::operator = (const memory_t &m);
 
-    template <>
     void* memory_t<CUDA>::getMemoryHandle();
 
-    template <>
     void* memory_t<CUDA>::getTextureHandle();
 
-    template <>
     void memory_t<CUDA>::copyFrom(const void *src,
                                   const uintptr_t bytes,
                                   const uintptr_t offset);
 
-    template <>
     void memory_t<CUDA>::copyFrom(const memory_v *src,
                                   const uintptr_t bytes,
                                   const uintptr_t destOffset,
                                   const uintptr_t srcOffset);
 
-    template <>
     void memory_t<CUDA>::copyTo(void *dest,
                                 const uintptr_t bytes,
                                 const uintptr_t offset);
 
-    template <>
     void memory_t<CUDA>::copyTo(memory_v *dest,
                                 const uintptr_t bytes,
                                 const uintptr_t destOffset,
                                 const uintptr_t srcOffset);
 
-    template <>
     void memory_t<CUDA>::asyncCopyFrom(const void *src,
                                        const uintptr_t bytes,
                                        const uintptr_t offset);
 
-    template <>
     void memory_t<CUDA>::asyncCopyFrom(const memory_v *src,
                                        const uintptr_t bytes,
                                        const uintptr_t destOffset,
                                        const uintptr_t srcOffset);
 
-    template <>
     void memory_t<CUDA>::asyncCopyTo(void *dest,
                                      const uintptr_t bytes,
                                      const uintptr_t offset);
 
-    template <>
     void memory_t<CUDA>::asyncCopyTo(memory_v *dest,
                                      const uintptr_t bytes,
                                      const uintptr_t destOffset,
                                      const uintptr_t srcOffset);
 
-    template <>
     void memory_t<CUDA>::mappedFree();
 
-    template <>
     void memory_t<CUDA>::free();
   }
 }

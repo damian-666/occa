@@ -20,12 +20,39 @@
 
 namespace occa {
   namespace openmp {
-    //---[ Data Structs ]---------------
-    struct OpenMPKernelData_t {
-      void *dlHandle;
-      handleFunction_t handle;
+    class memory : public occa::memory_v {
+    public:
+      memory();
+      memory(const memory &m);
+      memory& operator = (const memory &m);
+      ~memory();
 
-      void *vArgs[2*OCCA_MAX_ARGS];
+      void* getMemoryHandle();
+
+      void copyFrom(const void *src,
+                    const uintptr_t bytes,
+                    const uintptr_t offset,
+                    const bool async);
+
+      void copyFrom(const memory_v *src,
+                    const uintptr_t bytes,
+                    const uintptr_t destOffset,
+                    const uintptr_t srcOffset,
+                    const bool async);
+
+      void copyTo(void *dest,
+                  const uintptr_t bytes,
+                  const uintptr_t destOffset,
+                  const bool async);
+
+      void copyTo(memory_v *dest,
+                  const uintptr_t bytes,
+                  const uintptr_t srcOffset,
+                  const uintptr_t offset,
+                  const bool async);
+
+      void free();
+    };
     };
 
     struct OpenMPDeviceData_t {

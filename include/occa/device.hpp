@@ -28,7 +28,7 @@ namespace occa {
     argInfoMap();
     argInfoMap(const std::string &infos);
     argInfoMap(argInfoMap &aim);
-    argInfoMap& operator = (argInfoMap &aim);
+    argInfoMap& operator = (const argInfoMap &aim);
 
     std::string& operator [] (const std::string &info);
 
@@ -42,13 +42,14 @@ namespace occa {
 
     template <class TM>
     TM get(const std::string &prop) {
-      TM t;
       if (has(prop)) {
         std::stringstream ss;
+        TM t;
         ss << iMap[prop];
         ss >> t;
+        return t;
       }
-      return t;
+      return TM();
     }
 
     template <class TM>
@@ -96,6 +97,8 @@ namespace occa {
 
     device_v();
     virtual ~device_v() = 0;
+
+    void initFrom(const device_v &m);
 
     virtual void setup(argInfoMap &aim) = 0;
 
