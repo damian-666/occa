@@ -21,16 +21,19 @@ namespace occa {
 
 
   //---[ Registration ]-----------------
-  strToModeMap_t modeMap;
+  strToModeMap_t& modeMap() {
+    static strToModeMap_t modeMap_;
+    return modeMap_;
+  }
 
   bool modeExists(const std::string &mode) {
-    return (modeMap.find(mode) != modeMap.end());
+    return (modeMap().find(mode) != modeMap().end());
   }
 
   device_v* newModeDevice(const std::string &mode) {
-    strToModeMapIterator it = modeMap.find(mode);
+    strToModeMapIterator it = modeMap().find(mode);
 
-    if (it == modeMap.end()) {
+    if (it == modeMap().end()) {
       std::cout << "OCCA mode [" << mode << "] is not enabled, defaulting to [Serial] mode\n";
       return newModeDevice("Serial");
     }
@@ -39,9 +42,9 @@ namespace occa {
   }
 
   kernel_v* newModeKernel(const std::string &mode) {
-    strToModeMapIterator it = modeMap.find(mode);
+    strToModeMapIterator it = modeMap().find(mode);
 
-    if (it == modeMap.end()) {
+    if (it == modeMap().end()) {
       std::cout << "OCCA mode [" << mode << "] is not enabled, defaulting to [Serial] mode\n";
       return newModeKernel("Serial");
     }
@@ -50,9 +53,9 @@ namespace occa {
   }
 
   memory_v* newModeMemory(const std::string &mode) {
-    strToModeMapIterator it = modeMap.find(mode);
+    strToModeMapIterator it = modeMap().find(mode);
 
-    if (it == modeMap.end()) {
+    if (it == modeMap().end()) {
       std::cout << "OCCA mode [" << mode << "] is not enabled, defaulting to [Serial] mode\n";
       return newModeMemory("Serial");
     }
@@ -219,8 +222,8 @@ namespace occa {
   std::vector<device>& getDeviceList() {
     deviceListMutex.lock();
     if(deviceList.size() == 0) {
-      strToModeMapIterator it = modeMap.begin();
-      while (it != modeMap.end()) {
+      strToModeMapIterator it = modeMap().begin();
+      while (it != modeMap().end()) {
         device_v* dHandle = it->second->newDevice();
         dHandle->appendAvailableDevices(deviceList);
         freeModeDevice(dHandle);

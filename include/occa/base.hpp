@@ -44,9 +44,6 @@ namespace occa {
   extern bool verboseCompilation_f;
 
   void setVerboseCompilation(const bool value);
-
-  // [REFACTOR]
-  // hasModeEnabled(string mode)
   //====================================
 
 
@@ -56,8 +53,7 @@ namespace occa {
   typedef std::map<std::string,mode_v*> strToModeMap_t;
   typedef strToModeMap_t::iterator      strToModeMapIterator;
 
-  extern strToModeMap_t modeMap;
-
+  strToModeMap_t& modeMap();
   bool modeExists(const std::string &mode);
 
   device_v* newModeDevice(const std::string &mode);
@@ -90,7 +86,7 @@ namespace occa {
   public:
     mode(std::string modeName_) {
       modeName = modeName_;
-      modeMap[modeName] = (void*) this;
+      modeMap()[modeName] = this;
     }
 
     device_v* newDevice() {

@@ -135,8 +135,6 @@ namespace occa {
     virtual kernel_v* buildKernelFromBinary(const std::string &filename,
                                             const std::string &functionName) = 0;
 
-    virtual device_v* wrapDevice(void *info) = 0;
-
     virtual memory_v* wrapMemory(void *handle_,
                                  const uintptr_t bytes) = 0;
 
