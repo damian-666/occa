@@ -2,9 +2,14 @@
 #  ifndef OCCA_OPENCL_UTILS_HEADER
 #  define OCCA_OPENCL_UTILS_HEADER
 
+#include <iostream>
+
 #include "occa/modes/opencl/headers.hpp"
+#include "occa/device.hpp"
 
 namespace occa {
+  class streamTag;
+
   namespace opencl {
     struct info_t {
       cl_device_id clDeviceID;
@@ -59,7 +64,7 @@ namespace occa {
 
     std::string getDeviceListInfo();
 
-    void buildKernelFromSource(info_t &data_,
+    void buildKernelFromSource(info_t &info_,
                                const char *content,
                                const size_t contentBytes,
                                const std::string &functionName,
@@ -67,13 +72,13 @@ namespace occa {
                                const std::string &hash = "",
                                const std::string &sourceFile = "");
 
-    void buildKernelFromBinary(info_t &data_,
+    void buildKernelFromBinary(info_t &info_,
                                const unsigned char *content,
                                const size_t contentBytes,
                                const std::string &functionName,
                                const std::string &flags = "");
 
-    void saveProgramBinary(info_t &data_,
+    void saveProgramBinary(info_t &info_,
                            const std::string &binaryFile,
                            const std::string &hash = "");
 

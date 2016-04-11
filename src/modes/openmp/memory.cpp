@@ -9,7 +9,6 @@
 
 namespace occa {
   namespace openmp {
-    template <>
     memory_t<OpenMP>::memory_t(){
       strMode = "OpenMP";
 
@@ -27,12 +26,10 @@ namespace occa {
       textureInfo.w = textureInfo.h = textureInfo.d = 0;
     }
 
-    template <>
     memory_t<OpenMP>::memory_t(const memory_t<OpenMP> &m){
       *this = m;
     }
 
-    template <>
     memory_t<OpenMP>& memory_t<OpenMP>::operator = (const memory_t<OpenMP> &m){
       memInfo = m.memInfo;
 
@@ -56,20 +53,16 @@ namespace occa {
       return *this;
     }
 
-    template <>
     memory_t<OpenMP>::~memory_t(){}
 
-    template <>
     void* memory_t<OpenMP>::getMemoryHandle(){
       return handle;
     }
 
-    template <>
     void* memory_t<OpenMP>::getTextureHandle(){
       return textureInfo.arg;
     }
 
-    template <>
     void memory_t<OpenMP>::copyFrom(const void *src,
                                     const uintptr_t bytes,
                                     const uintptr_t offset){
@@ -87,7 +80,6 @@ namespace occa {
       ::memcpy(destPtr, srcPtr, bytes_);
     }
 
-    template <>
     void memory_t<OpenMP>::copyFrom(const memory_v *src,
                                     const uintptr_t bytes,
                                     const uintptr_t destOffset,
@@ -110,7 +102,6 @@ namespace occa {
       ::memcpy(destPtr, srcPtr, bytes_);
     }
 
-    template <>
     void memory_t<OpenMP>::copyTo(void *dest,
                                   const uintptr_t bytes,
                                   const uintptr_t offset){
@@ -128,7 +119,6 @@ namespace occa {
       ::memcpy(destPtr, srcPtr, bytes_);
     }
 
-    template <>
     void memory_t<OpenMP>::copyTo(memory_v *dest,
                                   const uintptr_t bytes,
                                   const uintptr_t destOffset,
@@ -151,7 +141,6 @@ namespace occa {
       ::memcpy(destPtr, srcPtr, bytes_);
     }
 
-    template <>
     void memory_t<OpenMP>::asyncCopyFrom(const void *src,
                                          const uintptr_t bytes,
                                          const uintptr_t offset){
@@ -168,7 +157,6 @@ namespace occa {
       ::memcpy(destPtr, srcPtr, bytes_);
     }
 
-    template <>
     void memory_t<OpenMP>::asyncCopyFrom(const memory_v *src,
                                          const uintptr_t bytes,
                                          const uintptr_t destOffset,
@@ -189,7 +177,6 @@ namespace occa {
       ::memcpy(destPtr, srcPtr, bytes_);
     }
 
-    template <>
     void memory_t<OpenMP>::asyncCopyTo(void *dest,
                                        const uintptr_t bytes,
                                        const uintptr_t offset){
@@ -205,7 +192,6 @@ namespace occa {
       ::memcpy(destPtr, srcPtr, bytes_);
     }
 
-    template <>
     void memory_t<OpenMP>::asyncCopyTo(memory_v *dest,
                                        const uintptr_t bytes,
                                        const uintptr_t destOffset,
@@ -226,7 +212,6 @@ namespace occa {
       ::memcpy(destPtr, srcPtr, bytes_);
     }
 
-    template <>
     void memory_t<OpenMP>::mappedFree(){
       sys::free(handle);
       handle    = NULL;
@@ -235,7 +220,6 @@ namespace occa {
       size = 0;
     }
 
-    template <>
     void memory_t<OpenMP>::free(){
       if(isATexture()){
         sys::free(textureInfo.arg);

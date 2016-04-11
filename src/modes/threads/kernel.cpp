@@ -3,7 +3,6 @@
 
 namespace occa {
   namespace threads {
-    template <>
     kernel_t<Pthreads>::kernel_t(){
       strMode = "Pthreads";
 
@@ -15,12 +14,10 @@ namespace occa {
       outer = occa::dim(1,1,1);
     }
 
-    template <>
     kernel_t<Pthreads>::kernel_t(const kernel_t<Pthreads> &k){
       *this = k;
     }
 
-    template <>
     kernel_t<Pthreads>& kernel_t<Pthreads>::operator = (const kernel_t<Pthreads> &k){
       data    = k.data;
       dHandle = k.dHandle;
@@ -36,10 +33,8 @@ namespace occa {
       return *this;
     }
 
-    template <>
     kernel_t<Pthreads>::~kernel_t(){}
 
-    template <>
     void* kernel_t<Pthreads>::getKernelHandle(){
       OCCA_EXTRACT_DATA(Pthreads, Kernel);
 
@@ -50,14 +45,12 @@ namespace occa {
       return ret;
     }
 
-    template <>
     void* kernel_t<Pthreads>::getProgramHandle(){
       OCCA_EXTRACT_DATA(Pthreads, Kernel);
 
       return data_.dlHandle;
     }
 
-    template <>
     std::string kernel_t<Pthreads>::fixBinaryName(const std::string &filename){
 #if (OCCA_OS & (LINUX_OS | OSX_OS))
       return filename;
@@ -66,7 +59,6 @@ namespace occa {
 #endif
     }
 
-    template <>
     kernel_t<Pthreads>* kernel_t<Pthreads>::buildFromSource(const std::string &filename,
                                                             const std::string &functionName,
                                                             const kernelInfo &info_){
@@ -173,7 +165,6 @@ namespace occa {
       return this;
     }
 
-    template <>
     kernel_t<Pthreads>* kernel_t<Pthreads>::buildFromBinary(const std::string &filename,
                                                             const std::string &functionName){
 
@@ -201,25 +192,21 @@ namespace occa {
       return this;
     }
 
-    template <>
     kernel_t<Pthreads>* kernel_t<Pthreads>::loadFromLibrary(const char *cache,
                                                             const std::string &functionName){
       return buildFromBinary(cache, functionName);
     }
 
-    template <>
     uintptr_t kernel_t<Pthreads>::maximumInnerDimSize(){
       return ((uintptr_t) -1);
     }
 
     // [-] Missing
-    template <>
     int kernel_t<Pthreads>::preferredDimSize(){
       preferredDimSize_ = OCCA_SIMD_WIDTH;
       return OCCA_SIMD_WIDTH;
     }
 
-    template <>
     void kernel_t<Pthreads>::runFromArguments(const int kArgc, const kernelArg *kArgs){
       OCCA_EXTRACT_DATA(Pthreads, Kernel);
 
@@ -258,7 +245,6 @@ namespace occa {
       data_.pendingJobsMutex->unlock();
     }
 
-    template <>
     void kernel_t<Pthreads>::free(){
       // [-] Fix later
       OCCA_EXTRACT_DATA(Pthreads, Kernel);

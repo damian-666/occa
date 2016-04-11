@@ -4,7 +4,6 @@
 
 namespace occa {
   namespace cuda {
-    template <>
     memory_t<CUDA>::memory_t(){
       strMode = "CUDA";
 
@@ -24,12 +23,10 @@ namespace occa {
       textureInfo.w  = textureInfo.h = textureInfo.d = 0;
     }
 
-    template <>
     memory_t<CUDA>::memory_t(const memory_t<CUDA> &m){
       *this = m;
     }
 
-    template <>
     memory_t<CUDA>& memory_t<CUDA>::operator = (const memory_t<CUDA> &m){
       memInfo = m.memInfo;
 
@@ -51,20 +48,16 @@ namespace occa {
       return *this;
     }
 
-    template <>
     memory_t<CUDA>::~memory_t(){}
 
-    template <>
     void* memory_t<CUDA>::getMemoryHandle(){
       return handle;
     }
 
-    template <>
     void* memory_t<CUDA>::getTextureHandle(){
       return (void*) ((CUDATextureData_t*) handle)->array;
     }
 
-    template <>
     void memory_t<CUDA>::copyFrom(const void *src,
                                   const uintptr_t bytes,
                                   const uintptr_t offset){
@@ -105,7 +98,6 @@ namespace occa {
       }
     }
 
-    template <>
     void memory_t<CUDA>::copyFrom(const memory_v *src,
                                   const uintptr_t bytes,
                                   const uintptr_t destOffset,
@@ -158,7 +150,6 @@ namespace occa {
       }
     }
 
-    template <>
     void memory_t<CUDA>::copyTo(void *dest,
                                 const uintptr_t bytes,
                                 const uintptr_t offset){
@@ -199,7 +190,6 @@ namespace occa {
       }
     }
 
-    template <>
     void memory_t<CUDA>::copyTo(memory_v *dest,
                                 const uintptr_t bytes,
                                 const uintptr_t destOffset,
@@ -252,7 +242,6 @@ namespace occa {
       }
     }
 
-    template <>
     void memory_t<CUDA>::asyncCopyFrom(const void *src,
                                        const uintptr_t bytes,
                                        const uintptr_t offset){
@@ -271,7 +260,6 @@ namespace occa {
                         cuMemcpyHtoAAsync(((CUDATextureData_t*) handle)->array, offset, src, bytes_, stream) );
     }
 
-    template <>
     void memory_t<CUDA>::asyncCopyFrom(const memory_v *src,
                                        const uintptr_t bytes,
                                        const uintptr_t destOffset,
@@ -325,7 +313,6 @@ namespace occa {
       }
     }
 
-    template <>
     void memory_t<CUDA>::asyncCopyTo(void *dest,
                                      const uintptr_t bytes,
                                      const uintptr_t offset){
@@ -344,7 +331,6 @@ namespace occa {
                         cuMemcpyAtoHAsync(dest,((CUDATextureData_t*) handle)->array, offset, bytes_, stream) );
     }
 
-    template <>
     void memory_t<CUDA>::asyncCopyTo(memory_v *dest,
                                      const uintptr_t bytes,
                                      const uintptr_t destOffset,
@@ -398,7 +384,6 @@ namespace occa {
       }
     }
 
-    template <>
     void memory_t<CUDA>::mappedFree(){
       if(isMapped()){
         OCCA_CUDA_CHECK("Device: mappedFree()",
@@ -410,7 +395,6 @@ namespace occa {
       }
     }
 
-    template <>
     void memory_t<CUDA>::free(){
       if(!isATexture()){
         cuMemFree(*((CUdeviceptr*) handle));

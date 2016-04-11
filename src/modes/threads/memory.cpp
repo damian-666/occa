@@ -3,7 +3,6 @@
 
 namespace occa {
   namespace threads {
-    template <>
     memory_t<Pthreads>::memory_t(){
       strMode = "Pthreads";
 
@@ -21,12 +20,10 @@ namespace occa {
       textureInfo.w = textureInfo.h = textureInfo.d = 0;
     }
 
-    template <>
     memory_t<Pthreads>::memory_t(const memory_t<Pthreads> &m){
       *this = m;
     }
 
-    template <>
     memory_t<Pthreads>& memory_t<Pthreads>::operator = (const memory_t<Pthreads> &m){
       memInfo = m.memInfo;
 
@@ -50,20 +47,16 @@ namespace occa {
       return *this;
     }
 
-    template <>
     memory_t<Pthreads>::~memory_t(){}
 
-    template <>
     void* memory_t<Pthreads>::getMemoryHandle(){
       return handle;
     }
 
-    template <>
     void* memory_t<Pthreads>::getTextureHandle(){
       return textureInfo.arg;
     }
 
-    template <>
     void memory_t<Pthreads>::copyFrom(const void *src,
                                       const uintptr_t bytes,
                                       const uintptr_t offset){
@@ -81,7 +74,6 @@ namespace occa {
       ::memcpy(destPtr, srcPtr, bytes_);
     }
 
-    template <>
     void memory_t<Pthreads>::copyFrom(const memory_v *src,
                                       const uintptr_t bytes,
                                       const uintptr_t destOffset,
@@ -104,7 +96,6 @@ namespace occa {
       ::memcpy(destPtr, srcPtr, bytes_);
     }
 
-    template <>
     void memory_t<Pthreads>::copyTo(void *dest,
                                     const uintptr_t bytes,
                                     const uintptr_t offset){
@@ -122,7 +113,6 @@ namespace occa {
       ::memcpy(destPtr, srcPtr, bytes_);
     }
 
-    template <>
     void memory_t<Pthreads>::copyTo(memory_v *dest,
                                     const uintptr_t bytes,
                                     const uintptr_t destOffset,
@@ -145,7 +135,6 @@ namespace occa {
       ::memcpy(destPtr, srcPtr, bytes_);
     }
 
-    template <>
     void memory_t<Pthreads>::asyncCopyFrom(const void *src,
                                            const uintptr_t bytes,
                                            const uintptr_t offset){
@@ -162,7 +151,6 @@ namespace occa {
       ::memcpy(destPtr, srcPtr, bytes_);
     }
 
-    template <>
     void memory_t<Pthreads>::asyncCopyFrom(const memory_v *src,
                                            const uintptr_t bytes,
                                            const uintptr_t destOffset,
@@ -183,7 +171,6 @@ namespace occa {
       ::memcpy(destPtr, srcPtr, bytes_);
     }
 
-    template <>
     void memory_t<Pthreads>::asyncCopyTo(void *dest,
                                          const uintptr_t bytes,
                                          const uintptr_t offset){
@@ -199,7 +186,6 @@ namespace occa {
       ::memcpy(destPtr, srcPtr, bytes_);
     }
 
-    template <>
     void memory_t<Pthreads>::asyncCopyTo(memory_v *dest,
                                          const uintptr_t bytes,
                                          const uintptr_t destOffset,
@@ -220,7 +206,6 @@ namespace occa {
       ::memcpy(destPtr, srcPtr, bytes_);
     }
 
-    template <>
     void memory_t<Pthreads>::mappedFree(){
       sys::free(handle);
       handle    = NULL;
@@ -229,7 +214,6 @@ namespace occa {
       size = 0;
     }
 
-    template <>
     void memory_t<Pthreads>::free(){
       if(isATexture()){
         sys::free(textureInfo.arg);

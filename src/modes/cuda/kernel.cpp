@@ -4,7 +4,6 @@
 
 namespace occa {
   namespace cuda {
-    template <>
     kernel_t<CUDA>::kernel_t(){
       strMode = "CUDA";
 
@@ -19,12 +18,10 @@ namespace occa {
       preferredDimSize_    = 0;
     }
 
-    template <>
     kernel_t<CUDA>::kernel_t(const kernel_t<CUDA> &k){
       *this = k;
     }
 
-    template <>
     kernel_t<CUDA>& kernel_t<CUDA>::operator = (const kernel_t<CUDA> &k){
       data    = k.data;
       dHandle = k.dHandle;
@@ -42,29 +39,24 @@ namespace occa {
       return *this;
     }
 
-    template <>
     kernel_t<CUDA>::~kernel_t(){}
 
-    template <>
     void* kernel_t<CUDA>::getKernelHandle(){
       OCCA_EXTRACT_DATA(CUDA, Kernel);
 
       return data_.function;
     }
 
-    template <>
     void* kernel_t<CUDA>::getProgramHandle(){
       OCCA_EXTRACT_DATA(CUDA, Kernel);
 
       return data_.module;
     }
 
-    template <>
     std::string kernel_t<CUDA>::fixBinaryName(const std::string &filename){
       return filename;
     }
 
-    template <>
     kernel_t<CUDA>* kernel_t<CUDA>::buildFromSource(const std::string &filename,
                                                     const std::string &functionName,
                                                     const kernelInfo &info_){
@@ -203,7 +195,6 @@ namespace occa {
       return this;
     }
 
-    template <>
     kernel_t<CUDA>* kernel_t<CUDA>::buildFromBinary(const std::string &filename,
                                                     const std::string &functionName){
 
@@ -220,7 +211,6 @@ namespace occa {
       return this;
     }
 
-    template <>
     kernel_t<CUDA>* kernel_t<CUDA>::loadFromLibrary(const char *cache,
                                                     const std::string &functionName){
       OCCA_EXTRACT_DATA(CUDA, Kernel);
@@ -234,7 +224,6 @@ namespace occa {
       return this;
     }
 
-    template <>
     uintptr_t kernel_t<CUDA>::maximumInnerDimSize(){
       if(maximumInnerDimSize_)
         return maximumInnerDimSize_;
@@ -251,13 +240,11 @@ namespace occa {
       return maximumInnerDimSize_;
     }
 
-    template <>
     int kernel_t<CUDA>::preferredDimSize(){
       preferredDimSize_ = 32;
       return 32;
     }
 
-    template <>
     void kernel_t<CUDA>::runFromArguments(const int kArgc, const kernelArg *kArgs){
       CUDAKernelData_t &data_ = *((CUDAKernelData_t*) data);
       CUfunction function_ = data_.function;
@@ -282,7 +269,6 @@ namespace occa {
       delete [] data_.vArgs;
     }
 
-    template <>
     void kernel_t<CUDA>::free(){
       OCCA_EXTRACT_DATA(CUDA, Kernel);
 

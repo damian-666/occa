@@ -1,5 +1,8 @@
 #if OCCA_OPENCL_ENABLED
 
+#include "occa/modes/opencl/utils.hpp"
+#include "occa/base.hpp"
+
 namespace occa {
   namespace opencl {
     namespace info {
@@ -56,7 +59,7 @@ namespace occa {
     }
 
     int getDeviceCount(int type){
-      int pCount = cl::getPlatformCount();
+      int pCount = opencl::getPlatformCount();
       int ret = 0;
 
       for(int p = 0; p < pCount; ++p)
@@ -232,10 +235,10 @@ namespace occa {
     std::string getDeviceListInfo(){
       std::stringstream ss;
 
-      int platformCount = occa::cl::getPlatformCount();
+      int platformCount = getPlatformCount();
 
       for(int pID = 0; pID < platformCount; ++pID){
-        int deviceCount = occa::cl::getDeviceCountInPlatform(pID);
+        int deviceCount = getDeviceCountInPlatform(pID);
 
         for(int dID = 0; dID < deviceCount; ++dID){
           uintptr_t bytes      = getDeviceMemorySize(pID, dID);

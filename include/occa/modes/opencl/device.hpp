@@ -8,7 +8,7 @@
 namespace occa {
   namespace opencl {
     class device : public occa::device_v {
-    private:
+    public:
       int platformID, deviceID;
 
       cl_platform_id clPlatformID;
@@ -17,7 +17,6 @@ namespace occa {
 
       std::string compilerFlags;
 
-    public:
       device();
       device(const device &k);
       device& operator = (const device &k);

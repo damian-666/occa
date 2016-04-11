@@ -1,6 +1,8 @@
 #if OCCA_OPENCL_ENABLED
 
 #include "occa/modes/opencl/kernel.hpp"
+#include "occa/modes/opencl/device.hpp"
+#include "occa/base.hpp"
 
 namespace occa {
   namespace opencl {
@@ -27,7 +29,7 @@ namespace occa {
 
     kernel::~kernel(){}
 
-    info_ kernel::makeCLInfo() {
+    info_t kernel::makeCLInfo() {
       info_t info;
       info.clDeviceID = clDeviceID;
       info.clContext  = clContext;
@@ -82,20 +84,19 @@ namespace occa {
       createSourceFileFrom(filename, hashDir, info);
 
       std::string cFunction = readFile(sourceFile);
+      std::string catFlags = info.flags + ((opencl::device*) dHandle)->compilerFlags;
+      info_t clInfo = makeCLInfo();
+      opencl::buildKernelFromSource(clInfo,
+                                    cFunction.c_str(), cFunction.size(),
+                                    functionName,
+                                    catFlags,
+                                    hash, sourceFile);
+      clProgram = clInfo.clProgram;
+      clKernel  = clInfo.clKernel;
 
-      std::string catFlags = info.flags + dHandle->compilerFlags;
-
-      cl::buildKernelFromSource(makeCLInfo(),
-                                cFunction.c_str(), cFunction.size(),
-                                functionName,
-                                catFlags,
-                                hash, sourceFile);
-
-      cl::saveProgramBinary(makeCLInfo(), binaryFile, hash);
+      opencl::saveProgramBinary(clInfo, binaryFile, hash);
 
       releaseHash(hash, 0);
-
-      return this;
     }
 
     void kernel::buildFromBinary(const std::string &filename,
@@ -104,14 +105,14 @@ namespace occa {
       name = functionName;
 
       std::string cFile = readFile(filename);
-
-      cl::buildKernelFromBinary(makeCLInfo(),
-                                (const unsigned char*) cFile.c_str(),
-                                cFile.size(),
-                                functionName,
-                                dHandle->compilerFlags);
-
-      return this;
+      info_t clInfo = makeCLInfo();
+      opencl::buildKernelFromBinary(clInfo,
+                                    (const unsigned char*) cFile.c_str(),
+                                    cFile.size(),
+                                    functionName,
+                                    ((opencl::device*) dHandle)->compilerFlags);
+      clProgram = clInfo.clProgram;
+      clKernel  = clInfo.clKernel;
     }
 
     void kernel::runFromArguments(const int kArgc, const kernelArg *kArgs){

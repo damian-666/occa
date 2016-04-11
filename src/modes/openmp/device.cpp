@@ -10,7 +10,6 @@
 
 namespace occa {
   namespace openmp {
-    template <>
     device_t<OpenMP>::device_t(){
       strMode = "OpenMP";
 
@@ -25,12 +24,10 @@ namespace occa {
       sys::addSharedBinaryFlagsTo(compiler, compilerFlags);
     }
 
-    template <>
     device_t<OpenMP>::device_t(const device_t<OpenMP> &d){
       *this = d;
     }
 
-    template <>
     device_t<OpenMP>& device_t<OpenMP>::operator = (const device_t<OpenMP> &d){
       modelID_ = d.modelID_;
       id_      = d.id_;
@@ -49,12 +46,10 @@ namespace occa {
       return *this;
     }
 
-    template <>
     void* device_t<OpenMP>::getContextHandle(){
       return NULL;
     }
 
-    template <>
     void device_t<OpenMP>::setup(argInfoMap &aim){
       properties = aim;
 
@@ -72,12 +67,10 @@ namespace occa {
       sys::addSharedBinaryFlagsTo(data_.vendor, compilerFlags);
     }
 
-    template <>
     void device_t<OpenMP>::addOccaHeadersToInfo(kernelInfo &info_){
       info_.mode = OpenMP;
     }
 
-    template <>
     std::string device_t<OpenMP>::getInfoSalt(const kernelInfo &info_){
       std::stringstream salt;
 
@@ -91,7 +84,6 @@ namespace occa {
       return salt.str();
     }
 
-    template <>
     deviceIdentifier device_t<OpenMP>::getIdentifier() const {
       deviceIdentifier dID;
 
@@ -122,7 +114,6 @@ namespace occa {
       return dID;
     }
 
-    template <>
     void device_t<OpenMP>::getEnvironmentVariables(){
       char *c_compiler = getenv("OCCA_CXX");
 
@@ -189,7 +180,6 @@ namespace occa {
 #endif
     }
 
-    template <>
     void device_t<OpenMP>::appendAvailableDevices(std::vector<device> &dList){
       device d;
       d.setup("OpenMP");
@@ -197,7 +187,6 @@ namespace occa {
       dList.push_back(d);
     }
 
-    template <>
     void device_t<OpenMP>::setCompiler(const std::string &compiler_){
       compiler = compiler_;
 
@@ -210,12 +199,10 @@ namespace occa {
       sys::addSharedBinaryFlagsTo(data_.vendor, compilerFlags);
     }
 
-    template <>
     void device_t<OpenMP>::setCompilerEnvScript(const std::string &compilerEnvScript_){
       compilerEnvScript = compilerEnvScript_;
     }
 
-    template <>
     void device_t<OpenMP>::setCompilerFlags(const std::string &compilerFlags_){
       OCCA_EXTRACT_DATA(OpenMP, Device);
 
@@ -224,34 +211,26 @@ namespace occa {
       sys::addSharedBinaryFlagsTo(data_.vendor, compilerFlags);
     }
 
-    template <>
     void device_t<OpenMP>::flush(){}
 
-    template <>
     void device_t<OpenMP>::finish(){}
 
-    template <>
     bool device_t<OpenMP>::fakesUva(){
       return false;
     }
 
-    template <>
     void device_t<OpenMP>::waitFor(streamTag tag){}
 
-    template <>
     stream_t device_t<OpenMP>::createStream(){
       return NULL;
     }
 
-    template <>
     void device_t<OpenMP>::freeStream(stream_t s){}
 
-    template <>
     stream_t device_t<OpenMP>::wrapStream(void *handle_){
       return NULL;
     }
 
-    template <>
     streamTag device_t<OpenMP>::tagStream(){
       streamTag ret;
 
@@ -260,12 +239,10 @@ namespace occa {
       return ret;
     }
 
-    template <>
     double device_t<OpenMP>::timeBetween(const streamTag &startTag, const streamTag &endTag){
       return (endTag.tagTime - startTag.tagTime);
     }
 
-    template <>
     std::string device_t<OpenMP>::fixBinaryName(const std::string &filename){
 #if (OCCA_OS & (LINUX_OS | OSX_OS))
       return filename;
@@ -274,7 +251,6 @@ namespace occa {
 #endif
     }
 
-    template <>
     kernel_v* device_t<OpenMP>::buildKernelFromSource(const std::string &filename,
                                                       const std::string &functionName,
                                                       const kernelInfo &info_){
@@ -297,7 +273,6 @@ namespace occa {
       return k;
     }
 
-    template <>
     kernel_v* device_t<OpenMP>::buildKernelFromBinary(const std::string &filename,
                                                       const std::string &functionName){
       OCCA_EXTRACT_DATA(OpenMP, Device);
@@ -319,7 +294,6 @@ namespace occa {
       return k;
     }
 
-    template <>
     void device_t<OpenMP>::cacheKernelInLibrary(const std::string &filename,
                                                 const std::string &functionName,
                                                 const kernelInfo &info_){
@@ -363,7 +337,6 @@ namespace occa {
 #endif
     }
 
-    template <>
     kernel_v* device_t<OpenMP>::loadKernelFromLibrary(const char *cache,
                                                       const std::string &functionName){
 #if 0
@@ -375,7 +348,6 @@ namespace occa {
       return NULL;
     }
 
-    template <>
     memory_v* device_t<OpenMP>::wrapMemory(void *handle_,
                                            const uintptr_t bytes){
       memory_v *mem = new memory_t<OpenMP>;
@@ -389,7 +361,6 @@ namespace occa {
       return mem;
     }
 
-    template <>
     memory_v* device_t<OpenMP>::wrapTexture(void *handle_,
                                             const int dim, const occa::dim &dims,
                                             occa::formatType type, const int permissions){
@@ -414,7 +385,6 @@ namespace occa {
       return mem;
     }
 
-    template <>
     memory_v* device_t<OpenMP>::malloc(const uintptr_t bytes,
                                        void *src){
       memory_v *mem = new memory_t<OpenMP>;
@@ -430,7 +400,6 @@ namespace occa {
       return mem;
     }
 
-    template <>
     memory_v* device_t<OpenMP>::textureAlloc(const int dim, const occa::dim &dims,
                                              void *src,
                                              occa::formatType type, const int permissions){
@@ -456,7 +425,6 @@ namespace occa {
       return mem;
     }
 
-    template <>
     memory_v* device_t<OpenMP>::mappedAlloc(const uintptr_t bytes,
                                             void *src){
       memory_v *mem = malloc(bytes, src);
@@ -466,15 +434,12 @@ namespace occa {
       return mem;
     }
 
-    template <>
     uintptr_t device_t<OpenMP>::memorySize(){
       return sys::installedRAM();
     }
 
-    template <>
     void device_t<OpenMP>::free(){}
 
-    template <>
     int device_t<OpenMP>::simdWidth(){
       simdWidth_ = OCCA_SIMD_WIDTH;
       return OCCA_SIMD_WIDTH;

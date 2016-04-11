@@ -4,6 +4,7 @@
 
 #include "occa/kernel.hpp"
 #include "occa/modes/opencl/headers.hpp"
+#include "occa/modes/opencl/utils.hpp"
 
 namespace occa {
   namespace opencl {
