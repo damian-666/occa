@@ -10,68 +10,48 @@
 
 namespace occa {
   namespace openmp {
-    device_t<OpenMP>::device_t(){
-      strMode = "OpenMP";
-
-      data = NULL;
-
-      uvaEnabled_ = false;
-
-      bytesAllocated = 0;
-
+    device::device() : occa::device_v() {
       getEnvironmentVariables();
-
       sys::addSharedBinaryFlagsTo(compiler, compilerFlags);
     }
 
-    device_t<OpenMP>::device_t(const device_t<OpenMP> &d){
+    device::device(const device &d){
       *this = d;
     }
 
-    device_t<OpenMP>& device_t<OpenMP>::operator = (const device_t<OpenMP> &d){
-      modelID_ = d.modelID_;
-      id_      = d.id_;
+    device& device::operator = (const device &d){
+      initFrom(d);
 
-      data = d.data;
-
-      uvaEnabled_    = d.uvaEnabled_;
-      uvaMap         = d.uvaMap;
-      uvaDirtyMemory = d.uvaDirtyMemory;
-
-      compiler      = d.compiler;
+      vendor = d.vendor;
+      compiler = d.compiler;
       compilerFlags = d.compilerFlags;
-
-      bytesAllocated = d.bytesAllocated;
+      compilerEnvScript = d.compilerEnvScript;
 
       return *this;
     }
 
-    void* device_t<OpenMP>::getContextHandle(){
+    void* device::getContextHandle(){
       return NULL;
     }
 
-    void device_t<OpenMP>::setup(argInfoMap &aim){
+    void device::setup(argInfoMap &aim){
       properties = aim;
 
       // Generate an OpenMP library dependency (so it doesn't crash when dlclose())
       omp_get_num_threads();
 
-      data = new OpenMPDeviceData_t;
-
-      OCCA_EXTRACT_DATA(OpenMP, Device);
-
-      data_.vendor         = sys::compilerVendor(compiler);
-      data_.OpenMPFlag     = omp::compilerFlag(data_.vendor, compiler);
-      data_.supportsOpenMP = (data_.OpenMPFlag != omp::notSupported);
+      vendor         = sys::compilerVendor(compiler);
+      ompFlag        = omp::compilerFlag(data_.vendor, compiler);
+      supportsOpenMP = (data_.OpenMPFlag != omp::notSupported);
 
       sys::addSharedBinaryFlagsTo(data_.vendor, compilerFlags);
     }
 
-    void device_t<OpenMP>::addOccaHeadersToInfo(kernelInfo &info_){
-      info_.mode = OpenMP;
+    // [REFACTOR]
+    void device::addOccaHeadersToInfo(kernelInfo &info_){
     }
 
-    std::string device_t<OpenMP>::getInfoSalt(const kernelInfo &info_){
+    std::string device::getInfoSalt(const kernelInfo &info_){
       std::stringstream salt;
 
       salt << "OpenMP"
@@ -84,7 +64,7 @@ namespace occa {
       return salt.str();
     }
 
-    deviceIdentifier device_t<OpenMP>::getIdentifier() const {
+    deviceIdentifier device::getIdentifier() const {
       deviceIdentifier dID;
 
       dID.mode_ = OpenMP;
@@ -114,7 +94,7 @@ namespace occa {
       return dID;
     }
 
-    void device_t<OpenMP>::getEnvironmentVariables(){
+    void device::getEnvironmentVariables(){
       char *c_compiler = getenv("OCCA_CXX");
 
       if(c_compiler != NULL){
@@ -180,14 +160,14 @@ namespace occa {
 #endif
     }
 
-    void device_t<OpenMP>::appendAvailableDevices(std::vector<device> &dList){
+    void device::appendAvailableDevices(std::vector<device> &dList){
       device d;
       d.setup("OpenMP");
 
       dList.push_back(d);
     }
 
-    void device_t<OpenMP>::setCompiler(const std::string &compiler_){
+    void device::setCompiler(const std::string &compiler_){
       compiler = compiler_;
 
       OCCA_EXTRACT_DATA(OpenMP, Device);
@@ -199,11 +179,11 @@ namespace occa {
       sys::addSharedBinaryFlagsTo(data_.vendor, compilerFlags);
     }
 
-    void device_t<OpenMP>::setCompilerEnvScript(const std::string &compilerEnvScript_){
+    void device::setCompilerEnvScript(const std::string &compilerEnvScript_){
       compilerEnvScript = compilerEnvScript_;
     }
 
-    void device_t<OpenMP>::setCompilerFlags(const std::string &compilerFlags_){
+    void device::setCompilerFlags(const std::string &compilerFlags_){
       OCCA_EXTRACT_DATA(OpenMP, Device);
 
       compilerFlags = compilerFlags_;
@@ -211,27 +191,27 @@ namespace occa {
       sys::addSharedBinaryFlagsTo(data_.vendor, compilerFlags);
     }
 
-    void device_t<OpenMP>::flush(){}
+    void device::flush(){}
 
-    void device_t<OpenMP>::finish(){}
+    void device::finish(){}
 
-    bool device_t<OpenMP>::fakesUva(){
+    bool device::fakesUva(){
       return false;
     }
 
-    void device_t<OpenMP>::waitFor(streamTag tag){}
+    void device::waitFor(streamTag tag){}
 
-    stream_t device_t<OpenMP>::createStream(){
+    stream_t device::createStream(){
       return NULL;
     }
 
-    void device_t<OpenMP>::freeStream(stream_t s){}
+    void device::freeStream(stream_t s){}
 
-    stream_t device_t<OpenMP>::wrapStream(void *handle_){
+    stream_t device::wrapStream(void *handle_){
       return NULL;
     }
 
-    streamTag device_t<OpenMP>::tagStream(){
+    streamTag device::tagStream(){
       streamTag ret;
 
       ret.tagTime = currentTime();
@@ -239,11 +219,11 @@ namespace occa {
       return ret;
     }
 
-    double device_t<OpenMP>::timeBetween(const streamTag &startTag, const streamTag &endTag){
+    double device::timeBetween(const streamTag &startTag, const streamTag &endTag){
       return (endTag.tagTime - startTag.tagTime);
     }
 
-    std::string device_t<OpenMP>::fixBinaryName(const std::string &filename){
+    std::string device::fixBinaryName(const std::string &filename){
 #if (OCCA_OS & (LINUX_OS | OSX_OS))
       return filename;
 #else
@@ -251,7 +231,7 @@ namespace occa {
 #endif
     }
 
-    kernel_v* device_t<OpenMP>::buildKernelFromSource(const std::string &filename,
+    kernel_v* device::buildKernelFromSource(const std::string &filename,
                                                       const std::string &functionName,
                                                       const kernelInfo &info_){
       OCCA_EXTRACT_DATA(OpenMP, Device);
@@ -273,7 +253,7 @@ namespace occa {
       return k;
     }
 
-    kernel_v* device_t<OpenMP>::buildKernelFromBinary(const std::string &filename,
+    kernel_v* device::buildKernelFromBinary(const std::string &filename,
                                                       const std::string &functionName){
       OCCA_EXTRACT_DATA(OpenMP, Device);
 
@@ -294,7 +274,7 @@ namespace occa {
       return k;
     }
 
-    void device_t<OpenMP>::cacheKernelInLibrary(const std::string &filename,
+    void device::cacheKernelInLibrary(const std::string &filename,
                                                 const std::string &functionName,
                                                 const kernelInfo &info_){
 #if 0
@@ -337,7 +317,7 @@ namespace occa {
 #endif
     }
 
-    kernel_v* device_t<OpenMP>::loadKernelFromLibrary(const char *cache,
+    kernel_v* device::loadKernelFromLibrary(const char *cache,
                                                       const std::string &functionName){
 #if 0
       kernel_v *k = new kernel_t<OpenMP>;
@@ -348,7 +328,7 @@ namespace occa {
       return NULL;
     }
 
-    memory_v* device_t<OpenMP>::wrapMemory(void *handle_,
+    memory_v* device::wrapMemory(void *handle_,
                                            const uintptr_t bytes){
       memory_v *mem = new memory_t<OpenMP>;
 
@@ -361,7 +341,7 @@ namespace occa {
       return mem;
     }
 
-    memory_v* device_t<OpenMP>::wrapTexture(void *handle_,
+    memory_v* device::wrapTexture(void *handle_,
                                             const int dim, const occa::dim &dims,
                                             occa::formatType type, const int permissions){
       memory_v *mem = new memory_t<OpenMP>;
@@ -385,7 +365,7 @@ namespace occa {
       return mem;
     }
 
-    memory_v* device_t<OpenMP>::malloc(const uintptr_t bytes,
+    memory_v* device::malloc(const uintptr_t bytes,
                                        void *src){
       memory_v *mem = new memory_t<OpenMP>;
 
@@ -400,7 +380,7 @@ namespace occa {
       return mem;
     }
 
-    memory_v* device_t<OpenMP>::textureAlloc(const int dim, const occa::dim &dims,
+    memory_v* device::textureAlloc(const int dim, const occa::dim &dims,
                                              void *src,
                                              occa::formatType type, const int permissions){
       memory_v *mem = new memory_t<OpenMP>;
@@ -425,7 +405,7 @@ namespace occa {
       return mem;
     }
 
-    memory_v* device_t<OpenMP>::mappedAlloc(const uintptr_t bytes,
+    memory_v* device::mappedAlloc(const uintptr_t bytes,
                                             void *src){
       memory_v *mem = malloc(bytes, src);
 
@@ -434,13 +414,13 @@ namespace occa {
       return mem;
     }
 
-    uintptr_t device_t<OpenMP>::memorySize(){
+    uintptr_t device::memorySize(){
       return sys::installedRAM();
     }
 
-    void device_t<OpenMP>::free(){}
+    void device::free(){}
 
-    int device_t<OpenMP>::simdWidth(){
+    int device::simdWidth(){
       simdWidth_ = OCCA_SIMD_WIDTH;
       return OCCA_SIMD_WIDTH;
     }

@@ -78,8 +78,8 @@ namespace occa {
 
       createSourceFileFrom(filename, hashDir, info);
 
-      occa::device device(dHandle);
       std::stringstream command;
+      occa::device device(dHandle);
       std::string compilerEnvScript = device.getCompilerEnvScript();
       if(compilerEnvScript.size())
         command << compilerEnvScript << " && ";

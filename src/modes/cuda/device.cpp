@@ -4,7 +4,7 @@
 
 namespace occa {
   namespace cuda {
-    device_t<CUDA>::device_t() {
+    device::device() {
       strMode = "CUDA";
 
       data = NULL;
@@ -16,11 +16,11 @@ namespace occa {
       getEnvironmentVariables();
     }
 
-    device_t<CUDA>::device_t(const device_t<CUDA> &d){
+    device::device(const device &d){
       *this = d;
     }
 
-    device_t<CUDA>& device_t<CUDA>::operator = (const device_t<CUDA> &d){
+    device& device::operator = (const device &d){
       modelID_ = d.modelID_;
       id_      = d.id_;
 
@@ -38,13 +38,13 @@ namespace occa {
       return *this;
     }
 
-    void* device_t<CUDA>::getContextHandle(){
+    void* device::getContextHandle(){
       OCCA_EXTRACT_DATA(CUDA, Device);
 
       return (void*) data_.context;
     }
 
-    void device_t<CUDA>::setup(argInfoMap &aim){
+    void device::setup(argInfoMap &aim){
       cuda::init();
       properties = aim;
 
@@ -66,11 +66,11 @@ namespace occa {
                       cuCtxCreate(&data_.context, CU_CTX_SCHED_AUTO, data_.device));
     }
 
-    void device_t<CUDA>::addOccaHeadersToInfo(kernelInfo &info_){
+    void device::addOccaHeadersToInfo(kernelInfo &info_){
       info_.mode = CUDA;
     }
 
-    std::string device_t<CUDA>::getInfoSalt(const kernelInfo &info_){
+    std::string device::getInfoSalt(const kernelInfo &info_){
       std::stringstream salt;
 
       salt << "CUDA"
@@ -83,7 +83,7 @@ namespace occa {
       return salt.str();
     }
 
-    deviceIdentifier device_t<CUDA>::getIdentifier() const {
+    deviceIdentifier device::getIdentifier() const {
       deviceIdentifier dID;
 
       dID.mode_ = CUDA;
@@ -116,7 +116,7 @@ namespace occa {
       return dID;
     }
 
-    void device_t<CUDA>::getEnvironmentVariables(){
+    void device::getEnvironmentVariables(){
       char *c_compiler = getenv("OCCA_CUDA_COMPILER");
 
       if(c_compiler != NULL)
@@ -137,7 +137,7 @@ namespace occa {
       }
     }
 
-    void device_t<CUDA>::appendAvailableDevices(std::vector<device> &dList){
+    void device::appendAvailableDevices(std::vector<device> &dList){
       cuda::init();
 
       int deviceCount = cuda::getDeviceCount();
@@ -150,35 +150,35 @@ namespace occa {
       }
     }
 
-    void device_t<CUDA>::setCompiler(const std::string &compiler_){
+    void device::setCompiler(const std::string &compiler_){
       compiler = compiler_;
     }
 
-    void device_t<CUDA>::setCompilerEnvScript(const std::string &compilerEnvScript_){
+    void device::setCompilerEnvScript(const std::string &compilerEnvScript_){
       compilerEnvScript = compilerEnvScript_;
     }
 
-    void device_t<CUDA>::setCompilerFlags(const std::string &compilerFlags_){
+    void device::setCompilerFlags(const std::string &compilerFlags_){
       compilerFlags = compilerFlags_;
     }
 
-    void device_t<CUDA>::flush(){}
+    void device::flush(){}
 
-    void device_t<CUDA>::finish(){
+    void device::finish(){
       OCCA_CUDA_CHECK("Device: Finish",
                       cuStreamSynchronize(*((CUstream*) currentStream)) );
     }
 
-    bool device_t<CUDA>::fakesUva(){
+    bool device::fakesUva(){
       return true;
     }
 
-    void device_t<CUDA>::waitFor(streamTag tag){
+    void device::waitFor(streamTag tag){
       OCCA_CUDA_CHECK("Device: Waiting For Tag",
                       cuEventSynchronize(cuda::event(tag)));
     }
 
-    stream_t device_t<CUDA>::createStream(){
+    stream_t device::createStream(){
       OCCA_EXTRACT_DATA(CUDA, Device);
 
       CUstream *retStream = new CUstream;
@@ -192,18 +192,18 @@ namespace occa {
       return retStream;
     }
 
-    void device_t<CUDA>::freeStream(stream_t s){
+    void device::freeStream(stream_t s){
       OCCA_CUDA_CHECK("Device: freeStream",
                       cuStreamDestroy( *((CUstream*) s) ));
 
       delete (CUstream*) s;
     }
 
-    stream_t device_t<CUDA>::wrapStream(void *handle_){
+    stream_t device::wrapStream(void *handle_){
       return handle_;
     }
 
-    streamTag device_t<CUDA>::tagStream(){
+    streamTag device::tagStream(){
       OCCA_EXTRACT_DATA(CUDA, Device);
 
       streamTag ret;
@@ -220,7 +220,7 @@ namespace occa {
       return ret;
     }
 
-    double device_t<CUDA>::timeBetween(const streamTag &startTag, const streamTag &endTag){
+    double device::timeBetween(const streamTag &startTag, const streamTag &endTag){
       OCCA_CUDA_CHECK("Device: Waiting for endTag",
                       cuEventSynchronize(cuda::event(endTag)));
 
@@ -231,11 +231,11 @@ namespace occa {
       return (double) (1.0e-3 * (double) msTimeTaken);
     }
 
-    std::string device_t<CUDA>::fixBinaryName(const std::string &filename){
+    std::string device::fixBinaryName(const std::string &filename){
       return filename;
     }
 
-    kernel_v* device_t<CUDA>::buildKernelFromSource(const std::string &filename,
+    kernel_v* device::buildKernelFromSource(const std::string &filename,
                                                     const std::string &functionName,
                                                     const kernelInfo &info_){
       OCCA_EXTRACT_DATA(CUDA, Device);
@@ -258,7 +258,7 @@ namespace occa {
       return k;
     }
 
-    kernel_v* device_t<CUDA>::buildKernelFromBinary(const std::string &filename,
+    kernel_v* device::buildKernelFromBinary(const std::string &filename,
                                                     const std::string &functionName){
       OCCA_EXTRACT_DATA(CUDA, Device);
 
@@ -276,7 +276,7 @@ namespace occa {
       return k;
     }
 
-    void device_t<CUDA>::cacheKernelInLibrary(const std::string &filename,
+    void device::cacheKernelInLibrary(const std::string &filename,
                                               const std::string &functionName,
                                               const kernelInfo &info_){
 #if 0
@@ -315,7 +315,7 @@ namespace occa {
 #endif
     }
 
-    kernel_v* device_t<CUDA>::loadKernelFromLibrary(const char *cache,
+    kernel_v* device::loadKernelFromLibrary(const char *cache,
                                                     const std::string &functionName){
 #if 0
       OCCA_EXTRACT_DATA(CUDA, Device);
@@ -336,7 +336,7 @@ namespace occa {
       return NULL;
     }
 
-    memory_v* device_t<CUDA>::wrapMemory(void *handle_,
+    memory_v* device::wrapMemory(void *handle_,
                                          const uintptr_t bytes){
       memory_v *mem = new memory_t<CUDA>;
 
@@ -349,7 +349,7 @@ namespace occa {
       return mem;
     }
 
-    memory_v* device_t<CUDA>::wrapTexture(void *handle_,
+    memory_v* device::wrapTexture(void *handle_,
                                           const int dim, const occa::dim &dims,
                                           occa::formatType type, const int permissions){
       memory_v *mem = new memory_t<CUDA>;
@@ -372,7 +372,7 @@ namespace occa {
       return mem;
     }
 
-    memory_v* device_t<CUDA>::malloc(const uintptr_t bytes,
+    memory_v* device::malloc(const uintptr_t bytes,
                                      void *src){
       OCCA_EXTRACT_DATA(CUDA, Device);
 
@@ -394,7 +394,7 @@ namespace occa {
       return mem;
     }
 
-    memory_v* device_t<CUDA>::textureAlloc(const int dim, const occa::dim &dims,
+    memory_v* device::textureAlloc(const int dim, const occa::dim &dims,
                                            void *src,
                                            occa::formatType type, const int permissions){
       OCCA_EXTRACT_DATA(CUDA, Device);
@@ -465,7 +465,7 @@ namespace occa {
       return mem;
     }
 
-    memory_v* device_t<CUDA>::mappedAlloc(const uintptr_t bytes,
+    memory_v* device::mappedAlloc(const uintptr_t bytes,
                                           void *src){
       OCCA_EXTRACT_DATA(CUDA, Device);
 
@@ -494,13 +494,13 @@ namespace occa {
       return mem;
     }
 
-    uintptr_t device_t<CUDA>::memorySize(){
+    uintptr_t device::memorySize(){
       OCCA_EXTRACT_DATA(CUDA, Device);
 
       return cuda::getDeviceMemorySize(data_.device);
     }
 
-    void device_t<CUDA>::free(){
+    void device::free(){
       OCCA_EXTRACT_DATA(CUDA, Device);
 
       OCCA_CUDA_CHECK("Device: Freeing Context",
@@ -509,7 +509,7 @@ namespace occa {
       delete (CUDADeviceData_t*) data;
     }
 
-    int device_t<CUDA>::simdWidth(){
+    int device::simdWidth(){
       if(simdWidth_)
         return simdWidth_;
 

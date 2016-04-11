@@ -1,7 +1,30 @@
 namespace occa {
   namespace threads {
+    //---[ Types ]----------------------
+    job_t::job_t() {}
+
+    job_t::job_t(const job_t &k) {
+      *this = k;
+    }
+
+    job_t& job_t::operator = (const job_t &k) {
+      rank     = k.rank;
+      count    = k.count;
+      schedule = k.schedule;
+
+      handle = k.handle;
+
+      dims  = k.dims;
+      inner = k.inner;
+      outer = k.outer;
+
+      args = k.args;
+    }
+    //==================================
+
+    //---[ Functions ]------------------
     void* limbo(void *args){
-      PthreadWorkerData_t &data = *((PthreadWorkerData_t*) args);
+      workerData_t &data = *((workerData_t*) args);
 
       // Thread affinity
 #if (OCCA_OS == LINUX_OS) // Not WINUX
@@ -83,5 +106,6 @@ namespace occa {
       delete [] pkInfo.args;
       delete &pkInfo;
     }
+    //==================================
   }
 }

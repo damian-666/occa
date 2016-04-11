@@ -1,32 +1,18 @@
-#ifndef OCCA_PTHREADS_KERNEL_HEADER
-#define OCCA_PTHREADS_KERNEL_HEADER
+#ifndef OCCA_THREADS_KERNEL_HEADER
+#define OCCA_THREADS_KERNEL_HEADER
 
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
-#  if (OCCA_OS != WINUX_OS)
-#    include <sys/sysctl.h>
-#  endif
-#  include <pthread.h>
-#  include <dlfcn.h>
-#else
-#  include <intrin.h>
-#endif
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <string.h>
-#include <fcntl.h>
-
-#include <queue>
-
-#include "occa/base.hpp"
+#include "occa/modes/threads/headers.hpp"
+#include "occa/kernel.hpp"
 
 namespace occa {
   namespace threads {
     class kernel : public occa::kernel_v {
-    private:
-      int rank, count;
-
     public:
+      void *dlHandle;
+      handleFunction_t handle;
+
+      void *vArgs[2*OCCA_MAX_ARGS];
+
       kernel();
       kernel(const kernel &k);
       kernel& operator = (const kernel &k);
@@ -51,6 +37,10 @@ namespace occa {
       void runFromArguments(const int kArgc, const kernelArg *kArgs);
 
       void free();
+
+      //---[ Custom ]-------------------
+      int threads();
+      //================================
     };
   }
 }

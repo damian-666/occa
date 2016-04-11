@@ -1,10 +1,11 @@
 #if OCCA_CUDA_ENABLED
 
-#include "occa/CUDA.hpp"
+#include "occa/modes/cuda/kernel.hpp"
+#include "occa/base.hpp"
 
 namespace occa {
   namespace cuda {
-    kernel_t<CUDA>::kernel_t(){
+    kernel::kernel(){
       strMode = "CUDA";
 
       data    = NULL;
@@ -18,11 +19,11 @@ namespace occa {
       preferredDimSize_    = 0;
     }
 
-    kernel_t<CUDA>::kernel_t(const kernel_t<CUDA> &k){
+    kernel::kernel(const kernel &k){
       *this = k;
     }
 
-    kernel_t<CUDA>& kernel_t<CUDA>::operator = (const kernel_t<CUDA> &k){
+    kernel& kernel::operator = (const kernel &k){
       data    = k.data;
       dHandle = k.dHandle;
 
@@ -39,25 +40,25 @@ namespace occa {
       return *this;
     }
 
-    kernel_t<CUDA>::~kernel_t(){}
+    kernel::~kernel(){}
 
-    void* kernel_t<CUDA>::getKernelHandle(){
+    void* kernel::getKernelHandle(){
       OCCA_EXTRACT_DATA(CUDA, Kernel);
 
       return data_.function;
     }
 
-    void* kernel_t<CUDA>::getProgramHandle(){
+    void* kernel::getProgramHandle(){
       OCCA_EXTRACT_DATA(CUDA, Kernel);
 
       return data_.module;
     }
 
-    std::string kernel_t<CUDA>::fixBinaryName(const std::string &filename){
+    std::string kernel::fixBinaryName(const std::string &filename){
       return filename;
     }
 
-    kernel_t<CUDA>* kernel_t<CUDA>::buildFromSource(const std::string &filename,
+    kernel* kernel::buildFromSource(const std::string &filename,
                                                     const std::string &functionName,
                                                     const kernelInfo &info_){
 
@@ -195,7 +196,7 @@ namespace occa {
       return this;
     }
 
-    kernel_t<CUDA>* kernel_t<CUDA>::buildFromBinary(const std::string &filename,
+    kernel* kernel::buildFromBinary(const std::string &filename,
                                                     const std::string &functionName){
 
       name = functionName;
@@ -211,7 +212,7 @@ namespace occa {
       return this;
     }
 
-    kernel_t<CUDA>* kernel_t<CUDA>::loadFromLibrary(const char *cache,
+    kernel* kernel::loadFromLibrary(const char *cache,
                                                     const std::string &functionName){
       OCCA_EXTRACT_DATA(CUDA, Kernel);
 
@@ -224,7 +225,7 @@ namespace occa {
       return this;
     }
 
-    uintptr_t kernel_t<CUDA>::maximumInnerDimSize(){
+    uintptr_t kernel::maximumInnerDimSize(){
       if(maximumInnerDimSize_)
         return maximumInnerDimSize_;
 
@@ -240,12 +241,12 @@ namespace occa {
       return maximumInnerDimSize_;
     }
 
-    int kernel_t<CUDA>::preferredDimSize(){
+    int kernel::preferredDimSize(){
       preferredDimSize_ = 32;
       return 32;
     }
 
-    void kernel_t<CUDA>::runFromArguments(const int kArgc, const kernelArg *kArgs){
+    void kernel::runFromArguments(const int kArgc, const kernelArg *kArgs){
       CUDAKernelData_t &data_ = *((CUDAKernelData_t*) data);
       CUfunction function_ = data_.function;
 
@@ -269,7 +270,7 @@ namespace occa {
       delete [] data_.vArgs;
     }
 
-    void kernel_t<CUDA>::free(){
+    void kernel::free(){
       OCCA_EXTRACT_DATA(CUDA, Kernel);
 
       OCCA_CUDA_CHECK("Kernel (" + name + ") : Unloading Module",

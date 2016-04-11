@@ -1,33 +1,32 @@
-#ifndef OCCA_PTHREADS_DEVICE_HEADER
-#define OCCA_PTHREADS_DEVICE_HEADER
+#ifndef OCCA_THREADS_DEVICE_HEADER
+#define OCCA_THREADS_DEVICE_HEADER
 
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
-#  if (OCCA_OS != WINUX_OS)
-#    include <sys/sysctl.h>
-#  endif
-#  include <pthread.h>
-#  include <dlfcn.h>
-#else
-#  include <intrin.h>
-#endif
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <string.h>
-#include <fcntl.h>
-
-#include <queue>
-
-#include "occa/base.hpp"
+#include "occa/modes/threads/headers.hpp"
+#include "occa/modes/threads/utils.hpp"
+#include "occa/device.hpp"
 
 namespace occa {
   namespace threads {
     class device : public occa::device_v {
-    private:
+    public:
       int vendor;
       std::string compiler, compilerFlags, compilerEnvScript;
 
-    public:
+      int coreCount;
+
+      int threads;
+      schedule_t schedule;
+
+#if (OCCA_OS & (LINUX_OS | OSX_OS))
+      pthread_t tid[50];
+#else
+      DWORD tid[50];
+#endif
+
+      std::queue<job_t> jobs;
+
+      mutex_t jobMutex, kernelMutex;
+
       device();
       device(const device &k);
       device& operator = (const device &k);
@@ -50,7 +49,7 @@ namespace occa {
 
       bool fakesUva();
 
-      //  |---[ Stream ]----------------
+      //---[ Stream ]-------------------
       stream_t createStream();
       void freeStream(stream_t s);
 
@@ -59,9 +58,9 @@ namespace occa {
       double timeBetween(const streamTag &startTag, const streamTag &endTag);
 
       stream_t wrapStream(void *handle_);
-      //  |=============================
+      //================================
 
-      //  |---[ Kernel ]----------------
+      //---[ Kernel ]-------------------
       std::string fixBinaryName(const std::string &filename);
 
       kernel_v* buildKernelFromSource(const std::string &filename,
@@ -70,9 +69,9 @@ namespace occa {
 
       kernel_v* buildKernelFromBinary(const std::string &filename,
                                       const std::string &functionName);
-      //  |=============================
+      //================================
 
-      //  |---[ Kernel ]----------------
+      //---[ Memory ]-------------------
       memory_v* wrapMemory(void *handle_,
                            const uintptr_t bytes);
 
@@ -83,7 +82,11 @@ namespace occa {
                             void *src);
 
       uintptr_t memorySize();
-      //  |=============================
+      //================================
+
+      //---[ Custom ]-------------------
+      void addJob(job_t &job);
+      //================================
     };
   }
 }

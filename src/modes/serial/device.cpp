@@ -33,7 +33,6 @@ namespace occa {
       properties = aim;
 
       vendor = sys::compilerVendor(compiler);
-
       sys::addSharedBinaryFlagsTo(vendor, compilerFlags);
     }
 

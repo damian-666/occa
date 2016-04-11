@@ -1,15 +1,13 @@
-#include "occa/defines.hpp"
-
 #if OCCA_OPENMP_ENABLED
-
-#include "occa/Serial.hpp"
-#include "occa/OpenMP.hpp"
 
 #include <omp.h>
 
+#include "occa/modes/openmp/kernel.hpp"
+#include "occa/base.hpp"
+
 namespace occa {
   namespace openmp {
-    kernel_t<OpenMP>::kernel_t(){
+    kernel::kernel(){
       strMode = "OpenMP";
 
       data    = NULL;
@@ -20,11 +18,11 @@ namespace occa {
       outer = occa::dim(1,1,1);
     }
 
-    kernel_t<OpenMP>::kernel_t(const kernel_t<OpenMP> &k){
+    kernel::kernel(const kernel &k){
       *this = k;
     }
 
-    kernel_t<OpenMP>& kernel_t<OpenMP>::operator = (const kernel_t<OpenMP> &k){
+    kernel& kernel::operator = (const kernel &k){
       data    = k.data;
       dHandle = k.dHandle;
 
@@ -39,9 +37,9 @@ namespace occa {
       return *this;
     }
 
-    kernel_t<OpenMP>::~kernel_t(){}
+    kernel::~kernel(){}
 
-    void* kernel_t<OpenMP>::getKernelHandle(){
+    void* kernel::getKernelHandle(){
       OCCA_EXTRACT_DATA(OpenMP, Kernel);
 
       void *ret;
@@ -51,13 +49,13 @@ namespace occa {
       return ret;
     }
 
-    void* kernel_t<OpenMP>::getProgramHandle(){
+    void* kernel::getProgramHandle(){
       OCCA_EXTRACT_DATA(OpenMP, Kernel);
 
       return data_.dlHandle;
     }
 
-    std::string kernel_t<OpenMP>::fixBinaryName(const std::string &filename){
+    std::string kernel::fixBinaryName(const std::string &filename){
 #if (OCCA_OS & (LINUX_OS | OSX_OS))
       return filename;
 #else
@@ -65,7 +63,7 @@ namespace occa {
 #endif
     }
 
-    kernel_t<OpenMP>* kernel_t<OpenMP>::buildFromSource(const std::string &filename,
+    kernel* kernel::buildFromSource(const std::string &filename,
                                                         const std::string &functionName,
                                                         const kernelInfo &info_){
 
@@ -173,7 +171,7 @@ namespace occa {
       return this;
     }
 
-    kernel_t<OpenMP>* kernel_t<OpenMP>::buildFromBinary(const std::string &filename,
+    kernel* kernel::buildFromBinary(const std::string &filename,
                                                         const std::string &functionName){
 
       name = functionName;
@@ -188,23 +186,23 @@ namespace occa {
       return this;
     }
 
-    kernel_t<OpenMP>* kernel_t<OpenMP>::loadFromLibrary(const char *cache,
+    kernel* kernel::loadFromLibrary(const char *cache,
                                                         const std::string &functionName){
       return buildFromBinary(cache, functionName);
     }
 
-    uintptr_t kernel_t<OpenMP>::maximumInnerDimSize(){
+    uintptr_t kernel::maximumInnerDimSize(){
       return ((uintptr_t) -1);
     }
 
     // [-] Missing
-    int kernel_t<OpenMP>::preferredDimSize(){
+    int kernel::preferredDimSize(){
       preferredDimSize_ = OCCA_SIMD_WIDTH;
       return OCCA_SIMD_WIDTH;
     }
 
 
-    void kernel_t<OpenMP>::runFromArguments(const int kArgc, const kernelArg *kArgs){
+    void kernel::runFromArguments(const int kArgc, const kernelArg *kArgs){
       OpenMPKernelData_t &data_ = *((OpenMPKernelData_t*) data);
       handleFunction_t tmpKernel = (handleFunction_t) data_.handle;
       int occaKernelArgs[6];
@@ -228,7 +226,7 @@ namespace occa {
                        argc, data_.vArgs);
     }
 
-    void kernel_t<OpenMP>::free(){
+    void kernel::free(){
       OCCA_EXTRACT_DATA(OpenMP, Kernel);
 
 #if (OCCA_OS & (LINUX_OS | OSX_OS))
