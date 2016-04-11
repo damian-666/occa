@@ -137,6 +137,9 @@ namespace occa {
         compilerFlags = "";
 #endif
       }
+
+      properties["compiler"]      = compiler;
+      properties["compilerFlags"] = compilerFlags;
     }
 
     void device::appendAvailableDevices(std::vector<device> &dList){

@@ -160,6 +160,10 @@ namespace occa {
         std::cout << "WARNING: Visual Studio environment variable not found -> compiler environment (vcvarsall.bat) maybe not correctly setup." << std::endl;
       }
 #endif
+
+      properties["compiler"]          = compiler;
+      properties["compilerFlags"]     = compilerFlags;
+      properties["compilerEnvScript"] = compilerEnvScript;
     }
 
     void device::appendAvailableDevices(std::vector<device> &dList){

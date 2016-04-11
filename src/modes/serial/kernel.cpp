@@ -100,39 +100,17 @@ namespace occa {
       const std::string occaLib = env::OCCA_DIR + "/lib/libocca.lib ";
 #  endif
 
-#  if OCCA_CUDA_ENABLED
-      const std::string cupath = getenv("CUDA_PATH");
-      const std::string cuInc  = cupath + "\\include";
-      const std::string cuLib  = cupath + "\\lib\\x64\\cuda.lib ";
-#  endif
-#  if OCCA_OPENCL_ENABLED
-      const std::string clpath = getenv("OPENCL_PATH");
-      const std::string clLib  = cpath + "\\lib\\x64\\OpenCL.lib ";
-#  endif
-
       command << dHandle->compiler
               << " /D MC_CL_EXE"
               << " /D OCCA_OS=WINDOWS_OS"
               << " /EHsc"
               << " /wd4244 /wd4800 /wd4804 /wd4018"
-              << ' '    << dHandle->compilerFlags
-              << ' '    << info.flags
-              << " /I"  << env::OCCA_DIR << "/include"
-#  if OCCA_CUDA_ENABLED
-              << " /I"  << cuInc
-#  endif
-#  if OCCA_OPENCL_ENABLED
-              << " /I"  << clInc
-#  endif
-              << ' '    << sourceFile
+              << ' '       << dHandle->compilerFlags
+              << ' '       << info.flags
+              << " /I"     << env::OCCA_DIR << "/include"
+              << ' '       << sourceFile
               << " /link " << occaLib
-#  if OCCA_CUDA_ENABLED
-              << " /link"  << cuLib
-#  endif
-#  if OCCA_OPENCL_ENABLED
-              << " /link"  << clLib
-#  endif
-              << " /OUT:" << binaryFile
+              << " /OUT:"  << binaryFile
               << std::endl;
 #endif
 
