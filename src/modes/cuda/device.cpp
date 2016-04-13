@@ -241,8 +241,8 @@ namespace occa {
     }
 
     kernel_v* device::buildKernelFromSource(const std::string &filename,
-                                                    const std::string &functionName,
-                                                    const kernelInfo &info_){
+                                            const std::string &functionName,
+                                            const kernelInfo &info_){
       OCCA_EXTRACT_DATA(CUDA, Device);
 
       OCCA_CUDA_CHECK("Device: Setting Context",
@@ -264,7 +264,7 @@ namespace occa {
     }
 
     kernel_v* device::buildKernelFromBinary(const std::string &filename,
-                                                    const std::string &functionName){
+                                            const std::string &functionName){
       OCCA_EXTRACT_DATA(CUDA, Device);
 
       kernel_v *k = new kernel_t<CUDA>;
@@ -282,8 +282,8 @@ namespace occa {
     }
 
     void device::cacheKernelInLibrary(const std::string &filename,
-                                              const std::string &functionName,
-                                              const kernelInfo &info_){
+                                      const std::string &functionName,
+                                      const kernelInfo &info_){
 #if 0
       //---[ Creating shared library ]----
       kernel tmpK = occa::device(this).buildKernelFromSource(filename, functionName, info_);
@@ -321,7 +321,7 @@ namespace occa {
     }
 
     kernel_v* device::loadKernelFromLibrary(const char *cache,
-                                                    const std::string &functionName){
+                                            const std::string &functionName){
 #if 0
       OCCA_EXTRACT_DATA(CUDA, Device);
 
@@ -342,12 +342,13 @@ namespace occa {
     }
 
     memory_v* device::wrapMemory(void *handle_,
-                                         const uintptr_t bytes){
+                                 const uintptr_t bytes){
       memory_v *mem = new memory_t<CUDA>;
 
       mem->dHandle = this;
       mem->size    = bytes;
-      mem->handle  = (CUdeviceptr*) handle_;
+      mem->handle  = new CUdeviceptr;
+      ::memcpy(mem->handle, handle_, sizeof(CUdeviceptr));
 
       mem->memInfo |= memFlag::isAWrapper;
 
@@ -355,8 +356,8 @@ namespace occa {
     }
 
     memory_v* device::wrapTexture(void *handle_,
-                                          const int dim, const occa::dim &dims,
-                                          occa::formatType type, const int permissions){
+                                  const int dim, const occa::dim &dims,
+                                  occa::formatType type, const int permissions){
       memory_v *mem = new memory_t<CUDA>;
 
       mem->dHandle = this;
@@ -378,13 +379,13 @@ namespace occa {
     }
 
     memory_v* device::malloc(const uintptr_t bytes,
-                                     void *src){
+                             void *src){
       OCCA_EXTRACT_DATA(CUDA, Device);
 
       memory_v *mem = new memory_t<CUDA>;
 
       mem->dHandle = this;
-      mem->handle  = new CUdeviceptr*;
+      mem->handle  = new CUdeviceptr;
       mem->size    = bytes;
 
       OCCA_CUDA_CHECK("Device: Setting Context",
@@ -400,8 +401,8 @@ namespace occa {
     }
 
     memory_v* device::textureAlloc(const int dim, const occa::dim &dims,
-                                           void *src,
-                                           occa::formatType type, const int permissions){
+                                   void *src,
+                                   occa::formatType type, const int permissions){
       OCCA_EXTRACT_DATA(CUDA, Device);
 
       memory_v *mem = new memory_t<CUDA>;
@@ -471,13 +472,13 @@ namespace occa {
     }
 
     memory_v* device::mappedAlloc(const uintptr_t bytes,
-                                          void *src){
+                                  void *src){
       OCCA_EXTRACT_DATA(CUDA, Device);
 
       memory_v *mem = new memory_t<CUDA>;
 
       mem->dHandle  = this;
-      mem->handle   = new CUdeviceptr*;
+      mem->handle   = new CUdeviceptr;
       mem->size     = bytes;
 
       mem->memInfo |= memFlag::isMapped;

@@ -38,7 +38,6 @@ namespace occa {
                   const uintptr_t offset,
                   const bool async);
 
-      void mappedFree();
       void free();
     };
   }

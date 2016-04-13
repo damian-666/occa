@@ -115,37 +115,24 @@ namespace occa {
                                         0, NULL, NULL));
     }
 
-    void memory::mappedFree(){
-      cl_command_queue &stream = *((cl_command_queue*) dHandle->currentStream);
-      cl_int error;
+    void memory::free(){
+      if (isMapped()) {
+        cl_command_queue &stream = *((cl_command_queue*) dHandle->currentStream);
 
-      // Un-map pointer
-      error = clEnqueueUnmapMemObject(stream,
-                                      *((cl_mem*) handle),
-                                      mappedPtr,
-                                      0, NULL, NULL);
-
-      OCCA_CL_CHECK("Mapped Free: clEnqueueUnmapMemObject", error);
+        OCCA_CL_CHECK("Mapped Free: clEnqueueUnmapMemObject",
+                      clEnqueueUnmapMemObject(stream,
+                                              *((cl_mem*) handle),
+                                              mappedPtr,
+                                              0, NULL, NULL));
+      }
 
       // Free mapped-host pointer
-      error = clReleaseMemObject(*((cl_mem*) handle));
-
-      OCCA_CL_CHECK("Mapped Free: clReleaseMemObject", error);
-
+      OCCA_CL_CHECK("Mapped Free: clReleaseMemObject",
+                    clReleaseMemObject(*((cl_mem*) handle)));
       delete (cl_mem*) handle;
-    }
 
-    void memory::free(){
-      clReleaseMemObject(*((cl_mem*) handle));
-
-      if (isMapped()) {
-        mappedFree();
-      }
-      else if (!isAWrapper()) {
-        delete (cl_mem*) handle;
-      }
-
-      size = 0;
+      handle = NULL;
+      size   = 0;
     }
   }
 }

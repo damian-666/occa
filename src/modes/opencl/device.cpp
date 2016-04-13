@@ -235,8 +235,8 @@ namespace occa {
       memory *mem = new memory();
       mem->dHandle = this;
       mem->size    = bytes;
-      mem->handle  = handle_;
-      mem->memInfo |= memFlag::isAWrapper;
+      mem->handle  = new cl_mem;
+      ::memcpy(mem->handle, handle_, sizeof(cl_mem));
       return mem;
     }
 
