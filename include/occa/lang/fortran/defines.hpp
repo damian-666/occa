@@ -1,50 +1,25 @@
-/*
- * The code related to fortran string handling was adapted from petsc.  The
- * license information for petsc can be found below.
- *
- *     Licensing Notification
- *
- *       Permission to use, reproduce, prepare derivative works, and to
- *       redistribute to others this software, derivatives of this software, and
- *       future versions of this software as well as its documentation is hereby
- *       granted, provided that this notice is retained thereon and on all
- *       copies or modifications. This permission is perpetual, world-wide, and
- *       provided on a royalty-free basis. UChicago Argonne, LLC and all other
- *       contributors make no representations as to the suitability and
- *       operability of this software for any purpose. It is provided "as is"
- *       without express or implied warranty.
- *
- *      Authors: http://www.mcs.anl.gov/petsc/miscellaneous/index.html
- *
- *
- *      - Mathematics and Computer Science Division
- *      - Argonne National Laboratory
- *      - Argonne IL 60439
- *
- *
- *       Portions of this software are copyright by UChicago Argonne, LLC.
- *       Argonne National Laboratory with facilities in the state of Illinois,
- *       is owned by The United States Government, and operated by UChicago
- *       Argonne, LLC under provision of a contract with the Department of
- *       Energy.
- *
- *     DISCLAIMER
- *
- *       PORTIONS OF THIS SOFTWARE WERE PREPARED AS AN ACCOUNT OF WORK SPONSORED
- *       BY AN AGENCY OF THE UNITED STATES GOVERNMENT. NEITHER THE UNITED STATES
- *       GOVERNMENT NOR ANY AGENCY THEREOF, NOR THE UNIVERSITY OF CHICAGO, NOR
- *       ANY OF THEIR EMPLOYEES OR OFFICERS, MAKES ANY WARRANTY, EXPRESS OR
- *       IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR RESPONSIBILITY FOR THE
- *       ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY INFORMATION, APPARATUS,
- *       PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS THAT ITS USE WOULD NOT
- *       INFRINGE PRIVATELY OWNED RIGHTS. REFERENCE HEREIN TO ANY SPECIFIC
- *       COMMERCIAL PRODUCT, PROCESS, OR SERVICE BY TRADE NAME, TRADEMARK,
- *       MANUFACTURER, OR OTHERWISE, DOES NOT NECESSARILY CONSTITUTE OR IMPLY
- *       ITS ENDORSEMENT, RECOMMENDATION, OR FAVORING BY THE UNITED STATES
- *       GOVERNMENT OR ANY AGENCY THEREOF. THE VIEW AND OPINIONS OF AUTHORS
- *       EXPRESSED HEREIN DO NOT NECESSARILY STATE OR REFLECT THOSE OF THE
- *       UNITED STATES GOVERNMENT OR ANY AGENCY THEREOF.
- *
+/* The MIT License (MIT)
+ * 
+ * Copyright (c) 2014 David Medina and Tim Warburton
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ */
+
  */
 
 #define OCCA_F2C_NULL_CHARACTER_Fortran ((char*) 0)

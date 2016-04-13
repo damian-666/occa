@@ -1,3 +1,25 @@
+/* The MIT License (MIT)
+ * 
+ * Copyright (c) 2014 David Medina and Tim Warburton
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ */
+
 #include "occa/base.hpp"
 
 namespace occa {
@@ -415,6 +437,44 @@ namespace occa {
 
 
   //---[ Class Infos ]------------------
+  iter_t properties::iter(std::string prop) {
+    return props.find(prop);
+  }
+
+  iter_t properties::end() {
+    return props.end();
+  }
+
+  bool properties::has(std::string prop) {
+    return (iter(prop) != end());
+  }
+
+  bool properties::hasMultiple(std::string prop) {
+    iter_t it = iter(prop);
+    return ((it != end()) && (it->second.size() > 1));
+  }
+
+  std::string properties::get(std::string prop) {
+    iter_t it = iter(prop);
+    if ((it != end()) && (it->second.size()))
+      return (it->second)[0];
+    return "";
+  }
+
+  std::string properties::set(std::string prop, const std::string &s) {
+    strVector &v = props[prop];
+    v.clear();
+    v.push_back(s);
+  }
+
+  void properties::append(std::string prop,
+                          const std::string &separator,
+                          const std::string &s) {
+    std::string &p = props[prop];
+    p += separator;
+    p += s;
+  }
+
   kernelInfo::kernelInfo() :
     header(""),
     flags("") {}
@@ -491,10 +551,6 @@ namespace occa {
   void kernelInfo::removeDefine(const std::string &macro) {
     if(!isAnOccaDefine(macro))
       header += "#undef " + macro + '\n';
-  }
-
-  void kernelInfo::addSource(const std::string &content) {
-    header += content;
   }
 
   void kernelInfo::addCompilerFlag(const std::string &f) {

@@ -1,3 +1,25 @@
+/* The MIT License (MIT)
+ * 
+ * Copyright (c) 2014 David Medina and Tim Warburton
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ */
+
 #ifndef OCCA_BASE_HEADER
 #define OCCA_BASE_HEADER
 
@@ -247,23 +269,43 @@ namespace occa {
   void printAvailableDevices();
 
   //---[ Class Infos ]------------------
-  class deviceInfo {
-  public:
-    std::string infos;
+  class properties {
+    typedef strToStrsMapIterator iter_t;
+    strToStrsMap props;
 
-    deviceInfo();
+    iter_t iter(std::string prop);
+    iter_t end();
 
-    deviceInfo(const deviceInfo &dInfo);
-    deviceInfo& operator = (const deviceInfo &dInfo);
+    bool has(std::string prop);
+    bool hasMultiple(std::string prop);
 
-    void append(const std::string &key,
-                const std::string &value);
+    template <class TM>
+    TM get(std::string prop) {
+      iter_t it = iter(prop);
+      TM t;
+      if (it != end())
+        return fromString(get(prop));
+      return t;
+    }
+    std::string get(std::string prop);
+
+    template <class TM>
+    void set(std::string prop, const TM &t) {
+      set(prop, toString(t));
+    }
+    std::string set(std::string prop, const std::string &s);
+
+    template <class TM>
+    void append(std::string prop, const TM &t) {
+      props[prop].push_back(toString(t));
+    }
+
+    void append(std::string prop, const std::string &separator, const std::string &s);
   };
 
   class kernelInfo {
   public:
     std::string header, flags;
-
     flags_t parserFlags;
 
     kernelInfo();
@@ -297,10 +339,7 @@ namespace occa {
       header = ss.str() + header;
     }
 
-    void addSource(const std::string &content);
-
     void addCompilerFlag(const std::string &f);
-
     void addCompilerIncludePath(const std::string &path);
 
     flags_t& getParserFlags();
