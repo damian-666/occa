@@ -1,17 +1,17 @@
 /* The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2014 David Medina and Tim Warburton
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -31,39 +31,46 @@ namespace occa {
   class kernel_v; class kernel;
   class memory_v; class memory;
   class device_v; class device;
-  class kernelArg;
 
-  namespace memFlag {
+  namespace uvaFlag {
     static const int none         = 0;
     static const int isManaged    = (1 << 0);
-    static const int isMapped     = (1 << 1);
-    static const int isAWrapper   = (1 << 2);
+    static const int inDevice     = (1 << 1);
+    static const int leftInDevice = (1 << 2);
+    static const int isDirty      = (1 << 3);
   }
 
   //---[ memory_v ]---------------------
   class memory_v {
   public:
     int memInfo;
+    occa::properties properties;
 
-    void *handle, *mappedPtr, *uvaPtr;
+    void *handle, *uvaPtr;
     occa::device_v *dHandle;
 
     uintptr_t size;
 
-    memory_v();
-    virtual ~memory_v() = 0;
+    memory_v(const occa::properties &properties_);
 
     void initFrom(const memory_v &m);
 
     bool isManaged() const;
-    bool isMapped() const;
-    bool isAWrapper() const;
-
     bool inDevice() const;
     bool leftInDevice() const;
     bool isDirty() const;
 
-    virtual void* getMemoryHandle() = 0;
+    void* uvaHandle();
+
+    //---[ Virtual Methods ]------------
+    virtual ~memory_v() = 0;
+
+    virtual void* getHandle(const std::string &type) = 0;
+
+    virtual void copyTo(const void *src,
+                        const uintptr_t bytes = 0,
+                        const uintptr_t offset = 0,
+                        const bool async = false) = 0;
 
     virtual void copyFrom(const void *src,
                           const uintptr_t bytes = 0,
@@ -76,21 +83,10 @@ namespace occa {
                           const uintptr_t srcOffset = 0,
                           const bool async = false) = 0;
 
-    virtual void copyTo(void *dest,
-                        const uintptr_t bytes = 0,
-                        const uintptr_t offset = 0,
-                        const bool async = false) = 0;
-
-    virtual void copyTo(memory_v *dest,
-                        const uintptr_t bytes = 0,
-                        const uintptr_t destOffset = 0,
-                        const uintptr_t srcOffset = 0,
-                        const bool async = false) = 0;
-
     virtual void free() = 0;
+    //==================================
 
-    //---[ Friend Functions ]---------------------
-
+    //---[ Friend Functions ]-----------
     // Let [memcpy] use private info
     friend void memcpy(void *dest, void *src,
                        const uintptr_t bytes,
@@ -149,15 +145,11 @@ namespace occa {
     uintptr_t bytes() const;
 
     bool isManaged() const;
-    bool isMapped() const;
-    bool isAWrapper() const;
-
     bool inDevice() const;
     bool leftInDevice() const;
     bool isDirty() const;
 
-    void* getMappedPointer();
-    void* getMemoryHandle();
+    void* getHandle(const std::string &type);
 
     void placeInUva();
     void manage();

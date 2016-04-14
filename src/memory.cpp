@@ -1,17 +1,17 @@
 /* The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2014 David Medina and Tim Warburton
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,25 +28,25 @@
 
 namespace occa {
   //---[ memory_v ]---------------------
-  memory_v::memory_v(){
+  memory_v::memory_v(const occa::properties &properties_) {
     memInfo = memFlag::none;
+    properties = properties_;
 
-    handle    = NULL;
-    mappedPtr = NULL;
-    uvaPtr    = NULL;
+    handle = NULL;
+    uvaPtr = NULL;
 
     dHandle = NULL;
     size    = 0;
   }
 
-  memory_v::~memory_v(){}
+  memory_v::~memory_v() {}
 
   void memory_v::initFrom(const memory_v &m) {
     memInfo = m.memInfo;
+    properties = m.properties;
 
-    handle    = m.handle;
-    mappedPtr = m.mappedPtr;
-    uvaPtr    = m.uvaPtr;
+    handle = m.handle;
+    uvaPtr = m.uvaPtr;
 
     dHandle = m.dHandle;
     size    = m.size;
@@ -56,24 +56,20 @@ namespace occa {
     return (memInfo & memFlag::isManaged);
   }
 
-  bool memory_v::isMapped() const {
-    return (memInfo & memFlag::isMapped);
-  }
-
-  bool memory_v::isAWrapper() const {
-    return (memInfo & memFlag::isAWrapper);
-  }
-
   bool memory_v::inDevice() const {
-    return (memInfo & uvaFlag::inDevice);
+    return (memInfo & memFlag::inDevice);
   }
 
   bool memory_v::leftInDevice() const {
-    return (memInfo & uvaFlag::leftInDevice);
+    return (memInfo & memFlag::leftInDevice);
   }
 
   bool memory_v::isDirty() const {
-    return (memInfo & uvaFlag::isDirty);
+    return (memInfo & memFlag::isDirty);
+  }
+
+  void* memory_v::uvaHandle() {
+    return handle;
   }
 
   //---[ memory ]-----------------------
@@ -141,44 +137,28 @@ namespace occa {
     return (mHandle->memInfo & memFlag::isManaged);
   }
 
-  bool memory::isMapped() const {
-    return (mHandle->memInfo & memFlag::isMapped);
-  }
-
-  bool memory::isAWrapper() const {
-    return (mHandle->memInfo & memFlag::isAWrapper);
-  }
-
   bool memory::inDevice() const {
-    return (mHandle->memInfo & uvaFlag::inDevice);
+    return (mHandle->memInfo & memFlag::inDevice);
   }
 
   bool memory::leftInDevice() const {
-    return (mHandle->memInfo & uvaFlag::leftInDevice);
+    return (mHandle->memInfo & memFlag::leftInDevice);
   }
 
   bool memory::isDirty() const {
-    return (mHandle->memInfo & uvaFlag::isDirty);
+    return (mHandle->memInfo & memFlag::isDirty);
   }
 
-  void* memory::getMappedPointer() {
+  void* memory::getHandle(const std::string &type) {
     checkIfInitialized();
-    return mHandle->mappedPtr;
-  }
-
-  void* memory::getMemoryHandle() {
-    checkIfInitialized();
-    return mHandle->getMemoryHandle();
+    return mHandle->getHandle(type);
   }
 
   void memory::placeInUva() {
     checkIfInitialized();
 
     if( !(mHandle->dHandle->fakesUva()) ) {
-      mHandle->uvaPtr = mHandle->handle;
-    }
-    else if(mHandle->isMapped()) {
-      mHandle->uvaPtr = mHandle->mappedPtr;
+      mHandle->uvaPtr = mHandle->uvaHandle();
     }
     else{
       mHandle->uvaPtr = sys::malloc(mHandle->size);
@@ -212,8 +192,8 @@ namespace occa {
 
       copyTo(mHandle->uvaPtr, bytes_, offset);
 
-      mHandle->memInfo |=  uvaFlag::inDevice;
-      mHandle->memInfo &= ~uvaFlag::isDirty;
+      mHandle->memInfo |=  memFlag::inDevice;
+      mHandle->memInfo &= ~memFlag::isDirty;
 
       removeFromDirtyMap(mHandle);
     }
@@ -228,8 +208,8 @@ namespace occa {
 
       copyFrom(mHandle->uvaPtr, bytes_, offset);
 
-      mHandle->memInfo &= ~uvaFlag::inDevice;
-      mHandle->memInfo &= ~uvaFlag::isDirty;
+      mHandle->memInfo &= ~memFlag::inDevice;
+      mHandle->memInfo &= ~memFlag::isDirty;
 
       removeFromDirtyMap(mHandle);
     }
@@ -243,13 +223,21 @@ namespace occa {
   void memory::uvaMarkDirty() {
     checkIfInitialized();
     if(mHandle != NULL)
-      mHandle->memInfo |= uvaFlag::isDirty;
+      mHandle->memInfo |= memFlag::isDirty;
   }
 
   void memory::uvaMarkClean() {
     checkIfInitialized();
     if(mHandle != NULL)
-      mHandle->memInfo &= ~uvaFlag::isDirty;
+      mHandle->memInfo &= ~memFlag::isDirty;
+  }
+
+  void memory::copyTo(void *dest,
+                      const uintptr_t bytes,
+                      const uintptr_t offset,
+                      const bool async) {
+    checkIfInitialized();
+    mHandle->copyTo(dest, bytes, offset, async);
   }
 
   void memory::copyFrom(const void *src,
@@ -329,23 +317,6 @@ namespace occa {
 #endif
   }
 
-  void memory::copyTo(void *dest,
-                      const uintptr_t bytes,
-                      const uintptr_t offset,
-                      const bool async) {
-    checkIfInitialized();
-    mHandle->copyTo(dest, bytes, offset, async);
-  }
-
-  void memory::copyTo(memory dest,
-                      const uintptr_t bytes,
-                      const uintptr_t destOffset,
-                      const uintptr_t srcOffset,
-                      const bool async) {
-
-    dest.copyFrom(*this, bytes, destOffset, srcOffset, async);
-  }
-
   void memory::asyncCopyFrom(const void *src,
                              const uintptr_t bytes,
                              const uintptr_t offset) {
@@ -365,7 +336,7 @@ namespace occa {
                            const uintptr_t bytes,
                            const uintptr_t offset) {
 
-    copyFrom(dest, bytes, offset, true);
+    copyTo(dest, bytes, offset, true);
   }
 
   void memory::asyncCopyTo(memory dest,
@@ -373,7 +344,7 @@ namespace occa {
                            const uintptr_t destOffset,
                            const uintptr_t srcOffset) {
 
-    copyFrom(dest, bytes, destOffset, srcOffset, true);
+    copyTo(dest, bytes, destOffset, srcOffset, true);
   }
 
   void memory::free() {

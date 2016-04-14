@@ -1,0 +1,187 @@
+#include "occa/tools/string.hpp"
+
+namespace occa {
+  uintptr_t atoi(const char *c) {
+    uintptr_t ret = 0;
+
+    const char *c0 = c;
+
+    bool negative  = false;
+    bool unsigned_ = false;
+    int longs      = 0;
+
+    skipWhitespace(c);
+
+    if ((*c == '+') || (*c == '-')) {
+      negative = (*c == '-');
+      ++c;
+    }
+
+    if (c[0] == '0')
+      return atoiBase2(c0);
+
+    while(('0' <= *c) && (*c <= '9')) {
+      ret *= 10;
+      ret += *(c++) - '0';
+    }
+
+    while(*c != '\0') {
+      const char C = upChar(*c);
+
+      if (C == 'L')
+        ++longs;
+      else if (C == 'U')
+        unsigned_ = true;
+      else
+        break;
+
+      ++c;
+    }
+
+    if (negative)
+      ret = ((~ret) + 1);
+
+    if (longs == 0) {
+      if (!unsigned_)
+        ret = ((uintptr_t) ((int) ret));
+      else
+        ret = ((uintptr_t) ((unsigned int) ret));
+    }
+    else if (longs == 1) {
+      if (!unsigned_)
+        ret = ((uintptr_t) ((long) ret));
+      else
+        ret = ((uintptr_t) ((unsigned long) ret));
+    }
+    // else it's already in uintptr_t form
+
+    return ret;
+  }
+
+  uintptr_t atoiBase2(const char*c) {
+    uintptr_t ret = 0;
+
+    const char *c0 = c;
+
+    bool negative     = false;
+    int bits          = 3;
+    int maxDigitValue = 10;
+    char maxDigitChar = '9';
+
+    skipWhitespace(c);
+
+    if ((*c == '+') || (*c == '-')) {
+      negative = (*c == '-');
+      ++c;
+    }
+
+    if (*c == '0') {
+      ++c;
+
+      const char C = upChar(*c);
+
+      if (C == 'X') {
+        bits = 4;
+        ++c;
+
+        maxDigitValue = 16;
+        maxDigitChar  = 'F';
+      }
+      else if (C == 'B') {
+        bits = 1;
+        ++c;
+
+        maxDigitValue = 2;
+        maxDigitChar  = '1';
+      }
+    }
+
+    while(true) {
+      if (('0' <= *c) && (*c <= '9')) {
+        const char digitValue = *(c++) - '0';
+
+        OCCA_CHECK(digitValue < maxDigitValue,
+                   "Number [" << std::string(c0, c - c0)
+                   << "...] must contain digits in the [0,"
+                   << maxDigitChar << "] range");
+
+        ret <<= bits;
+        ret += digitValue;
+      }
+      else {
+        const char C = upChar(*c);
+
+        if (('A' <= C) && (C <= 'F')) {
+          const char digitValue = 10 + (C - 'A');
+          ++c;
+
+          OCCA_CHECK(digitValue < maxDigitValue,
+                     "Number [" << std::string(c0, c - c0)
+                     << "...] must contain digits in the [0,"
+                     << maxDigitChar << "] range");
+
+          ret <<= bits;
+          ret += digitValue;
+        }
+        else
+          break;
+      }
+    }
+
+    if (negative)
+      ret = ((~ret) + 1);
+
+    return ret;
+  }
+
+  uintptr_t atoi(const std::string &str){
+    return occa::atoi((const char*) str.c_str());
+  }
+
+  double atof(const char *c){
+    return ::atof(c);
+  }
+
+  double atof(const std::string &str){
+    return ::atof(str.c_str());
+  }
+
+  double atod(const char *c){
+    double ret;
+#if (OCCA_OS & (LINUX_OS | OSX_OS))
+    sscanf(c, "%lf", &ret);
+#else
+    sscanf_s(c, "%lf", &ret);
+#endif
+    return ret;
+  }
+
+  double atod(const std::string &str){
+    return occa::atod(str.c_str());
+  }
+
+  std::string stringifyBytes(uintptr_t bytes) {
+    if (0 < bytes) {
+      std::stringstream ss;
+      uint64_t bigBytes = bytes;
+      uint64_t big1 = 1;
+
+      if (bigBytes < (big1 << 10))
+        ss << bigBytes << " bytes";
+      else if (bigBytes < (big1 << 20))
+        ss << (bigBytes >> 10) << " KB";
+      else if (bigBytes < (big1 << 30))
+        ss << (bigBytes >> 20) << " MB";
+      else if (bigBytes < (big1 << 40))
+        ss << (bigBytes >> 30) << " GB";
+      else if (bigBytes < (big1 << 50))
+        ss << (bigBytes >> 40) << " TB";
+      else
+        ss << bigBytes << " bytes";
+
+      return ss.str();
+    }
+
+    return "";
+  }
+}

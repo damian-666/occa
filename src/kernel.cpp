@@ -1,17 +1,17 @@
 /* The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2014 David Medina and Tim Warburton
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -203,7 +203,7 @@ namespace occa {
 
   int kernelArg::argumentCount(const int kArgc, const kernelArg *kArgs) {
     int argc = 0;
-    for(int i = 0; i < kArgc; ++i){
+    for(int i = 0; i < kArgc; ++i) {
       argc += kArgs[i].argc;
     }
     return argc;
@@ -222,20 +222,23 @@ namespace occa {
   //====================================
 
   //---[ kernel_v ]---------------------
-  kernel_v::kernel_v(){
+  kernel_v::kernel_v(const occa::properties &properties_) {
     dHandle = NULL;
+
+    properties = properties_;
 
     dims  = 1;
     inner = occa::dim(1,1,1);
     outer = occa::dim(1,1,1);
   }
 
-  kernel_v::~kernel_v(){}
+  kernel_v::~kernel_v() {}
 
   void kernel_v::initFrom(const kernel_v &m) {
     dHandle = m.dHandle;
 
     name = m.name;
+    properties = m.properties;
 
     metaInfo = m.metaInfo;
 
@@ -350,13 +353,7 @@ namespace occa {
     return kHandle->maxInnerDims();
   }
 
-  void kernel::clearArgumentList() {
-    checkIfInitialized();
-    kHandle->arguments.clear();
-  }
-
-  void kernel::addArgument(const int argPos,
-                           const kernelArg &arg) {
+  void kernel::addArgument(const int argPos, const kernelArg &arg) {
     checkIfInitialized();
 
     if(kHandle->argumentCount() <= argPos) {
@@ -384,6 +381,11 @@ namespace occa {
     // Remove nestedKernels
     if (kHandle->nestedKernelCount())
       kHandle->arguments.erase(kHandle->arguments.begin());
+  }
+
+  void kernel::clearArgumentList() {
+    checkIfInitialized();
+    kHandle->arguments.clear();
   }
 
 #include "operators/definitions.cpp"

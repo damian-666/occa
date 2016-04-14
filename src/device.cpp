@@ -1,17 +1,17 @@
 /* The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2014 David Medina and Tim Warburton
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,63 +25,14 @@
 #include "occa/parser/parser.hpp"
 
 namespace occa {
-  //---[ argInfoMap ]-------------------
-  argInfoMap::argInfoMap() {}
-
-  argInfoMap::argInfoMap(const std::string &infos) {
-    if(infos.size() == 0)
-      return;
-
-    parserNS::expNode expRoot = parserNS::createOrganizedExpNodeFrom(infos);
-
-    parserNS::expNode &csvFlatRoot = *(expRoot.makeCsvFlatHandle());
-
-    for(int i = 0; i < csvFlatRoot.leafCount; ++i) {
-      parserNS::expNode &leaf = csvFlatRoot[i];
-
-      std::string &info = (leaf.leafCount ? leaf[0].value : leaf.value);
-
-      if(leaf.value != "=") {
-        std::cout << "Flag [" << info << "] was not set, skipping it\n";
-        continue;
-      }
-
-      iMap[info] = leaf[1].toString();
-    }
-
-    parserNS::expNode::freeFlatHandle(csvFlatRoot);
-  }
-
-  argInfoMap::argInfoMap(argInfoMap &aim) {
-    *this = aim;
-  }
-
-  argInfoMap& argInfoMap::operator = (const argInfoMap &aim) {
-    iMap = aim.iMap;
-    return *this;
-  }
-
-  std::string& argInfoMap::operator [] (const std::string &info) {
-    return iMap[info];
-  }
-
-  bool argInfoMap::has(const std::string &info) {
-    return (iMap.find(info) != iMap.end());
-  }
-
-  void argInfoMap::remove(const std::string &info) {
-    std::map<std::string, std::string>::iterator it = iMap.find(info);
-
-    if(it != iMap.end())
-      iMap.erase(it);
-  }
-  //====================================
-
   //---[ device_v ]---------------------
-  device_v::device_v(){
-      uvaEnabled_ = uvaEnabledByDefault_f;
-      currentStream = NULL;
-      bytesAllocated = 0;
+  device_v::device_v(const occa::properties &properties_){
+    mode = properties_["mode"];
+    properties = properties_;
+
+    uvaEnabled_ = uvaEnabledByDefault_f;
+    currentStream = NULL;
+    bytesAllocated = 0;
   }
 
   device_v::~device_v(){}
@@ -112,12 +63,12 @@ namespace occa {
   device::device(device_v *dHandle_) :
     dHandle(dHandle_) {}
 
-  device::device(deviceInfo &dInfo) {
-    setup(dInfo);
+  device::device(const properties &props) {
+    setup(props);
   }
 
-  device::device(const std::string &infos) {
-    setup(infos);
+  device::device(const std::string &props) {
+    setup(properties(props));
   }
 
   device::device(const device &d) :
@@ -129,6 +80,11 @@ namespace occa {
     return *this;
   }
 
+  void checkIfInitialized() const {
+    OCCA_CHECK(dHandle != NULL,
+               "Device is not initialized");
+  }
+
   void* device::getContextHandle() {
     return dHandle->getContextHandle();
   }
@@ -137,30 +93,24 @@ namespace occa {
     return dHandle;
   }
 
-  void device::setup(deviceInfo &dInfo) {
-    setup(dInfo.infos);
-  }
-
-  void device::setup(const std::string &infos) {
-    argInfoMap aim(infos);
-
-    OCCA_CHECK(aim.has("mode"),
-               "OCCA mode not given");
-
-    dHandle = occa::newModeDevice(aim["mode"]);
+  void device::setup(properties &props) {
+    OCCA_CHECK(props.has("mode") && modeIsEnabled(props),
+               "OCCA mode not enabled")
+    dHandle = occa::newModeDevice(props["mode"]);
     dHandle->setup(aim);
 
-    if(aim.has("UVA")) {
-      if(upStringCheck(aim["UVA"], "enabled"))
-        dHandle->uvaEnabled_ = true;
-      else
-        dHandle->uvaEnabled_ = false;
-    }
+    if (props.has("uva")
+      dHandle->uvaEnabled_ = (props["uva"] == "ENABLED");
     else
       dHandle->uvaEnabled_ = uvaEnabledByDefault_f;
 
     stream newStream = createStream();
     dHandle->currentStream = newStream.handle;
+  }
+
+  const occa::properties& properties() {
+    checkIfInitialized();
+    return dHandle->properties;
   }
 
   uintptr_t device::memorySize() const {
@@ -173,33 +123,14 @@ namespace occa {
     return dHandle->bytesAllocated;
   }
 
+  bool hasUvaEnabled() {
+    checkIfInitialized();
+    return dHandle->hasUvaEnabled();
+  }
+
   const std::string& device::mode() {
     checkIfInitialized();
-    return dHandle->properties["mode"];
-  }
-
-  void device::setCompiler(const std::string &compiler_) {
-    setProperty("compiler", compiler_);
-  }
-
-  void device::setCompilerEnvScript(const std::string &compilerEnvScript_) {
-    setProperty("compilerEnvScript", compilerEnvScript_);
-  }
-
-  void device::setCompilerFlags(const std::string &compilerFlags_) {
-    setProperty("compilerFlags", compilerFlags_);
-  }
-
-  std::string device::getCompiler() {
-    return getProperty<std::string>("compiler");
-  }
-
-  std::string device::getCompilerEnvScript() {
-    return getProperty<std::string>("compilerEnvScript");
-  }
-
-  std::string device::getCompilerFlags() {
-    return getProperty<std::string>("compilerFlags");
+    return dHandle->mode;
   }
 
   void device::flush() {
@@ -230,19 +161,32 @@ namespace occa {
     dHandle->finish();
   }
 
-  void device::waitFor(streamTag tag) {
-    checkIfInitialized();
-    dHandle->waitFor(tag);
-  }
-
+  //  |---[ Stream ]--------------------
   stream device::createStream() {
     checkIfInitialized();
 
     stream newStream(dHandle, dHandle->createStream());
-
     dHandle->streams.push_back(newStream.handle);
 
     return newStream;
+  }
+
+  void device::freeStream(stream s) {
+    checkIfInitialized();
+
+    const int streamCount = dHandle->streams.size();
+
+    for(int i = 0; i < streamCount; ++i) {
+      if(dHandle->streams[i] == s.handle) {
+        if(dHandle->currentStream == s.handle)
+          dHandle->currentStream = NULL;
+
+        dHandle->freeStream(dHandle->streams[i]);
+        dHandle->streams.erase(dHandle->streams.begin() + i);
+
+        break;
+      }
+    }
   }
 
   stream device::getStream() {
@@ -265,38 +209,27 @@ namespace occa {
     return dHandle->tagStream();
   }
 
+  void device::waitFor(streamTag tag) {
+    checkIfInitialized();
+    dHandle->waitFor(tag);
+  }
+
   double device::timeBetween(const streamTag &startTag, const streamTag &endTag) {
     checkIfInitialized();
     return dHandle->timeBetween(startTag, endTag);
   }
+  //  |=================================
 
-  void device::freeStream(stream s) {
-    checkIfInitialized();
-
-    const int streamCount = dHandle->streams.size();
-
-    for(int i = 0; i < streamCount; ++i) {
-      if(dHandle->streams[i] == s.handle) {
-        if(dHandle->currentStream == s.handle)
-          dHandle->currentStream = NULL;
-
-        dHandle->freeStream(dHandle->streams[i]);
-        dHandle->streams.erase(dHandle->streams.begin() + i);
-
-        break;
-      }
-    }
-  }
-
+  //  |---[ Kernel ]--------------------
   kernel device::buildKernel(const std::string &str,
                              const std::string &functionName,
-                             const kernelInfo &info_) {
+                             const properties &props) {
     checkIfInitialized();
 
     if(sys::fileExists(str, flags::checkCacheDir))
-      return buildKernelFromSource(str, functionName, info_);
+      return buildKernelFromSource(str, functionName, props);
     else
-      return buildKernelFromString(str, functionName, info_);
+      return buildKernelFromString(str, functionName, props);
   }
 
   kernel device::buildKernelFromString(const std::string &content,
@@ -310,9 +243,10 @@ namespace occa {
                                  language);
   }
 
+  // [REFACTOR]
   kernel device::buildKernelFromString(const std::string &content,
                                        const std::string &functionName,
-                                       const kernelInfo &info_,
+                                       const properties &props,
                                        const int language) {
     checkIfInitialized();
 
@@ -346,7 +280,7 @@ namespace occa {
 
     kernel k = buildKernelFromSource(stringSourceFile,
                                      functionName,
-                                     info_);
+                                     props);
 
     releaseHash(hash, 1);
 
@@ -355,7 +289,7 @@ namespace occa {
 
   kernel device::buildKernelFromSource(const std::string &filename,
                                        const std::string &functionName,
-                                       const kernelInfo &info_) {
+                                       const properties &props) {
     checkIfInitialized();
 
     const std::string realFilename = sys::getFilename(filename);
@@ -385,7 +319,7 @@ namespace occa {
                                          realFilename,
                                          parsedFile,
                                          functionName,
-                                         info_);
+                                         props);
 
       kernelInfo info = defaultKernelInfo;
       info.addDefine("OCCA_LAUNCH_KERNEL", 1);
@@ -408,7 +342,7 @@ namespace occa {
           kernel sKer;
           sKer.kHandle = dHandle->buildKernelFromSource(parsedFile,
                                                         sKerName,
-                                                        info_);
+                                                        props);
 
           sKer.kHandle->metaInfo               = k->metaInfo;
           sKer.kHandle->metaInfo.name          = sKerName;
@@ -427,7 +361,7 @@ namespace occa {
     else{
       k = dHandle->buildKernelFromSource(realFilename,
                                          functionName,
-                                         info_);
+                                         props);
       k->dHandle = dHandle;
     }
 
@@ -444,31 +378,16 @@ namespace occa {
 
     return ker;
   }
+  //  |=================================
 
-  memory device::wrapMemory(void *handle_,
-                            const uintptr_t bytes) {
-    checkIfInitialized();
-
-    memory mem;
-    mem.mHandle = dHandle->wrapMemory(handle_, bytes);
-    mem.mHandle->dHandle = dHandle;
-
-    return mem;
-  }
-
-  void device::wrapManagedMemory(void *handle_,
-                                 const uintptr_t bytes) {
-    checkIfInitialized();
-    memory mem = wrapMemory(handle_, bytes);
-    mem.manage();
-  }
-
+  //  |---[ Memory ]--------------------
   memory device::malloc(const uintptr_t bytes,
-                        void *src) {
+                        void *src,
+                        const properties &props) {
     checkIfInitialized();
 
     memory mem;
-    mem.mHandle          = dHandle->malloc(bytes, src);
+    mem.mHandle          = dHandle->malloc(bytes, src, props);
     mem.mHandle->dHandle = dHandle;
 
     dHandle->bytesAllocated += bytes;
@@ -477,39 +396,16 @@ namespace occa {
   }
 
   void* device::managedAlloc(const uintptr_t bytes,
-                             void *src) {
+                             void *src,
+                             const properties &props) {
     checkIfInitialized();
 
-    memory mem = malloc(bytes, src);
+    memory mem = malloc(bytes, src, props);
     mem.manage();
 
     return mem.mHandle->uvaPtr;
   }
-
-  memory device::mappedAlloc(const uintptr_t bytes,
-                             void *src) {
-    checkIfInitialized();
-
-    memory mem;
-
-    mem.mHandle          = dHandle->mappedAlloc(bytes, src);
-    mem.mHandle->dHandle = dHandle;
-
-    dHandle->bytesAllocated += bytes;
-
-    return mem;
-  }
-
-  void* device::managedMappedAlloc(const uintptr_t bytes,
-                                   void *src) {
-    checkIfInitialized();
-
-    memory mem = mappedAlloc(bytes, src);
-
-    mem.manage();
-
-    return mem.mHandle->uvaPtr;
-  }
+  //  |=================================
 
   void device::free() {
     checkIfInitialized();

@@ -1,17 +1,17 @@
 /* The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2014 David Medina and Tim Warburton
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,6 +30,7 @@
 #include <stdint.h>
 
 #include "occa/defines.hpp"
+#include "occa/typedefs.hpp"
 
 #if OCCA_SSE
 #  include <xmmintrin.h>
@@ -44,20 +45,11 @@ namespace occa {
   class memory_v; class memory;
   class device_v; class device;
 
-  class kernelInfo;
-  class deviceInfo;
-
-  //---[ Typedefs ]---------------------
-  typedef std::vector<int>          intVector_t;
-  typedef std::vector<intVector_t>  intVecVector_t;
-  typedef std::vector<std::string>  stringVector_t;
-  //====================================
-
 
   //---[ Globals & Flags ]--------------
   extern const int parserVersion;
 
-  extern kernelInfo defaultKernelInfo;
+  extern properties defaultProperties;
 
   extern const int autoDetect;
   extern const int srcInUva, destInUva;
@@ -76,7 +68,7 @@ namespace occa {
   typedef strToModeMap_t::iterator      strToModeMapIterator;
 
   strToModeMap_t& modeMap();
-  bool modeExists(const std::string &mode);
+  bool modeIsEnabled(const std::string &mode);
 
   device_v* newModeDevice(const std::string &mode);
   kernel_v* newModeKernel(const std::string &mode);
@@ -179,30 +171,12 @@ namespace occa {
 
   device host();
   void setDevice(device d);
-  void setDevice(const std::string &infos);
-
-  extern mutex_t deviceListMutex;
-  extern std::vector<device> deviceList;
+  void setDevice(const std::string &props);
+  void setDevice(const properties &props);
 
   std::vector<device>& getDeviceList();
 
-  template <class TM>
-  std::string getDeviceProperty(const std::string &info) {
-    return currentDevice.getProperty<TM>(info);
-  }
-
-  template <class TM>
-  void setDeviceProperty(const std::string &info, const TM &value) {
-    currentDevice.setProperty(info, value);
-  }
-
-  void setCompiler(const std::string &compiler_);
-  void setCompilerEnvScript(const std::string &compilerEnvScript_);
-  void setCompilerFlags(const std::string &compilerFlags_);
-
-  std::string getCompiler();
-  std::string getCompilerEnvScript();
-  std::string getCompilerFlags();
+  properties& deviceProperties();
 
   void flush();
   void finish();
@@ -220,7 +194,7 @@ namespace occa {
   //---[ Kernel Functions ]-------------
   kernel buildKernel(const std::string &str,
                      const std::string &functionName,
-                     const kernelInfo &info_ = defaultKernelInfo);
+                     const properties &props = defaultProperties);
 
   kernel buildKernelFromString(const std::string &content,
                                const std::string &functionName,
@@ -228,35 +202,25 @@ namespace occa {
 
   kernel buildKernelFromString(const std::string &content,
                                const std::string &functionName,
-                               const kernelInfo &info_ = defaultKernelInfo,
+                               const properties &props = defaultProperties,
                                const int language = usingOKL);
 
   kernel buildKernelFromSource(const std::string &filename,
                                const std::string &functionName,
-                               const kernelInfo &info_ = defaultKernelInfo);
+                               const properties &props = defaultProperties);
 
   kernel buildKernelFromBinary(const std::string &filename,
                                const std::string &functionName);
   //====================================
 
   //---[ Memory Functions ]-------------
-  memory wrapMemory(void *handle_,
-                    const uintptr_t bytes);
-
-  void wrapManagedMemory(void *handle_,
-                         const uintptr_t bytes);
-
-  memory malloc(const uintptr_t bytes,
-                void *src = NULL);
+  occa::memory malloc(const uintptr_t bytes,
+                      void *src = NULL,
+                      const properties &props = defaultProperties);
 
   void* managedAlloc(const uintptr_t bytes,
-                     void *src = NULL);
-
-  memory mappedAlloc(const uintptr_t bytes,
-                     void *src = NULL);
-
-  void* managedMappedAlloc(const uintptr_t bytes,
-                           void *src = NULL);
+                     void *src = NULL,
+                     const properties &props = defaultProperties);
   //====================================
 
   //---[ Free Functions ]---------------
@@ -267,92 +231,6 @@ namespace occa {
   //====================================
 
   void printAvailableDevices();
-
-  //---[ Class Infos ]------------------
-  class properties {
-    typedef strToStrsMapIterator iter_t;
-    strToStrsMap props;
-
-    iter_t iter(std::string prop);
-    iter_t end();
-
-    bool has(std::string prop);
-    bool hasMultiple(std::string prop);
-
-    template <class TM>
-    TM get(std::string prop) {
-      iter_t it = iter(prop);
-      TM t;
-      if (it != end())
-        return fromString(get(prop));
-      return t;
-    }
-    std::string get(std::string prop);
-
-    template <class TM>
-    void set(std::string prop, const TM &t) {
-      set(prop, toString(t));
-    }
-    std::string set(std::string prop, const std::string &s);
-
-    template <class TM>
-    void append(std::string prop, const TM &t) {
-      props[prop].push_back(toString(t));
-    }
-
-    void append(std::string prop, const std::string &separator, const std::string &s);
-  };
-
-  class kernelInfo {
-  public:
-    std::string header, flags;
-    flags_t parserFlags;
-
-    kernelInfo();
-
-    kernelInfo(const kernelInfo &p);
-    kernelInfo& operator = (const kernelInfo &p);
-
-    kernelInfo& operator += (const kernelInfo &p);
-
-    std::string salt() const;
-
-    std::string getModeHeaderFilename() const;
-
-    static bool isAnOccaDefine(const std::string &name);
-
-    void addIncludeDefine(const std::string &filename);
-
-    void addInclude(const std::string &filename);
-
-    void removeDefine(const std::string &macro);
-
-    template <class TM>
-    void addDefine(const std::string &macro, const TM &value) {
-      std::stringstream ss;
-
-      if(isAnOccaDefine(macro))
-        ss << "#undef " << macro << "\n";
-
-      ss << "#define " << macro << " " << value << '\n';
-
-      header = ss.str() + header;
-    }
-
-    void addCompilerFlag(const std::string &f);
-    void addCompilerIncludePath(const std::string &path);
-
-    flags_t& getParserFlags();
-    const flags_t& getParserFlags() const;
-
-    void addParserFlag(const std::string &flag,
-                       const std::string &value = "");
-  };
-
-  template <> void kernelInfo::addDefine(const std::string &macro, const std::string &value);
-  template <> void kernelInfo::addDefine(const std::string &macro, const float &value);
-  template <> void kernelInfo::addDefine(const std::string &macro, const double &value);
-  //====================================
 }
 
 #endif
