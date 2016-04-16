@@ -26,11 +26,13 @@
 #include <iostream>
 
 #include "occa/defines.hpp"
+#include "occa/tools/properties.hpp"
 
 namespace occa {
   class kernel_v; class kernel;
   class memory_v; class memory;
   class device_v; class device;
+  class kernelArg;
 
   namespace uvaFlag {
     static const int none         = 0;

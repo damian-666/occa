@@ -25,11 +25,12 @@
 #include "occa/memory.hpp"
 #include "occa/device.hpp"
 #include "occa/uva.hpp"
+#include "occa/sys.hpp"
 
 namespace occa {
   //---[ memory_v ]---------------------
   memory_v::memory_v(const occa::properties &properties_) {
-    memInfo = memFlag::none;
+    memInfo = uvaFlag::none;
     properties = properties_;
 
     handle = NULL;
@@ -53,19 +54,19 @@ namespace occa {
   }
 
   bool memory_v::isManaged() const {
-    return (memInfo & memFlag::isManaged);
+    return (memInfo & uvaFlag::isManaged);
   }
 
   bool memory_v::inDevice() const {
-    return (memInfo & memFlag::inDevice);
+    return (memInfo & uvaFlag::inDevice);
   }
 
   bool memory_v::leftInDevice() const {
-    return (memInfo & memFlag::leftInDevice);
+    return (memInfo & uvaFlag::leftInDevice);
   }
 
   bool memory_v::isDirty() const {
-    return (memInfo & memFlag::isDirty);
+    return (memInfo & uvaFlag::isDirty);
   }
 
   void* memory_v::uvaHandle() {
@@ -134,24 +135,24 @@ namespace occa {
   }
 
   bool memory::isManaged() const {
-    return (mHandle->memInfo & memFlag::isManaged);
+    return (mHandle->memInfo & uvaFlag::isManaged);
   }
 
   bool memory::inDevice() const {
-    return (mHandle->memInfo & memFlag::inDevice);
+    return (mHandle->memInfo & uvaFlag::inDevice);
   }
 
   bool memory::leftInDevice() const {
-    return (mHandle->memInfo & memFlag::leftInDevice);
+    return (mHandle->memInfo & uvaFlag::leftInDevice);
   }
 
   bool memory::isDirty() const {
-    return (mHandle->memInfo & memFlag::isDirty);
+    return (mHandle->memInfo & uvaFlag::isDirty);
   }
 
-  void* memory::getHandle(const std::string &type) {
+  void* memory::getHandle(const occa::properties &props) {
     checkIfInitialized();
-    return mHandle->getHandle(type);
+    return mHandle->getHandle(props);
   }
 
   void memory::placeInUva() {
@@ -180,7 +181,7 @@ namespace occa {
   void memory::manage() {
     checkIfInitialized();
     placeInUva();
-    mHandle->memInfo |= memFlag::isManaged;
+    mHandle->memInfo |= uvaFlag::isManaged;
   }
 
   void memory::syncToDevice(const uintptr_t bytes,
@@ -192,8 +193,8 @@ namespace occa {
 
       copyTo(mHandle->uvaPtr, bytes_, offset);
 
-      mHandle->memInfo |=  memFlag::inDevice;
-      mHandle->memInfo &= ~memFlag::isDirty;
+      mHandle->memInfo |=  uvaFlag::inDevice;
+      mHandle->memInfo &= ~uvaFlag::isDirty;
 
       removeFromDirtyMap(mHandle);
     }
@@ -208,8 +209,8 @@ namespace occa {
 
       copyFrom(mHandle->uvaPtr, bytes_, offset);
 
-      mHandle->memInfo &= ~memFlag::inDevice;
-      mHandle->memInfo &= ~memFlag::isDirty;
+      mHandle->memInfo &= ~uvaFlag::inDevice;
+      mHandle->memInfo &= ~uvaFlag::isDirty;
 
       removeFromDirtyMap(mHandle);
     }
@@ -223,13 +224,13 @@ namespace occa {
   void memory::uvaMarkDirty() {
     checkIfInitialized();
     if(mHandle != NULL)
-      mHandle->memInfo |= memFlag::isDirty;
+      mHandle->memInfo |= uvaFlag::isDirty;
   }
 
   void memory::uvaMarkClean() {
     checkIfInitialized();
     if(mHandle != NULL)
-      mHandle->memInfo &= ~memFlag::isDirty;
+      mHandle->memInfo &= ~uvaFlag::isDirty;
   }
 
   void memory::copyTo(void *dest,
