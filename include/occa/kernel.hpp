@@ -145,7 +145,6 @@ namespace occa {
   public:
     kernelInfo();
     kernelInfo(const kernelInfo &kInfo);
-    kernelInfo& operator = (const kernelInfo &kInfo);
 
     static bool isAnOccaDefine(const std::string &name);
     void addIncludeDefine(const std::string &filename);

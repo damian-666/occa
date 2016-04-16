@@ -208,17 +208,6 @@ namespace occa {
     }
     return argc;
   }
-
-  std::ostream& operator << (std::ostream &out, const argInfoMap &m) {
-    std::map<std::string,std::string>::const_iterator it = m.iMap.begin();
-
-    while(it != m.iMap.end()) {
-      out << it->first << " = " << it->second << '\n';
-      ++it;
-    }
-
-    return out;
-  }
   //====================================
 
 
@@ -229,12 +218,7 @@ namespace occa {
     occa::properties() {}
 
   kernelInfo::kernelInfo(const kernelInfo &kInfo) {
-    *this = p;
-  }
-
-  kernelInfo& kernelInfo::operator = (const kernelInfo &kInfo) {
-    occa::properties::operator = (kInfo);
-    return *this;
+    *this = kInfo;
   }
 
   bool kernelInfo::isAnOccaDefine(const std::string &name) {
@@ -332,14 +316,9 @@ namespace occa {
                "Kernel is not initialized");
   }
 
-  void* kernel::getKernelHandle() {
+  void* kernel::getHandle(const occa::properties &props) {
     checkIfInitialized();
-    return kHandle->getKernelHandle();
-  }
-
-  void* kernel::getProgramHandle() {
-    checkIfInitialized();
-    return kHandle->getProgramHandle();
+    return kHandle->getHandle(props);
   }
 
   kernel_v* kernel::getKHandle() {
