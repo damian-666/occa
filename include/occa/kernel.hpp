@@ -140,6 +140,29 @@ namespace occa {
   //====================================
 
 
+  //---[ kernelInfo ]---------------------
+  class kernelInfo : public occa::properties {
+    kernelInfo();
+    kernelInfo(const kernelInfo &kInfo);
+    kernelInfo& operator = (const kernelInfo &kInfo);
+
+    static bool isAnOccaDefine(const std::string &name);
+    void addIncludeDefine(const std::string &filename);
+    void addInclude(const std::string &filename);
+    void removeDefine(const std::string &macro);
+
+    template <class TM>
+    inline void addDefine(const std::string &macro, const TM &value) {
+      if(isAnOccaDefine(macro))
+        append("headers", "#undef " + macro);
+      append("headers", "#define " + toString(macro));
+    }
+
+    void addSource(const std::string &content);
+  };
+  //====================================
+
+
   //---[ kernel_v ]---------------------
   class kernel_v {
   public:
@@ -173,7 +196,7 @@ namespace occa {
 
     virtual void buildFromSource(const std::string &filename,
                                  const std::string &functionName,
-                                 const properties &props) = 0;
+                                 const occa::properties &props) = 0;
 
     virtual void buildFromBinary(const std::string &filename,
                                  const std::string &functionName) = 0;

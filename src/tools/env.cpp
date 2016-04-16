@@ -12,7 +12,7 @@ namespace occa {
 
     std::string OCCA_DIR, OCCA_CACHE_DIR;
     size_t OCCA_MEM_BYTE_ALIGN;
-    stringVector_t OCCA_INCLUDE_PATH;
+    strVector_t OCCA_INCLUDE_PATH;
 
     void initialize() {
       if (isInitialized)
@@ -114,7 +114,7 @@ namespace occa {
       const char *cStart = oip.c_str();
       const char *cEnd;
 
-      stringVector_t tmpOIP;
+      strVector_t tmpOIP;
 
       while(cStart[0] != '\0') {
         cEnd = cStart;

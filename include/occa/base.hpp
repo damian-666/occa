@@ -49,8 +49,6 @@ namespace occa {
   //---[ Globals & Flags ]--------------
   extern const int parserVersion;
 
-  extern properties defaultProperties;
-
   extern const int autoDetect;
   extern const int srcInUva, destInUva;
 
@@ -70,9 +68,17 @@ namespace occa {
   strToModeMap_t& modeMap();
   bool modeIsEnabled(const std::string &mode);
 
+  mode_v* getMode(const occa::properties &props);
+  mode_v* getMode(const std::string &mode);
+
   device_v* newModeDevice(const std::string &mode);
+  device_v* newModeDevice(const occa::properties &props);
+
   kernel_v* newModeKernel(const std::string &mode);
+  kernel_v* newModeKernel(const occa::properties &props);
+
   memory_v* newModeMemory(const std::string &mode);
+  memory_v* newModeMemory(const occa::properties &props);
 
   void freeModeDevice(device_v *dHandle);
   void freeModeKernel(kernel_v *kHandle);
@@ -194,7 +200,7 @@ namespace occa {
   //---[ Kernel Functions ]-------------
   kernel buildKernel(const std::string &str,
                      const std::string &functionName,
-                     const properties &props = defaultProperties);
+                     const properties &props = occa::properties());
 
   kernel buildKernelFromString(const std::string &content,
                                const std::string &functionName,
@@ -202,12 +208,12 @@ namespace occa {
 
   kernel buildKernelFromString(const std::string &content,
                                const std::string &functionName,
-                               const properties &props = defaultProperties,
+                               const properties &props = occa::properties(),
                                const int language = usingOKL);
 
   kernel buildKernelFromSource(const std::string &filename,
                                const std::string &functionName,
-                               const properties &props = defaultProperties);
+                               const properties &props = occa::properties());
 
   kernel buildKernelFromBinary(const std::string &filename,
                                const std::string &functionName);
@@ -216,11 +222,11 @@ namespace occa {
   //---[ Memory Functions ]-------------
   occa::memory malloc(const uintptr_t bytes,
                       void *src = NULL,
-                      const properties &props = defaultProperties);
+                      const properties &props = occa::properties());
 
   void* managedAlloc(const uintptr_t bytes,
                      void *src = NULL,
-                     const properties &props = defaultProperties);
+                     const properties &props = occa::properties());
   //====================================
 
   //---[ Free Functions ]---------------

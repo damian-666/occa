@@ -221,6 +221,51 @@ namespace occa {
   }
   //====================================
 
+
+  //---[ kernelInfo ]---------------------
+
+  //  |---[ Kernel Info ]-------------------------
+  kernelInfo::kernelInfo() :
+    occa::properties() {}
+
+  kernelInfo::kernelInfo(const kernelInfo &kInfo) {
+    *this = p;
+  }
+
+  kernelInfo& kernelInfo::operator = (const kernelInfo &kInfo) {
+    occa::properties::operator = (kInfo);
+    return *this;
+  }
+
+  bool kernelInfo::isAnOccaDefine(const std::string &name) {
+    return ((name == "occaInnerDim0") ||
+            (name == "occaInnerDim1") ||
+            (name == "occaInnerDim2") ||
+
+            (name == "occaOuterDim0") ||
+            (name == "occaOuterDim1") ||
+            (name == "occaOuterDim2"));
+  }
+
+  void kernelInfo::addIncludeDefine(const std::string &filename) {
+    append("headers", "#include \"" + filename + "\"");
+  }
+
+  void kernelInfo::addInclude(const std::string &filename) {
+    append("headers", io::read(filename));
+  }
+
+  void kernelInfo::removeDefine(const std::string &macro) {
+    if(!isAnOccaDefine(macro))
+      append("headers", "#undef " + macro);
+  }
+
+  void kernelInfo::addSource(const std::string &content) {
+    append("headers", content);
+  }
+  //====================================
+
+
   //---[ kernel_v ]---------------------
   kernel_v::kernel_v(const occa::properties &properties_) {
     dHandle = NULL;

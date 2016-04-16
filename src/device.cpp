@@ -22,11 +22,14 @@
 
 #include "occa/device.hpp"
 #include "occa/base.hpp"
+#include "occa/sys.hpp"
 #include "occa/parser/parser.hpp"
 
 namespace occa {
   //---[ device_v ]---------------------
-  device_v::device_v(const occa::properties &properties_){
+  device_v::device_v(const occa::properties &properties_) :
+    hasProperties() {
+
     mode = properties_["mode"];
     properties = properties_;
 
@@ -63,12 +66,12 @@ namespace occa {
   device::device(device_v *dHandle_) :
     dHandle(dHandle_) {}
 
-  device::device(const properties &props) {
+  device::device(const occa::properties &props) {
     setup(props);
   }
 
   device::device(const std::string &props) {
-    setup(properties(props));
+    setup(occa::properties(props));
   }
 
   device::device(const device &d) :
@@ -80,35 +83,31 @@ namespace occa {
     return *this;
   }
 
-  void checkIfInitialized() const {
+  void device::checkIfInitialized() const {
     OCCA_CHECK(dHandle != NULL,
                "Device is not initialized");
   }
 
-  void* device::getContextHandle() {
-    return dHandle->getContextHandle();
+  void* device::getHandle(const occa::properties &props) {
+    return dHandle->getHandle(props);
   }
 
   device_v* device::getDHandle() {
     return dHandle;
   }
 
-  void device::setup(properties &props) {
-    OCCA_CHECK(props.has("mode") && modeIsEnabled(props),
-               "OCCA mode not enabled")
-    dHandle = occa::newModeDevice(props["mode"]);
-    dHandle->setup(aim);
+  void device::setup(const occa::properties &props) {
+    OCCA_CHECK(props.has("mode") && modeIsEnabled(props["mode"]),
+               "OCCA mode not enabled");
+    dHandle = occa::newModeDevice(props);
 
-    if (props.has("uva")
-      dHandle->uvaEnabled_ = (props["uva"] == "ENABLED");
-    else
-      dHandle->uvaEnabled_ = uvaEnabledByDefault_f;
+    dHandle->uvaEnabled_ = (props["uva"] == "ENABLED");
 
     stream newStream = createStream();
     dHandle->currentStream = newStream.handle;
   }
 
-  const occa::properties& properties() {
+  occa::properties& device::properties() {
     checkIfInitialized();
     return dHandle->properties;
   }
@@ -123,7 +122,7 @@ namespace occa {
     return dHandle->bytesAllocated;
   }
 
-  bool hasUvaEnabled() {
+  bool device::hasUvaEnabled() {
     checkIfInitialized();
     return dHandle->hasUvaEnabled();
   }
@@ -223,7 +222,7 @@ namespace occa {
   //  |---[ Kernel ]--------------------
   kernel device::buildKernel(const std::string &str,
                              const std::string &functionName,
-                             const properties &props) {
+                             const occa::properties &props) {
     checkIfInitialized();
 
     if(sys::fileExists(str, flags::checkCacheDir))
@@ -239,20 +238,18 @@ namespace occa {
 
     return buildKernelFromString(content,
                                  functionName,
-                                 defaultKernelInfo,
+                                 occa::properties(),
                                  language);
   }
 
   // [REFACTOR]
   kernel device::buildKernelFromString(const std::string &content,
                                        const std::string &functionName,
-                                       const properties &props,
+                                       const occa::properties &props,
                                        const int language) {
     checkIfInitialized();
 
     kernelInfo info = info_;
-
-    dHandle->addOccaHeadersToInfo(info);
 
     const std::string hash = getContentHash(content,
                                             dHandle->getInfoSalt(info));
@@ -276,7 +273,7 @@ namespace occa {
                                    functionName);
     }
 
-    writeToFile(stringSourceFile, content);
+    io::write(stringSourceFile, content);
 
     kernel k = buildKernelFromSource(stringSourceFile,
                                      functionName,
@@ -289,7 +286,7 @@ namespace occa {
 
   kernel device::buildKernelFromSource(const std::string &filename,
                                        const std::string &functionName,
-                                       const properties &props) {
+                                       const occa::properties &props) {
     checkIfInitialized();
 
     const std::string realFilename = sys::getFilename(filename);
@@ -383,7 +380,7 @@ namespace occa {
   //  |---[ Memory ]--------------------
   memory device::malloc(const uintptr_t bytes,
                         void *src,
-                        const properties &props) {
+                        const occa::properties &props) {
     checkIfInitialized();
 
     memory mem;
@@ -397,7 +394,7 @@ namespace occa {
 
   void* device::managedAlloc(const uintptr_t bytes,
                              void *src,
-                             const properties &props) {
+                             const occa::properties &props) {
     checkIfInitialized();
 
     memory mem = malloc(bytes, src, props);

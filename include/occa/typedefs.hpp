@@ -28,21 +28,21 @@
 #include <map>
 
 namespace occa {
-  typedef std::vector<int>                     intVector_t;
-  typedef std::vector<intVector_t>             intVecVector_t;
-  typedef std::vector<std::string>             stringVector_t;
+  typedef std::vector<int>                   intVector_t;
+  typedef std::vector<intVector_t>           intVecVector_t;
+  typedef std::vector<std::string>           strVector_t;
 
-  typedef std::map<std::string, std::string>   strToStrMap_t;
-  typedef strToStrMap_t::iterator              strToStrMapIterator;
-  typedef strToStrMap_t::const_iterator        cStrToStrMapIterator;
+  typedef std::map<std::string, std::string> strToStrMap_t;
+  typedef strToStrMap_t::iterator            strToStrMapIterator;
+  typedef strToStrMap_t::const_iterator      cStrToStrMapIterator;
 
-  typedef std::map<std::string,stringVector_t> strToStrsMap_t;
-  typedef strToStrMap_t::iterator              strToStrsMapIterator;
-  typedef strToStrMap_t::const_iterator        cStrToStrsMapIterator;
+  typedef std::map<std::string,strVector_t>  strToStrsMap_t;
+  typedef strToStrsMap_t::iterator           strToStrsMapIterator;
+  typedef strToStrsMap_t::const_iterator     cStrToStrsMapIterator;
 
-  typedef std::map<std::string, bool>          strToBoolMap_t;
-  typedef strToBoolMap_t::iterator             strToBoolMapIterator;
-  typedef strToBoolMap_t::const_iterator       cStrToBoolMapIterator;
+  typedef std::map<std::string, bool>        strToBoolMap_t;
+  typedef strToBoolMap_t::iterator           strToBoolMapIterator;
+  typedef strToBoolMap_t::const_iterator     cStrToBoolMapIterator;
 }
 
 #endif

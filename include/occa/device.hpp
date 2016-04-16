@@ -43,10 +43,9 @@ namespace occa {
   class streamTag;
 
   //---[ device_v ]---------------------
-  class device_v {
+  class device_v : public hasProperties {
   public:
     std::string mode;
-    occa::properties properties;
 
     bool uvaEnabled_;
     ptrRangeMap_t uvaMap;
@@ -65,9 +64,14 @@ namespace occa {
     //---[ Virtual Methods ]------------
     virtual ~device_v() = 0;
 
-    virtual void* getHandle(const std::string &type) = 0;
+    virtual void* getHandle(const occa::properties &props) = 0;
 
     virtual void appendAvailableDevices(std::vector<occa::device> &dList) = 0;
+
+    virtual void onPropertyChange(properties::Op op,
+                                  const std::string &prop,
+                                  strVector_t oldValues,
+                                  const std::string &newValue) = 0;
 
     virtual void flush()  = 0;
     virtual void finish() = 0;
@@ -88,7 +92,7 @@ namespace occa {
     //  |---[ Kernel ]------------------
     virtual kernel_v* buildKernelFromSource(const std::string &filename,
                                             const std::string &functionName,
-                                            const properties &props = defaultProperties) = 0;
+                                            const occa::properties &props = occa::properties()) = 0;
 
     virtual kernel_v* buildKernelFromBinary(const std::string &filename,
                                             const std::string &functionName) = 0;
@@ -97,7 +101,7 @@ namespace occa {
     //  |---[ Memory ]------------------
     virtual memory_v* malloc(const uintptr_t bytes,
                              void* src,
-                             const properties &props) = 0;
+                             const occa::properties &props) = 0;
 
     virtual memory_v* wrapMemory(void *handle_,
                                  const uintptr_t bytes) = 0;
@@ -125,21 +129,21 @@ namespace occa {
     device();
     device(device_v *dHandle_);
 
-    device(const properties &props);
+    device(const occa::properties &props);
     device(const std::string &props);
 
     device(const occa::device &d);
     device& operator = (const occa::device &d);
 
-    void checkIfInitialized();
+    void checkIfInitialized() const;
 
     const std::string& mode();
-    const occa::properties& properties();
+    occa::properties& properties();
 
-    void* getHandle(const std::string &type);
+    void* getHandle(const occa::properties &props);
     device_v* getDHandle();
 
-    void setup(properties &props);
+    void setup(const occa::properties &props);
     void setup(const std::string &props);
 
     uintptr_t memorySize() const;
@@ -166,7 +170,7 @@ namespace occa {
     //  |---[ Kernel ]------------------
     occa::kernel buildKernel(const std::string &str,
                              const std::string &functionName,
-                             const properties &props = defaultProperties);
+                             const occa::properties &props = occa::properties());
 
     occa::kernel buildKernelFromString(const std::string &content,
                                        const std::string &functionName,
@@ -174,12 +178,12 @@ namespace occa {
 
     occa::kernel buildKernelFromString(const std::string &content,
                                        const std::string &functionName,
-                                       const properties &props = defaultProperties,
+                                       const occa::properties &props = occa::properties(),
                                        const int language = usingOKL);
 
     occa::kernel buildKernelFromSource(const std::string &filename,
                                        const std::string &functionName,
-                                       const properties &props = defaultProperties);
+                                       const occa::properties &props = occa::properties());
 
     occa::kernel buildKernelFromBinary(const std::string &filename,
                                        const std::string &functionName);
@@ -188,11 +192,11 @@ namespace occa {
     //  |---[ Memory ]------------------
     occa::memory malloc(const uintptr_t bytes,
                         void *src = NULL,
-                        const properties &props = defaultProperties);
+                        const occa::properties &props = occa::properties());
 
     void* managedAlloc(const uintptr_t bytes,
                        void *src = NULL,
-                        const properties &props = defaultProperties);
+                       const occa::properties &props = occa::properties());
     //  |===============================
 
     void free();

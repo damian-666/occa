@@ -1,7 +1,8 @@
 #include "occa/tools/properties.hpp"
 
 namespace occa {
-  properties::properties() {}
+  properties::properties(hasProperties *holder_) :
+    holder(holder_) {}
 
   properties::properties(const std::string &props) {
     if(props.size() == 0)
@@ -25,7 +26,20 @@ namespace occa {
     parserNS::expNode::freeFlatHandle(csvFlatRoot);
   }
 
-  iter_t properties::iter(std::string prop) {
+  properties::properties(const properties &p) {
+    *this = p;
+  }
+
+  properties& properties::operator = (const properties &p) {
+    props = p.props;
+    return *this;
+  }
+
+  iter_t properties::iter(const std::string &prop) {
+    return props.find(prop);
+  }
+
+  citer_t properties::iter(const std::string &prop) const {
     return props.find(prop);
   }
 
@@ -33,28 +47,52 @@ namespace occa {
     return props.end();
   }
 
-  bool properties::has(std::string prop) {
+  citer_t properties::end() const {
+    return props.end();
+  }
+
+  bool properties::has(const std::string &prop) const {
     return (iter(prop) != end());
   }
 
-  bool properties::hasMultiple(std::string prop) {
+  bool properties::hasMultiple(const std::string &prop) const {
     iter_t it = iter(prop);
     return ((it != end()) && (it->second.size() > 1));
   }
 
-  std::string& operator [] (std::string prop) {
-    iter_t it = iter(prop);
-    if ((it == end()) || (it->second.size() == 0)) {
-      props[prop].push_back("");
-      it = iter(prop);
-    }
-    return props[prop][0];
+  std::string operator [] (const std::string &prop) const {
+    return get(prop);
   }
 
-  strVector_t properties::getAll(std::string prop) {
+  std::string get(const std::string &prop) const {
+    return get<std::string>(prop);
+  }
+
+  strVector_t properties::getAll(const std::string &prop) const {
     iter_t it = iter(prop);
     if ((it != end()) && (it->second.size()))
       return it->second;
     return strVector_t();
   }
+
+  void properties::clear(const std::string &prop) {
+    strVector_t &oldValues = props[prop];
+    onChange(Op::Clear, prop, oldValues, "");
+    oldValues.clear();
+  }
+
+  void propertie::setHolder(hasProperties &holder_) {
+    holder = &holder_;
+  }
+
+  void properties::onChange(properties::Op op,
+                            const std::string &prop,
+                            strVector_t oldValues,
+                            const std::string &newValue) const {
+    if (holder){
+      holder->onChange(op, prop, oldValues, newValue);
+    }
+  }
+
+  hasProperties::hasProperties() : properties(this) {}
 }

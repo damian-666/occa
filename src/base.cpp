@@ -21,6 +21,7 @@
  */
 
 #include "occa/base.hpp"
+#include "occa/sys.hpp"
 
 namespace occa {
 
@@ -52,37 +53,44 @@ namespace occa {
     return (modeMap().find(mode) != modeMap().end());
   }
 
-  device_v* newModeDevice(const std::string &mode) {
-    strToModeMapIterator it = modeMap().find(mode);
-
-    if (it == modeMap().end()) {
-      std::cout << "OCCA mode [" << mode << "] is not enabled, defaulting to [Serial] mode\n";
-      return newModeDevice("Serial");
+  mode_v* getMode(const occa::properties &props) {
+    if (!props.has("mode")) {
+      std::cout << "No OCCA mode given, defaulting to [Serial] mode\n";
+      return getMode("Serial");
     }
+    return getMode(props["mode"]);
+  }
 
-    return it->second->newDevice();
+  mode_v* getMode(const std::string &mode) {
+    if (!modeIsEnabled(mode)) {
+      std::cout << "OCCA mode [" << mode << "] is not enabled, defaulting to [Serial] mode\n";
+      return modeMap()["Serial"];
+    }
+    return modeMap()[mode];
+  }
+
+  device_v* newModeDevice(const std::string &mode) {
+    return getMode(mode)->newDevice();
+  }
+
+  device_v* newModeDevice(const occa::properties &props) {
+    return getMode(props)->newDevice();
   }
 
   kernel_v* newModeKernel(const std::string &mode) {
-    strToModeMapIterator it = modeMap().find(mode);
+    return getMode(mode)->newKernel();
+  }
 
-    if (it == modeMap().end()) {
-      std::cout << "OCCA mode [" << mode << "] is not enabled, defaulting to [Serial] mode\n";
-      return newModeKernel("Serial");
-    }
-
-    return it->second->newKernel();
+  kernel_v* newModeKernel(const occa::properties &props) {
+    return getMode(props)->newKernel();
   }
 
   memory_v* newModeMemory(const std::string &mode) {
-    strToModeMapIterator it = modeMap().find(mode);
+    return getMode(mode)->newMemory();
+  }
 
-    if (it == modeMap().end()) {
-      std::cout << "OCCA mode [" << mode << "] is not enabled, defaulting to [Serial] mode\n";
-      return newModeMemory("Serial");
-    }
-
-    return it->second->newMemory();
+  memory_v* newModeMemory(const occa::properties &props) {
+    return getMode(props)->newMemory();
   }
 
   void freeModeDevice(device_v *dHandle) {
@@ -262,7 +270,7 @@ namespace occa {
   }
 
   properties& deviceProperties() {
-    return currentDevice.properties;
+    return currentDevice.properties();
   }
 
   void flush() {
@@ -355,7 +363,7 @@ namespace occa {
                      void *src,
                      const properties &props) {
 
-    return currentDevice.managedMalloc(bytes, src, props);
+    return currentDevice.managedAlloc(bytes, src, props);
   }
   //====================================
 

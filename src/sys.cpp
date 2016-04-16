@@ -1,17 +1,17 @@
 /* The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2014 David Medina and Tim Warburton
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -145,7 +145,7 @@ namespace occa {
     }
 
     void mkpath(const std::string &dir) {
-      stringVector_t path;
+      strVector_t path;
 
 #if (OCCA_OS & (LINUX_OS | OSX_OS))
       sys::absolutePathVec(dir, path);
@@ -222,7 +222,7 @@ namespace occa {
     std::string getFilename(const std::string &filename) {
       std::string ret;
 
-      stringVector_t path;
+      strVector_t path;
       absolutePathVec(filename, path);
 
       const int dirCount = (int) path.size();
@@ -245,7 +245,7 @@ namespace occa {
     }
 
     void absolutePathVec(const std::string &path_,
-                         stringVector_t &pathVec) {
+                         strVector_t &pathVec) {
 
       std::string path = expandEnvVariables(path_);
       strip(path);
@@ -302,7 +302,7 @@ namespace occa {
       if ((!foundDir) &&
          (c[0] != '/')) {
 
-        stringVector_t::iterator it = env::OCCA_INCLUDE_PATH.begin();
+        strVector_t::iterator it = env::OCCA_INCLUDE_PATH.begin();
 
         while(it != env::OCCA_INCLUDE_PATH.end()) {
           if (it->size() && sys::fileExists(*it + path)) {
@@ -333,8 +333,8 @@ namespace occa {
       }
     }
 
-    stringVector_t absolutePathVec(const std::string &path){
-      stringVector_t pathVec;
+    strVector_t absolutePathVec(const std::string &path){
+      strVector_t pathVec;
       absolutePathVec(path, pathVec);
       return pathVec;
     }
@@ -346,7 +346,7 @@ namespace occa {
       std::string shellToolsFile = sys::getFilename("[occa]/scripts/shellTools.sh");
 
       if(!sys::fileExists(shellToolsFile)){
-        sys::mkpath(getFileDirectory(shellToolsFile));
+        sys::mkpath(dirname(shellToolsFile));
 
         std::ofstream fs2;
         fs2.open(shellToolsFile.c_str());
@@ -662,7 +662,7 @@ namespace occa {
       const std::string infoFilename   = sys::getFilename("[occa]/testing/compilerVendorInfo_" + safeCompiler);
 
       cacheFile(testFilename,
-                readFile(env::OCCA_DIR + "/scripts/compilerVendorTest.cpp"),
+                io::read(env::OCCA_DIR + "/scripts/compilerVendorTest.cpp"),
                 "compilerVendorTest");
 
       if(!haveHash(hash)){
@@ -689,7 +689,7 @@ namespace occa {
           ss.str("");
           ss << vendor_;
 
-          writeToFile(infoFilename, ss.str());
+          io::write(infoFilename, ss.str());
           releaseHash(hash);
 
           return vendor_;
@@ -697,7 +697,7 @@ namespace occa {
         releaseHash(hash);
       }
 
-      ss << readFile(infoFilename);
+      ss << io::read(infoFilename);
       ss >> vendor_;
 
       return vendor_;
@@ -783,7 +783,7 @@ namespace occa {
         releaseHash(hash, 0);
 
         OCCA_CHECK(false,
-                   "Error loading binary [" << compressFilename(filename) << "] with dlopen");
+                   "Error loading binary [" << io::shortname(filename) << "] with dlopen");
       }
 #else
       void *dlHandle = LoadLibraryA(filename.c_str());
@@ -792,7 +792,7 @@ namespace occa {
         releaseHash(hash, 0);
 
         OCCA_CHECK(dlHandle != NULL,
-                   "Error loading dll [" << compressFilename(filename) << "] (WIN32 error: " << GetLastError() << ")");
+                   "Error loading dll [" << io::shortname(filename) << "] (WIN32 error: " << GetLastError() << ")");
       }
 #endif
 

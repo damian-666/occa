@@ -1,5 +1,8 @@
-#ifndef OCCA_TOOLS_CRYPTO_HEADER
-#define OCCA_TOOLS_CRYPTO_HEADER
+#ifndef OCCA_TOOLS_STRING_HEADER
+#define OCCA_TOOLS_STRING_HEADER
+
+#include <iostream>
+#include <iomanip>
 
 namespace occa {
   template <class TM>
