@@ -94,7 +94,7 @@ namespace occa {
       const std::string hash = getFileContentHash(filename,
                                                   dHandle->getInfoSalt(info));
 
-      const std::string hashDir       = hashDirFor(filename, hash);
+      const std::string hashDir       = hashDir(filename, hash);
       const std::string sourceFile    = hashDir + kc::sourceFile;
       const std::string binaryFile    = hashDir + fixBinaryName(kc::binaryFile);
       const std::string ptxBinaryFile = hashDir + "ptxBinary.o";

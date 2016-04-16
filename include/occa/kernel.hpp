@@ -142,6 +142,7 @@ namespace occa {
 
   //---[ kernelInfo ]---------------------
   class kernelInfo : public occa::properties {
+  public:
     kernelInfo();
     kernelInfo(const kernelInfo &kInfo);
     kernelInfo& operator = (const kernelInfo &kInfo);
@@ -177,6 +178,8 @@ namespace occa {
     std::vector<kernel> nestedKernels;
     std::vector<kernelArg> arguments;
 
+    kernelMetadata metadata;
+
     kernel_v(const occa::properties &properties_);
 
     void initFrom(const kernel_v &m);
@@ -190,7 +193,7 @@ namespace occa {
     //---[ Virtual Methods ]------------
     virtual ~kernel_v() = 0;
 
-    virtual void* getHandle(const std::string &type) = 0;
+    virtual void* getHandle(const occa::properties &props = occa::properties()) = 0;
 
     virtual std::string binaryName(const std::string &filename) = 0;
 
@@ -228,8 +231,8 @@ namespace occa {
 
     void checkIfInitialized() const;
 
+    void* getHandle(const occa::properties &props = occa::properties());
     kernel_v* getKHandle();
-    void* getHandle(const std::string &type);
 
     const std::string& mode();
     const std::string& name();

@@ -285,7 +285,7 @@ namespace occa {
     name = m.name;
     properties = m.properties;
 
-    metaInfo = m.metaInfo;
+    metadata = m.metadata;
 
     dims = m.dims;
     inner = m.inner;

@@ -64,7 +64,7 @@ namespace occa {
     //---[ Virtual Methods ]------------
     virtual ~device_v() = 0;
 
-    virtual void* getHandle(const occa::properties &props) = 0;
+    virtual void* getHandle(const occa::properties &props = occa::properties()) = 0;
 
     virtual void appendAvailableDevices(std::vector<occa::device> &dList) = 0;
 
@@ -140,7 +140,7 @@ namespace occa {
     const std::string& mode();
     occa::properties& properties();
 
-    void* getHandle(const occa::properties &props);
+    void* getHandle(const occa::properties &props = occa::properties());
     device_v* getDHandle();
 
     void setup(const occa::properties &props);
@@ -214,7 +214,7 @@ namespace occa {
     stream(const stream &s);
     stream& operator = (const stream &s);
 
-    void* getHandle(const std::string &type);
+    void* getHandle(const occa::properties &props = occa::properties());
 
     void free();
   };

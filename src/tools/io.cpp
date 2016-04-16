@@ -1,3 +1,25 @@
+/* The MIT License (MIT)
+ * 
+ * Copyright (c) 2014 David Medina and Tim Warburton
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ */
+
 #if (OCCA_OS & LINUX_OS)
 #  include <unistd.h>
 #  include <sys/types.h>
@@ -197,11 +219,11 @@ namespace occa {
               (ext == "cu"));
     }
 
-    parsedKernelInfo parseFileForFunction(const std::string &deviceMode,
-                                          const std::string &filename,
-                                          const std::string &parsedFile,
-                                          const std::string &functionName,
-                                          const properties &props) {
+    kernelMetadata parseFileForFunction(const std::string &deviceMode,
+                                        const std::string &filename,
+                                        const std::string &parsedFile,
+                                        const std::string &functionName,
+                                        const properties &props) {
 
       parser fileParser;
 
@@ -236,14 +258,14 @@ namespace occa {
       kernelInfoIterator kIt = fileParser.kernelInfoMap.find(functionName);
 
       if (kIt != fileParser.kernelInfoMap.end())
-        return (kIt->second)->makeParsedKernelInfo();
+        return (kIt->second)->metadata();
 
       OCCA_CHECK(false,
                  "Could not find function ["
                  << functionName << "] in file ["
                  << io::shortname(filename) << "]");
 
-      return parsedKernelInfo();
+      return kernelMetadata();
     }
 
     std::string removeSlashes(const std::string &str) {
@@ -357,8 +379,12 @@ namespace occa {
       return filename.substr(start, end - start);
     }
 
-    std::string hashDirFor(const std::string &filename,
-                           hash_t hash) {
+    std::string hashDir(hash_t hash) {
+      return hashDir("", hash);
+    }
+
+    std::string hashDir(const std::string &filename,
+                        hash_t hash) {
 
       if (filename.size() == 0) {
         if (hash.initialized)

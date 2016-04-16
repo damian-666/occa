@@ -65,7 +65,7 @@ namespace occa {
     //---[ Virtual Methods ]------------
     virtual ~memory_v() = 0;
 
-    virtual void* getHandle(const std::string &type) = 0;
+    virtual void* getHandle(const occa::properties &props = occa::properties()) = 0;
 
     virtual void copyTo(const void *src,
                         const uintptr_t bytes = 0,
@@ -149,7 +149,7 @@ namespace occa {
     bool leftInDevice() const;
     bool isDirty() const;
 
-    void* getHandle(const std::string &type);
+    void* getHandle(const occa::properties &props = occa::properties());
 
     void placeInUva();
     void manage();

@@ -23,6 +23,7 @@
 #include "occa/device.hpp"
 #include "occa/base.hpp"
 #include "occa/sys.hpp"
+#include "occa/tools/io.hpp"
 #include "occa/parser/parser.hpp"
 
 namespace occa {
@@ -249,12 +250,10 @@ namespace occa {
                                        const int language) {
     checkIfInitialized();
 
-    kernelInfo info = info_;
-
-    hash_t hash = hash(content);
+    hash_t hash = occa::hash(content);
     hash ^= props.hash();
 
-    const std::string hashDir = hashDirFor("", hash);
+    const std::string hashDir = io::hashDir(hash);
 
     std::string stringSourceFile = hashDir;
 
@@ -265,11 +264,12 @@ namespace occa {
     else
       stringSourceFile += "stringSource.occa";
 
-    if(!haveHash(hash, 1)) {
-      waitForHash(hash, 1);
+    if(!io::haveHash(hash, 1)) {
+      io::waitForHash(hash, 1);
 
+      // [REFACTOR] fix binary name
       return buildKernelFromBinary(hashDir +
-                                   dHandle->fixBinaryName(kc::binaryFile),
+                                   kc::binaryFile,
                                    functionName);
     }
 
@@ -279,7 +279,7 @@ namespace occa {
                                      functionName,
                                      props);
 
-    releaseHash(hash, 1);
+    io::releaseHash(hash, 1);
 
     return k;
   }
@@ -290,7 +290,7 @@ namespace occa {
     checkIfInitialized();
 
     const std::string realFilename = sys::getFilename(filename);
-    const bool usingParser         = fileNeedsParser(filename);
+    const bool usingParser         = io::fileNeedsParser(filename);
 
     kernel ker;
 
@@ -306,33 +306,33 @@ namespace occa {
         k->dHandle = dHandle;
       }
 
-      const std::string hash = getFileContentHash(realFilename,
-                                                  dHandle->getInfoSalt(info_));
+      hash_t hash = occa::hashFile(realFilename);
+      hash ^= occa::hash(*dHandle);
 
-      const std::string hashDir    = hashDirFor(realFilename, hash);
+      const std::string hashDir    = io::hashDir(realFilename, hash);
       const std::string parsedFile = hashDir + "parsedSource.occa";
 
-      k->metaInfo = parseFileForFunction(mode(),
-                                         realFilename,
-                                         parsedFile,
-                                         functionName,
-                                         props);
+      k->metadata = io::parseFileForFunction(mode(),
+                                             realFilename,
+                                             parsedFile,
+                                             functionName,
+                                             props);
 
-      kernelInfo info = defaultKernelInfo;
+      kernelInfo info;
       info.addDefine("OCCA_LAUNCH_KERNEL", 1);
 
       k->buildFromSource(parsedFile, functionName, info);
       k->nestedKernels.clear();
 
-      if (k->metaInfo.nestedKernels) {
+      if (k->metadata.nestedKernels) {
         std::stringstream ss;
 
         const int vc_f = verboseCompilation_f;
 
-        for(int ki = 0; ki < k->metaInfo.nestedKernels; ++ki) {
+        for(int ki = 0; ki < k->metadata.nestedKernels; ++ki) {
           ss << ki;
 
-          const std::string sKerName = k->metaInfo.baseName + ss.str();
+          const std::string sKerName = k->metadata.baseName + ss.str();
 
           ss.str("");
 
@@ -341,10 +341,10 @@ namespace occa {
                                                         sKerName,
                                                         props);
 
-          sKer.kHandle->metaInfo               = k->metaInfo;
-          sKer.kHandle->metaInfo.name          = sKerName;
-          sKer.kHandle->metaInfo.nestedKernels = 0;
-          sKer.kHandle->metaInfo.removeArg(0); // remove nestedKernels **
+          sKer.kHandle->metadata               = k->metadata;
+          sKer.kHandle->metadata.name          = sKerName;
+          sKer.kHandle->metadata.nestedKernels = 0;
+          sKer.kHandle->metadata.removeArg(0); // remove nestedKernels **
           k->nestedKernels.push_back(sKer);
 
           // Only show compilation the first time
@@ -439,7 +439,7 @@ namespace occa {
     return *this;
   }
 
-  void* stream::getStreamHandle() {
+  void* stream::getHandle(const occa::properties &props) {
     return handle;
   }
 
