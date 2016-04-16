@@ -192,7 +192,7 @@ namespace occa {
     //---[ Virtual Methods ]------------
     virtual ~kernel_v() = 0;
 
-    virtual void* getHandle(const occa::properties &props = occa::properties()) = 0;
+    virtual void* getHandle(const occa::properties &props) = 0;
 
     virtual std::string binaryName(const std::string &filename) = 0;
 

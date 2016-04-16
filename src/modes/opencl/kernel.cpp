@@ -28,7 +28,8 @@
 
 namespace occa {
   namespace opencl {
-    kernel::kernel() : occa::kernel_v() {}
+    kernel::kernel(const occa::properties &properties_) :
+      occa::kernel_v(properties_) {}
 
     kernel::kernel(const kernel &k){
       *this = k;
@@ -60,31 +61,28 @@ namespace occa {
 
     kernel::~kernel(){}
 
-    void* kernel::getKernelHandle(){
-      return clKernel;
+    void* kernel::getHandle(const occa::properties &props) {
+      const std::string type = props["type"];
+      if (type == "kernel")
+        return clKernel;
+      if (type == "program")
+        return clProgram;
     }
 
-    void* kernel::getProgramHandle(){
-      return clProgram;
-    }
-
-    std::string kernel::fixBinaryName(const std::string &filename){
+    std::string kernel::binaryName(const std::string &filename) {
       return filename;
     }
 
     void kernel::buildFromSource(const std::string &filename,
                                  const std::string &functionName,
-                                 const kernelInfo &info_){
+                                 const occa::properties &props) {
 
       name = functionName;
 
-      kernelInfo info = info_;
-      dHandle->addOccaHeadersToInfo(info);
+      hash_t hash = occa::hashFile(filename);
+      hash ^= props.hash();
 
-      const std::string hash = getFileContentHash(filename,
-                                                  dHandle->getInfoSalt(info));
-
-      const std::string hashDir    = hashDir(filename, hash);
+      const std::string hashDir    = io::hashDir(filename, hash);
       const std::string sourceFile = hashDir + kc::sourceFile;
       const std::string binaryFile = hashDir + fixBinaryName(kc::binaryFile);
       bool foundBinary = true;

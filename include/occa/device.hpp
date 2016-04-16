@@ -63,8 +63,9 @@ namespace occa {
 
     //---[ Virtual Methods ]------------
     virtual ~device_v() = 0;
+    virtual void free() = 0;
 
-    virtual void* getHandle(const occa::properties &props = occa::properties()) = 0;
+    virtual void* getHandle(const occa::properties &props) = 0;
 
     virtual void appendAvailableDevices(std::vector<occa::device> &dList) = 0;
 
@@ -92,7 +93,7 @@ namespace occa {
     //  |---[ Kernel ]------------------
     virtual kernel_v* buildKernelFromSource(const std::string &filename,
                                             const std::string &functionName,
-                                            const occa::properties &props = occa::properties()) = 0;
+                                            const occa::properties &props) = 0;
 
     virtual kernel_v* buildKernelFromBinary(const std::string &filename,
                                             const std::string &functionName) = 0;
@@ -105,23 +106,15 @@ namespace occa {
 
     virtual memory_v* wrapMemory(void *handle_,
                                  const uintptr_t bytes) = 0;
-    //  |===============================
-
-    virtual void free() = 0;
 
     virtual uintptr_t memorySize() = 0;
+    //  |===============================
     //==================================
   };
   //====================================
 
   //---[ device ]-----------------------
   class device {
-    friend class occa::kernel_v;
-    friend class occa::memory_v;
-    friend class occa::device_v;
-
-    friend class occa::memory;
-
   private:
     device_v *dHandle;
 

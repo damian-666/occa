@@ -37,22 +37,12 @@
 #endif
 
 #include "occa/sys.hpp"
+#include "occa/tools/env.hpp"
 #include "occa/parser/tools.hpp"
 
 namespace occa {
   namespace flags {
     const int checkCacheDir = (1 << 0);
-  }
-
-  namespace env {
-    std::string var(const std::string &varName) {
-      char *c_varName = getenv(varName.c_str());
-
-      if (c_varName != NULL)
-        return std::string(c_varName);
-
-      return "";
-    }
   }
 
   namespace sys {

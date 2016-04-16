@@ -38,10 +38,6 @@ namespace occa {
     extern const int checkCacheDir;
   }
 
-  namespace env {
-    std::string var(const std::string &var);
-  }
-
   namespace sys {
     namespace vendor {
       static const int notFound     = 0;

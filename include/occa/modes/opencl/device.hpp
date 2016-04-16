@@ -1,17 +1,17 @@
 /* The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2014 David Medina and Tim Warburton
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -39,21 +39,13 @@ namespace occa {
 
       std::string compilerFlags;
 
-      device();
-      device(const device &k);
-      device& operator = (const device &k);
+      device(const occa::properties &properties_);
       ~device();
       void free();
 
-      void* getContextHandle();
-
-      void setup(argInfoMap &aim);
-
-      void addOccaHeadersToInfo(kernelInfo &info_);
-
-      std::string getInfoSalt(const kernelInfo &info_);
-
       void getEnvironmentVariables();
+
+      void* getHandle(const occa::properties &props);
 
       void appendAvailableDevices(std::vector<occa::device> &dList);
 
@@ -66,33 +58,32 @@ namespace occa {
       stream_t createStream();
       void freeStream(stream_t s);
 
+      stream_t wrapStream(void *handle_);
+
       streamTag tagStream();
       void waitFor(streamTag tag);
       double timeBetween(const streamTag &startTag, const streamTag &endTag);
-
-      stream_t wrapStream(void *handle_);
       //  |=============================
 
       //  |---[ Kernel ]----------------
-      std::string fixBinaryName(const std::string &filename);
-
       kernel_v* buildKernelFromSource(const std::string &filename,
                                       const std::string &functionName,
-                                      const kernelInfo &info_);
+                                      const occa::properties &props);
 
       kernel_v* buildKernelFromBinary(const std::string &filename,
                                       const std::string &functionName);
       //  |=============================
 
-      //  |---[ Kernel ]----------------
-      memory_v* wrapMemory(void *handle_,
-                           const uintptr_t bytes);
-
+      //  |---[ Memory ]----------------
       memory_v* malloc(const uintptr_t bytes,
-                       void *src);
+                       void *src,
+                       const occa::properties &props);
 
       memory_v* mappedAlloc(const uintptr_t bytes,
                             void *src);
+
+      memory_v* wrapMemory(void *handle_,
+                           const uintptr_t bytes);
 
       uintptr_t memorySize();
       //  |=============================

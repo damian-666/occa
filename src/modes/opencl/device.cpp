@@ -1,17 +1,17 @@
 /* The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2014 David Medina and Tim Warburton
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,75 +26,40 @@
 #include "occa/modes/opencl/kernel.hpp"
 #include "occa/modes/opencl/memory.hpp"
 #include "occa/modes/opencl/utils.hpp"
+#include "occa/tools/env.hpp"
 #include "occa/base.hpp"
 
 namespace occa {
   namespace opencl {
-    device::device() : occa::device_v() {
-      platformID = 0;
-      deviceID   = 0;
-
-      getEnvironmentVariables();
-    }
-
-    device::device(const device &d){
-      *this = d;
-    }
-
-    device& device::operator = (const device &d) {
-      initFrom(d);
-
-      platformID = d.platformID;
-      deviceID = d.deviceID;
-
-      clPlatformID = d.clPlatformID;
-      clDeviceID = d.clDeviceID;
-      clContext = d.clContext;
-
-      return *this;
-    }
-
-    device::~device(){}
-
-    void* device::getContextHandle(){
-      return (void*) clContext;
-    }
-
-    void device::setup(argInfoMap &aim){
-      properties = aim;
+    device::device(const occa::properties &properties_) :
+      occa::device_v(properties_) {
 
       cl_int error;
 
-      OCCA_CHECK(aim.has("platformID"),
+      OCCA_CHECK(properties.has("platformID"),
                  "[OpenCL] device not given [platformID]");
 
-      OCCA_CHECK(aim.has("deviceID"),
+      OCCA_CHECK(properties.has("deviceID"),
                  "[OpenCL] device not given [deviceID]");
 
-      platformID = aim.get<int>("platformID");
-      deviceID   = aim.get<int>("deviceID");
+      platformID = properties.get<int>("platformID");
+      deviceID   = properties.get<int>("deviceID");
 
       clPlatformID = opencl::platformID(platformID);
       clDeviceID   = opencl::deviceID(platformID, deviceID);
 
       clContext = clCreateContext(NULL, 1, &clDeviceID, NULL, NULL, &error);
       OCCA_CL_CHECK("Device: Creating Context", error);
+
+      getEnvironmentVariables();
     }
 
-    // [REFACTOR]
-    void device::addOccaHeadersToInfo(kernelInfo &info_){
-    }
+    device::~device(){}
 
-    std::string device::getInfoSalt(const kernelInfo &info_){
-      std::stringstream salt;
-
-      salt << "OpenCL"
-           << platformID << '-' << deviceID
-           << info_.salt()
-           << parserVersion
-           << compilerFlags;
-
-      return salt.str();
+    void* device::getHandle(const occa::properties &props) {
+      if (props.get("type") == "context")
+        return (void*) clContext;
+      return NULL;
     }
 
     void device::getEnvironmentVariables(){
@@ -212,14 +177,10 @@ namespace occa {
       return (double) (1.0e-9 * (double)(end - start));
     }
 
-    std::string device::fixBinaryName(const std::string &filename){
-      return filename;
-    }
-
     kernel_v* device::buildKernelFromSource(const std::string &filename,
                                             const std::string &functionName,
-                                            const kernelInfo &info_){
-      opencl::kernel *k = new opencl::kernel();
+                                            const occa::properties &props) {
+      opencl::kernel *k = new opencl::kernel(props);
 
       k->dHandle = this;
 
@@ -230,7 +191,7 @@ namespace occa {
       k->clDeviceID   = clDeviceID;
       k->clContext    = clContext;
 
-      k->buildFromSource(filename, functionName, info_);
+      k->buildFromSource(filename, functionName, props);
 
       return k;
     }
@@ -254,7 +215,7 @@ namespace occa {
 
     memory_v* device::wrapMemory(void *handle_,
                                  const uintptr_t bytes){
-      memory *mem = new memory();
+      opencl::memory *mem = new opencl::memory();
       mem->dHandle = this;
       mem->size    = bytes;
       mem->handle  = new cl_mem;
@@ -263,8 +224,13 @@ namespace occa {
     }
 
     memory_v* device::malloc(const uintptr_t bytes,
-                             void *src){
-      memory *mem = new memory();
+                             void *src,
+                             const occa::properties &props){
+
+      if (props["type"] == "mapped")
+        return mappedAlloc(bytes, src);
+
+      opencl::memory *mem = new opencl::memory();
       cl_int error;
 
       mem->dHandle = this;
@@ -292,14 +258,12 @@ namespace occa {
 
       cl_command_queue &stream = *((cl_command_queue*) currentStream);
 
-      memory_v *mem = new memory;
+      opencl::memory *mem = new opencl::memory;
       cl_int error;
 
       mem->dHandle  = this;
       mem->handle   = new cl_mem;
       mem->size     = bytes;
-
-      mem->memInfo |= memFlag::isMapped;
 
       // Alloc pinned host buffer
       *((cl_mem*) mem->handle) = clCreateBuffer(clContext,
