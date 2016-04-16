@@ -67,9 +67,9 @@ namespace occa {
       const std::string safeCompiler = removeSlashes(compiler);
       const std::string &hash = safeCompiler;
 
-      const std::string testFilename   = sys::getFilename("[occa]/testing/ompTest.cpp");
-      const std::string binaryFilename = sys::getFilename("[occa]/testing/omp_" + safeCompiler);
-      const std::string infoFilename   = sys::getFilename("[occa]/testing/ompInfo_" + safeCompiler);
+      const std::string testFilename   = sys::filename("[occa]/testing/ompTest.cpp");
+      const std::string binaryFilename = sys::filename("[occa]/testing/omp_" + safeCompiler);
+      const std::string infoFilename   = sys::filename("[occa]/testing/ompInfo_" + safeCompiler);
 
       cacheFile(testFilename,
                 io::read(env::OCCA_DIR + "/scripts/ompTest.cpp"),

@@ -188,7 +188,7 @@ namespace occa {
       return (endTag.tagTime - startTag.tagTime);
     }
 
-    std::string device::fixBinaryName(const std::string &filename){
+    std::string device::binaryName(const std::string &filename){
 #if (OCCA_OS & (LINUX_OS | OSX_OS))
       return filename;
 #else

@@ -49,7 +49,7 @@ namespace occa {
       void* getKernelHandle();
       void* getProgramHandle();
 
-      std::string fixBinaryName(const std::string &filename);
+      std::string binaryName(const std::string &filename);
 
       void buildFromSource(const std::string &filename,
                            const std::string &functionName,

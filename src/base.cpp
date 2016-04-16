@@ -21,7 +21,7 @@
  */
 
 #include "occa/base.hpp"
-#include "occa/sys.hpp"
+#include "occa/tools/sys.hpp"
 
 namespace occa {
 

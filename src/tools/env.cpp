@@ -123,7 +123,7 @@ namespace occa {
                  "Path to the OCCA caching directory is not set properly, "
                  "unset OCCA_CACHE_DIR to use default directory [~/._occa]");
 
-      env::OCCA_CACHE_DIR = sys::getFilename(env::OCCA_CACHE_DIR);
+      env::OCCA_CACHE_DIR = sys::filename(env::OCCA_CACHE_DIR);
 
       if (!sys::dirExists(env::OCCA_CACHE_DIR))
         sys::mkpath(env::OCCA_CACHE_DIR);
@@ -148,7 +148,7 @@ namespace occa {
 
         if (0 < (cEnd - cStart)) {
           std::string newPath(cStart, cEnd - cStart);
-          newPath = sys::getFilename(newPath);
+          newPath = sys::filename(newPath);
           endDirWithSlash(newPath);
 
           tmpOIP.push_back(newPath);

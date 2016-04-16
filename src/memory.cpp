@@ -25,7 +25,7 @@
 #include "occa/memory.hpp"
 #include "occa/device.hpp"
 #include "occa/uva.hpp"
-#include "occa/sys.hpp"
+#include "occa/tools/sys.hpp"
 
 namespace occa {
   //---[ memory_v ]---------------------

@@ -60,7 +60,7 @@ namespace occa {
       return dlHandle;
     }
 
-    std::string kernel::fixBinaryName(const std::string &filename){
+    std::string kernel::binaryName(const std::string &filename){
 #if (OCCA_OS & (LINUX_OS | OSX_OS))
       return filename;
 #else
@@ -82,7 +82,7 @@ namespace occa {
 
       const std::string hashDir    = hashDirFor(filename, hash);
       const std::string sourceFile = hashDir + kc::sourceFile;
-      const std::string binaryFile = hashDir + fixBinaryName(kc::binaryFile);
+      const std::string binaryFile = hashDir + binaryName(kc::binaryFile);
       bool foundBinary = true;
 
       if (!haveHash(hash, 0))

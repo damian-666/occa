@@ -36,7 +36,7 @@
 #  include <windows.h>
 #endif
 
-#include "occa/sys.hpp"
+#include "occa/tools/sys.hpp"
 #include "occa/tools/env.hpp"
 #include "occa/parser/tools.hpp"
 
@@ -202,14 +202,14 @@ namespace occa {
       strip(filename);
 
       if (flags & flags::checkCacheDir)
-        return fileExists(getFilename(filename));
+        return fileExists(filename(filename));
 
       struct stat statInfo;
 
       return (stat(filename.c_str(), &statInfo) == 0);
     }
 
-    std::string getFilename(const std::string &filename) {
+    std::string filename(const std::string &filename) {
       std::string ret;
 
       strVector_t path;
@@ -333,7 +333,7 @@ namespace occa {
     std::string getFieldFrom(const std::string &command,
                              const std::string &field){
 #if (OCCA_OS & LINUX)
-      std::string shellToolsFile = sys::getFilename("[occa]/scripts/shellTools.sh");
+      std::string shellToolsFile = sys::filename("[occa]/scripts/shellTools.sh");
 
       if(!sys::fileExists(shellToolsFile)){
         sys::mkpath(dirname(shellToolsFile));
@@ -647,9 +647,9 @@ namespace occa {
       const std::string safeCompiler = removeSlashes(compiler);
       const std::string &hash = safeCompiler;
 
-      const std::string testFilename   = sys::getFilename("[occa]/testing/compilerVendorTest.cpp");
-      const std::string binaryFilename = sys::getFilename("[occa]/testing/compilerVendor_" + safeCompiler);
-      const std::string infoFilename   = sys::getFilename("[occa]/testing/compilerVendorInfo_" + safeCompiler);
+      const std::string testFilename   = sys::filename("[occa]/testing/compilerVendorTest.cpp");
+      const std::string binaryFilename = sys::filename("[occa]/testing/compilerVendor_" + safeCompiler);
+      const std::string infoFilename   = sys::filename("[occa]/testing/compilerVendorInfo_" + safeCompiler);
 
       cacheFile(testFilename,
                 io::read(env::OCCA_DIR + "/scripts/compilerVendorTest.cpp"),

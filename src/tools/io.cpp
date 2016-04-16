@@ -1,17 +1,17 @@
 /* The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2014 David Medina and Tim Warburton
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -280,17 +280,17 @@ namespace occa {
       return ret;
     }
 
-    void cacheFile(const std::string &filename,
-                   std::string source,
-                   hash_t &hash) {
+    void cache(const std::string &filename,
+               std::string source,
+               hash_t &hash) {
 
-      cacheFile(filename, source.c_str(), hash, false);
+      cache(filename, source.c_str(), hash, false);
     }
 
-    void cacheFile(const std::string &filename,
-                   const char *source,
-                   hash_t &hash,
-                   const bool deleteSource) {
+    void cache(const std::string &filename,
+               const char *source,
+               hash_t &hash,
+               const bool deleteSource) {
 
       std::string shash = hash.toString();
       if(!haveHash(shash)){
@@ -310,10 +310,12 @@ namespace occa {
         delete [] source;
     }
 
-    void createSourceFileFrom(const std::string &filename,
-                              hash_t &hash,
-                              const properties &props) {
+    void cacheFile(const std::string &filename,
+                   hash_t &hash,
+                   const std::string &header,
+                   const std::string &footer) {
 
+      const std::string hashDir = io::hashDir(filename, hash);
       const std::string sourceFile = hashDir + kc::sourceFile;
 
       if (sys::fileExists(sourceFile))
@@ -321,23 +323,12 @@ namespace occa {
 
       sys::mkpath(hashDir);
 
-      setupOccaHeaders(info);
-
       std::ofstream fs;
       fs.open(sourceFile.c_str());
 
-      fs << "#include \"" << info.getModeHeaderFilename() << "\"\n"
-         << "#include \"" << sys::getFilename("[occa]/primitives.hpp") << "\"\n";
-
-      // [REFACTOR]
-      // if (info.mode & (Serial | OpenMP | Pthreads | CUDA)) {
-      //   fs << "#if defined(OCCA_IN_KERNEL) && !OCCA_IN_KERNEL\n"
-      //      << "using namespace occa;\n"
-      //      << "#endif\n";
-      // }
-
-      fs << info.header
-         << io::read(filename);
+      fs << header             << '\n'
+         << readFile(filename) << '\n'
+         << footer;
 
       fs.close();
     }
@@ -363,12 +354,12 @@ namespace occa {
     }
 
     std::string hashFrom(const std::string &filename) {
-      std::string hashDir = hashDirFor(filename);
+      std::string dir = hashDir(filename);
 
       const int chars = (int) filename.size();
       const char *c   = filename.c_str();
 
-      int start = (int) hashDir.size();
+      int start = (int) dir.size();
       int end;
 
       for (end = (start + 1); end < chars; ++end) {
@@ -393,7 +384,7 @@ namespace occa {
           return (env::OCCA_CACHE_DIR + "kernels/");
       }
 
-      std::string occaLibName = getLibraryName(sys::getFilename(filename));
+      std::string occaLibName = getLibraryName(sys::filename(filename));
 
       if (occaLibName.size() == 0) {
         if (hash.initialized)

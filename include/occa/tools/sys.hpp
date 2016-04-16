@@ -20,8 +20,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  */
 
-#ifndef OCCA_CPU_HEADER
-#define OCCA_CPU_HEADER
+#ifndef OCCA_TOOLS_SYS_HEADER
+#define OCCA_TOOLS_SYS_HEADER
 
 #include <iostream>
 
@@ -78,7 +78,7 @@ namespace occa {
     bool fileExists(const std::string &filename_,
                     const int flags = 0);
 
-    std::string getFilename(const std::string &filename);
+    std::string filename(const std::string &filename);
 
     void absolutePathVec(const std::string &path_,
                          strVector_t &pathVec);

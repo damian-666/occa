@@ -76,7 +76,7 @@ namespace occa {
       return data_.module;
     }
 
-    std::string kernel::fixBinaryName(const std::string &filename){
+    std::string kernel::binaryName(const std::string &filename){
       return filename;
     }
 
@@ -96,7 +96,7 @@ namespace occa {
 
       const std::string hashDir       = hashDir(filename, hash);
       const std::string sourceFile    = hashDir + kc::sourceFile;
-      const std::string binaryFile    = hashDir + fixBinaryName(kc::binaryFile);
+      const std::string binaryFile    = hashDir + binaryName(kc::binaryFile);
       const std::string ptxBinaryFile = hashDir + "ptxBinary.o";
       bool foundBinary = true;
 

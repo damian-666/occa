@@ -24,6 +24,7 @@
 
 #include "occa/modes/opencl/kernel.hpp"
 #include "occa/modes/opencl/device.hpp"
+#include "occa/tools/sys.hpp"
 #include "occa/base.hpp"
 
 namespace occa {
@@ -31,24 +32,7 @@ namespace occa {
     kernel::kernel(const occa::properties &properties_) :
       occa::kernel_v(properties_) {}
 
-    kernel::kernel(const kernel &k){
-      *this = k;
-    }
-
-    kernel& kernel::operator = (const kernel &k){
-      initFrom(k);
-
-      platformID = k.platformID;
-      deviceID   = k.deviceID;
-
-      clPlatformID = k.clPlatformID;
-      clDeviceID   = k.clDeviceID;
-      clContext    = k.clContext;
-      clProgram    = k.clProgram;
-      clKernel     = k.clKernel;
-
-      return *this;
-    }
+    kernel::~kernel(){}
 
     info_t kernel::makeCLInfo() {
       info_t info;
@@ -59,18 +43,15 @@ namespace occa {
       return info;
     }
 
-    kernel::~kernel(){}
-
     void* kernel::getHandle(const occa::properties &props) {
       const std::string type = props["type"];
+
       if (type == "kernel")
         return clKernel;
       if (type == "program")
         return clProgram;
-    }
 
-    std::string kernel::binaryName(const std::string &filename) {
-      return filename;
+      return NULL;
     }
 
     void kernel::buildFromSource(const std::string &filename,
@@ -82,26 +63,37 @@ namespace occa {
       hash_t hash = occa::hashFile(filename);
       hash ^= props.hash();
 
-      const std::string hashDir    = io::hashDir(filename, hash);
-      const std::string sourceFile = hashDir + kc::sourceFile;
-      const std::string binaryFile = hashDir + fixBinaryName(kc::binaryFile);
+      const std::string sourceFile = sourceFilename(filename, hash);
+      const std::string binaryFile = binaryFilename(filename, hash);
       bool foundBinary = true;
 
-      if (!haveHash(hash, 0))
-        waitForHash(hash, 0);
+      if (!io::haveHash(hash, 0))
+        io::waitForHash(hash, 0);
       else if (sys::fileExists(binaryFile))
-        releaseHash(hash, 0);
+        io::releaseHash(hash, 0);
       else
         foundBinary = false;
 
       if (foundBinary) {
         if(verboseCompilation_f)
-          std::cout << "Found cached binary of [" << io::shortname(filename) << "] in [" << io::shortname(binaryFile) << "]\n";
+          std::cout << "Found cached binary of [" << io::shortname(filename)
+                    << "] in [" << io::shortname(binaryFile) << "]\n";
 
         return buildFromBinary(binaryFile, functionName);
       }
 
-      createSourceFileFrom(filename, hashDir, info);
+      std::stringstream ss;
+      ss << "#include \"" << occaModeHeader() << "\"\n"
+         << "#include \"" << sys::filename("[occa]/primitives.hpp") << "\"\n"
+         << props["header"];
+
+      // if (info.mode & (Serial | OpenMP | Pthreads | CUDA)) {
+      //   fs << "#if defined(OCCA_IN_KERNEL) && !OCCA_IN_KERNEL\n"
+      //      << "using namespace occa;\n"
+      //      << "#endif\n";
+      // }
+
+      io::cacheFile(filename, hash, ss.str(), props["footer"]);
 
       std::string cFunction = io::read(sourceFile);
       std::string catFlags = info.flags + ((opencl::device*) dHandle)->compilerFlags;
@@ -116,7 +108,7 @@ namespace occa {
 
       opencl::saveProgramBinary(clInfo, binaryFile, hash);
 
-      releaseHash(hash, 0);
+      io::releaseHash(hash, 0);
     }
 
     void kernel::buildFromBinary(const std::string &filename,

@@ -22,7 +22,7 @@
 
 #include "occa/device.hpp"
 #include "occa/base.hpp"
-#include "occa/sys.hpp"
+#include "occa/tools/sys.hpp"
 #include "occa/tools/io.hpp"
 #include "occa/parser/parser.hpp"
 
@@ -289,7 +289,7 @@ namespace occa {
                                        const occa::properties &props) {
     checkIfInitialized();
 
-    const std::string realFilename = sys::getFilename(filename);
+    const std::string realFilename = sys::filename(filename);
     const bool usingParser         = io::fileNeedsParser(filename);
 
     kernel ker;

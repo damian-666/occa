@@ -68,7 +68,7 @@ namespace occa {
       //  |=============================
 
       //  |---[ Kernel ]----------------
-      std::string fixBinaryName(const std::string &filename);
+      std::string binaryName(const std::string &filename);
 
       kernel_v* buildKernelFromSource(const std::string &filename,
                                       const std::string &functionName,

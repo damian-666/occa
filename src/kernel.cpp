@@ -24,6 +24,7 @@
 #include "occa/device.hpp"
 #include "occa/memory.hpp"
 #include "occa/uva.hpp"
+#include "occa/tools/sys.hpp"
 
 namespace occa {
   //---[ KernelArg ]--------------------
@@ -293,6 +294,22 @@ namespace occa {
 
   int kernel_v::argumentCount() {
     return (int) arguments.size();
+  }
+
+  std::string kernel_v::binaryName(const std::string &filename) {
+    return filename;
+  }
+
+  std::string kernel_v::sourceFilename(const std::string &filename, hash_t &hash) {
+    return io::hashDir(filename, hash) + kc::sourceFile;
+  }
+
+  std::string kernel_v::binaryFilename(const std::string &filename, hash_t &hash) {
+    return io::hashDir(filename, hash) + binaryName(kc::binaryFile);
+  }
+
+  std::string kernel_v::occaModeHeader() {
+    return sys::filename("[occa]/defines/" + dHandle->mode + ".hpp");
   }
   //====================================
 

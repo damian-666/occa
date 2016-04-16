@@ -189,12 +189,16 @@ namespace occa {
     kernelArg* argumentsPtr();
     int argumentCount();
 
+    std::string binaryName(const std::string &filename);
+    std::string sourceFilename(const std::string &filename, hash_t &hash);
+    std::string binaryFilename(const std::string &filename, hash_t &hash);
+
+    std::string occaModeHeader();
+
     //---[ Virtual Methods ]------------
     virtual ~kernel_v() = 0;
 
     virtual void* getHandle(const occa::properties &props) = 0;
-
-    virtual std::string binaryName(const std::string &filename) = 0;
 
     virtual void buildFromSource(const std::string &filename,
                                  const std::string &functionName,

@@ -258,7 +258,7 @@ namespace occa {
       return (double) (1.0e-3 * (double) msTimeTaken);
     }
 
-    std::string device::fixBinaryName(const std::string &filename){
+    std::string device::binaryName(const std::string &filename){
       return filename;
     }
 
