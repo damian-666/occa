@@ -30,9 +30,9 @@ namespace occa {
     std::string getFileLock(const std::string &filename, const int n);
     void clearLocks();
 
-    bool haveHash(const std::string &hash, const int depth = 0);
-    void waitForHash(const std::string &hash, const int depth = 0);
-    void releaseHash(const std::string &hash, const int depth = 0);
+    bool haveHash(hash_t &hash, const int depth = 0);
+    void waitForHash(hash_t &hash, const int depth = 0);
+    void releaseHash(hash_t &hash, const int depth = 0);
     void releaseHashLock(const std::string &lockDir);
 
     bool fileNeedsParser(const std::string &filename);
@@ -47,22 +47,22 @@ namespace occa {
 
     void cacheFile(const std::string &filename,
                    std::string source,
-                   const std::string &hash);
+                   hash_t &hash);
 
     void cacheFile(const std::string &filename,
                    const char *source,
-                   const std::string &hash,
+                   hash_t &hash,
                    const bool deleteSource = true);
 
     void createSourceFileFrom(const std::string &filename,
-                              const std::string &hashDir,
+                              hash_t &hash,
                               const properties &props);
 
     std::string getLibraryName(const std::string &filename);
 
     std::string hashFrom(const std::string &filename);
     std::string hashDirFor(const std::string &filename,
-                           const std::string &hash);
+                           hash_t hash = hash_t());
   }
 }
 

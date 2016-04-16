@@ -3,6 +3,7 @@
 
 #include "occa/typedefs.hpp"
 #include "occa/tools/string.hpp"
+#include "occa/tools/hash.hpp"
 
 namespace occa {
   class hasProperties;
@@ -83,7 +84,7 @@ namespace occa {
                   strVector_t oldValues,
                   const std::string &newValue) const;
 
-    std::string hash() const;
+    hash_t hash() const;
   };
 
   class hasProperties {

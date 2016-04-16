@@ -1,16 +1,27 @@
 #include <sstream>
 #include <stdint.h>
 
-#include "occa/tools/crypto.hpp"
+#include "occa/tools/hash.hpp"
 #include "occa/tools/env.hpp"
 #include "occa/tools/io.hpp"
 
 namespace occa {
   hash_t::hash_t() {
+    initialized = false;
     h[0] = 101527; h[1] = 101531;
     h[2] = 101533; h[3] = 101537;
     h[4] = 101561; h[5] = 101573;
     h[6] = 101581; h[7] = 101599;
+    for (int i = 0; i < 8; ++i)
+      sh[i] = 0;
+  }
+
+  hash_t::hash_t(int *h_) {
+    initialized = true;
+    for (int i = 0; i < 8; ++i)
+      h[i] = h_[i];
+    for (int i = 0; i < 8; ++i)
+      sh[i] = 0;
   }
 
   hash_t::hash_t(const hash_t &hash) {
@@ -18,8 +29,11 @@ namespace occa {
   }
 
   hash_t& hash_t::operator = (const hash_t &hash) {
+    initialized = hash.initialized;
     for (int i = 0; i < 8; ++i)
-      h[i] = hash[i];
+      h[i] = hash.h[i];
+    for (int i = 0; i < 8; ++i)
+      sh[i] = 0;
     return *this;
   }
 
@@ -42,7 +56,8 @@ namespace occa {
   hash_t hash_t::operator ^ (const hash_t hash) {
     hash_t mix;
     for (int i = 0; i < 8; ++i)
-      mix.h[i] = (h[i] ^ hash.h[i])
+      mix.h[i] = (h[i] ^ hash.h[i]);
+    mix.initialized = true;
     return mix;
   }
 
@@ -51,13 +66,20 @@ namespace occa {
     return *this;
   }
 
-  hash_t::operator std::string () {
-    std::stringstream ss;
-    for (int i = 0; i < 8; ++i)
-      ss << std::hex << h[i];
+  std::string hash_t::toString() {
+    if (*this != hash_t(sh)) {
+      std::stringstream ss;
+      for (int i = 0; i < 8; ++i)
+        ss << std::hex << h[i];
 
-    std::string s = ss.str();
-    return (s.size() < 16) ? s : s.substr(0, 16);
+      std::string s = ss.str();
+      h_string = (s.size() < 16) ? s : s.substr(0, 16);
+    }
+    return h_string;
+  }
+
+  hash_t::operator std::string () {
+    return toString();
   }
 
   hash_t hash(const void *ptr, uintptr_t bytes) {
@@ -75,6 +97,7 @@ namespace occa {
         h[j] = (h[j] * p[j]) ^ c[i];
       }
     }
+    hash.initialized = true;
 
     return hash;
   }

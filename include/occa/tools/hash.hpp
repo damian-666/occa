@@ -1,5 +1,5 @@
-#ifndef OCCA_TOOLS_CRYPTO_HEADER
-#define OCCA_TOOLS_CRYPTO_HEADER
+#ifndef OCCA_TOOLS_HASH_HEADER
+#define OCCA_TOOLS_HASH_HEADER
 
 #include <iostream>
 
@@ -7,9 +7,14 @@ namespace occa {
   // Uses FNV hashing
   class hash_t {
   public:
+    bool initialized;
     int h[8];
 
+    std::string h_string;
+    int sh[8];
+
     hash_t();
+    hash_t(int *h_);
     hash_t(const hash_t &hash);
     hash_t& operator = (const hash_t &hash);
 
@@ -19,6 +24,7 @@ namespace occa {
     hash_t operator ^ (const hash_t hash);
     hash_t& operator ^= (const hash_t hash);
 
+    std::string toString();
     operator std::string ();
   };
 

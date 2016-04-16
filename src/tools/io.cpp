@@ -136,8 +136,8 @@ namespace occa {
       fclose(fp);
     }
 
-    std::string getFileLock(const std::string &hash, const int depth) {
-      std::string ret = (env::OCCA_CACHE_DIR + "locks/" + hash);
+    std::string getFileLock(hash_t &hash, const int depth) {
+      std::string ret = (env::OCCA_CACHE_DIR + "locks/" + hash.toString());
 
       ret += '_';
       ret += (char) ('0' + depth);
@@ -154,7 +154,7 @@ namespace occa {
       fileLocks.clear();
     }
 
-    bool haveHash(const std::string &hash, const int depth) {
+    bool haveHash(hash_t &hash, const int depth) {
       std::string lockDir = getFileLock(hash, depth);
 
       sys::mkpath(env::OCCA_CACHE_DIR + "locks/");
@@ -169,7 +169,7 @@ namespace occa {
       return true;
     }
 
-    void waitForHash(const std::string &hash, const int depth) {
+    void waitForHash(hash_t &hash, const int depth) {
       struct stat buffer;
 
       std::string lockDir   = getFileLock(hash, depth);
@@ -179,7 +179,7 @@ namespace occa {
         ; // Do Nothing
     }
 
-    void releaseHash(const std::string &hash, const int depth) {
+    void releaseHash(hash_t &hash, const int depth) {
       releaseHashLock(getFileLock(hash, depth));
     }
 
@@ -260,17 +260,19 @@ namespace occa {
 
     void cacheFile(const std::string &filename,
                    std::string source,
-                   const std::string &hash) {
+                   hash_t &hash) {
 
       cacheFile(filename, source.c_str(), hash, false);
     }
 
     void cacheFile(const std::string &filename,
                    const char *source,
-                   const std::string &hash,
+                   hash_t &hash,
                    const bool deleteSource) {
-      if(!haveHash(hash)){
-        waitForHash(hash);
+
+      std::string shash = hash.toString();
+      if(!haveHash(shash)){
+        waitForHash(shash);
       } else {
         if (!sys::fileExists(filename)) {
           sys::mkpath(dirname(filename));
@@ -280,14 +282,14 @@ namespace occa {
           fs2 << source;
           fs2.close();
         }
-        releaseHash(hash);
+        releaseHash(shash);
       }
       if (deleteSource)
         delete [] source;
     }
 
     void createSourceFileFrom(const std::string &filename,
-                              const std::string &hashDir,
+                              hash_t &hash,
                               const properties &props) {
 
       const std::string sourceFile = hashDir + kc::sourceFile;
@@ -339,7 +341,7 @@ namespace occa {
     }
 
     std::string hashFrom(const std::string &filename) {
-      std::string hashDir = hashDirFor(filename, "");
+      std::string hashDir = hashDirFor(filename);
 
       const int chars = (int) filename.size();
       const char *c   = filename.c_str();
@@ -356,11 +358,11 @@ namespace occa {
     }
 
     std::string hashDirFor(const std::string &filename,
-                           const std::string &hash) {
+                           hash_t hash) {
 
       if (filename.size() == 0) {
-        if (hash.size() != 0)
-          return (env::OCCA_CACHE_DIR + "kernels/" + hash + "/");
+        if (hash.initialized)
+          return (env::OCCA_CACHE_DIR + "kernels/" + hash.toString() + "/");
         else
           return (env::OCCA_CACHE_DIR + "kernels/");
       }
@@ -368,13 +370,13 @@ namespace occa {
       std::string occaLibName = getLibraryName(sys::getFilename(filename));
 
       if (occaLibName.size() == 0) {
-        if (hash.size() != 0)
-          return (env::OCCA_CACHE_DIR + "kernels/" + hash + "/");
+        if (hash.initialized)
+          return (env::OCCA_CACHE_DIR + "kernels/" + hash.toString() + "/");
         else
           return (env::OCCA_CACHE_DIR + "kernels/");
       }
 
-      return (env::OCCA_CACHE_DIR + "libraries/" + occaLibName + "/" + hash + "/");
+      return (env::OCCA_CACHE_DIR + "libraries/" + occaLibName + "/" + hash.toString() + "/");
     }
   }
 }

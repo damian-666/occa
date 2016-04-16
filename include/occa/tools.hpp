@@ -23,7 +23,7 @@
 #ifndef OCCA_TOOLS_HEADER
 #define OCCA_TOOLS_HEADER
 
-#include "occa/tools/crypto.hpp"
+#include "occa/tools/hash.hpp"
 #include "occa/tools/env.hpp"
 #include "occa/tools/io.hpp"
 #include "occa/tools/properties.hpp"

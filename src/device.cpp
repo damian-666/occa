@@ -251,8 +251,8 @@ namespace occa {
 
     kernelInfo info = info_;
 
-    const std::string hash = getContentHash(content,
-                                            dHandle->getInfoSalt(info));
+    hash_t hash = hash(content);
+    hash ^= props.hash();
 
     const std::string hashDir = hashDirFor("", hash);
 

@@ -106,16 +106,16 @@ namespace occa {
       return sameAs(e);
     }
 
-    fnvOutput_t expNode::hash(){
+    hash_t expNode::hash(){
       if(info & expType::hasInfo)
         return fnv(leaves[0]);
 
-      fnvOutput_t fo = fnv(value);
+      hash_t hash = occa::hash(value);
 
       for(int i = 0; i < leafCount; ++i)
-        fo.mergeWith(leaves[i]->hash());
+        hash ^= leaves[i]->hash();
 
-      return fo;
+      return hash;
     }
 
     bool expNode::sameAs(expNode &e, const bool nestedSearch){
