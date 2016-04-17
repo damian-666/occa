@@ -1,17 +1,17 @@
 /* The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2014 David Medina and Tim Warburton
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,66 +28,32 @@
 
 namespace occa {
   namespace threads {
-    device::device() : occa::device_v() {
-      getEnvironmentVariables();
-      sys::addSharedBinaryFlagsTo(compiler, compilerFlags);
-    }
-
-    device::device(const device &d){
-      *this = d;
-    }
-
-    device& device::operator = (const device &d){
-      initFrom(d);
-
-      vendor = d.vendor;
-      compiler = d.compiler;
-      compilerFlags = d.compilerFlags;
-      compilerEnvScript = d.compilerEnvScript;
-
-      return *this;
-    }
-
-    device::~device(){}
-
-    void* device::getContextHandle(){
-      return NULL;
-    }
-
-    void device::setup(argInfoMap &aim){
-      properties = aim;
-
-      vendor = sys::compilerVendor(compiler);
-      sys::addSharedBinaryFlagsTo(vendor, compilerFlags);
-
+    device::device(const occa::properties &properties_) :
+      serial::device(properties_) {
       coreCount = sys::getCoreCount();
 
       std::vector<int> pinnedCores;
 
-      if(!aim.has("threads"))
-        threads = coreCount;
-      else
-        threads = aim.get<int>("threads");
+      threads  = properties.get<int>("threads", coreCount);
 
-      if(!aim.has("schedule") ||
-         (aim.get<std::string>("schedule") == "compact")){
+      if (properties.get("schedule", "compact") == "compact") {
         schedule = compact;
       }
-      else{
+      else {
         schedule = scatter;
       }
 
-      if(aim.has("pinnedCores")){
-        pinnedCores = aim.getVector<int>("pinnedCores");
+      if (properties.has("pinnedCores")){
+        pinnedCores = properties.getVector<int>("pinnedCores");
 
-        if(pinnedCores.size() != (size_t) threads){
+        if (pinnedCores.size() != (size_t) threads){
           threads = (int) pinnedCores.size();
           std::cout << "[Threads]: Mismatch between thread count and pinned cores\n"
                     << "           Setting threads to " << threads << '\n';
         }
 
-        for(size_t i = 0; i < pinnedCores.size(); ++i)
-          if(pinnedCores[i] < 0){
+        for (size_t i = 0; i < pinnedCores.size(); ++i)
+          if (pinnedCores[i] < 0){
             const int newPC = (((pinnedCores[i] % coreCount)
                                 + pinnedCores[i]) % coreCount);
 
@@ -97,7 +63,7 @@ namespace occa {
 
             pinnedCores[i] = newPC;
           }
-          else if(coreCount <= pinnedCores[i]){
+          else if (coreCount <= pinnedCores[i]){
             const int newPC = (pinnedCores[i] % coreCount);
 
             std::cout << "Trying to pin thread on core ["
@@ -110,16 +76,16 @@ namespace occa {
         schedule = manual;
       }
 
-      for(int t = 0; t < threads; ++t){
+      for (int t = 0; t < threads; ++t){
         workerData_t *args = new workerData_t;
 
         args->rank  = t;
         args->count = threads;
 
         // [-] Need to know number of sockets
-        if(schedule & compact)
+        if (schedule & compact)
           args->pinnedCore = (t % coreCount);
-        else if(schedule & scatter)
+        else if (schedule & scatter)
           args->pinnedCore = (t % coreCount);
         else // Manual
           args->pinnedCore = pinnedCores[t];
@@ -136,92 +102,7 @@ namespace occa {
       }
     }
 
-    // [REFACTOR]
-    void device::addOccaHeadersToInfo(kernelInfo &info_){
-    }
-
-    std::string device::getInfoSalt(const kernelInfo &info_){
-      std::stringstream salt;
-
-      salt << "Pthreads"
-           << info_.salt()
-           << parserVersion
-           << compilerEnvScript
-           << compiler
-           << compilerFlags;
-
-      return salt.str();
-    }
-
-    void device::getEnvironmentVariables(){
-      char *c_compiler = getenv("OCCA_CXX");
-
-      if(c_compiler != NULL){
-        compiler = std::string(c_compiler);
-      }
-      else{
-        c_compiler = getenv("CXX");
-
-        if(c_compiler != NULL){
-          compiler = std::string(c_compiler);
-        }
-        else{
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
-          compiler = "g++";
-#else
-          compiler = "cl.exe";
-#endif
-        }
-      }
-
-      char *c_compilerFlags = getenv("OCCA_CXXFLAGS");
-
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
-      if(c_compilerFlags != NULL)
-        compilerFlags = std::string(c_compilerFlags);
-      else{
-#  if OCCA_DEBUG_ENABLED
-        compilerFlags = "-g";
-#  else
-        compilerFlags = "";
-#  endif
-      }
-#else
-#  if OCCA_DEBUG_ENABLED
-      compilerFlags = " /Od";
-#  else
-      compilerFlags = " /O2";
-#  endif
-
-      std::string byteness;
-
-      if(sizeof(void*) == 4)
-        byteness = "x86 ";
-      else if(sizeof(void*) == 8)
-        byteness = "amd64";
-      else
-        OCCA_CHECK(false, "sizeof(void*) is not equal to 4 or 8");
-
-#  if      (OCCA_VS_VERSION == 1800)
-      char *visualStudioTools = getenv("VS120COMNTOOLS");   // MSVC++ 12.0 - Visual Studio 2013
-#  elif    (OCCA_VS_VERSION == 1700)
-      char *visualStudioTools = getenv("VS110COMNTOOLS");   // MSVC++ 11.0 - Visual Studio 2012
-#  else // (OCCA_VS_VERSION == 1600)
-      char *visualStudioTools = getenv("VS100COMNTOOLS");   // MSVC++ 10.0 - Visual Studio 2010
-#  endif
-
-      if(visualStudioTools != NULL){
-        setCompilerEnvScript("\"" + std::string(visualStudioTools) + "..\\..\\VC\\vcvarsall.bat\" " + byteness);
-      }
-      else{
-        std::cout << "WARNING: Visual Studio environment variable not found -> compiler environment (vcvarsall.bat) maybe not correctly setup." << std::endl;
-      }
-#endif
-
-      properties["compiler"]          = compiler;
-      properties["compilerFlags"]     = compilerFlags;
-      properties["compilerEnvScript"] = compilerEnvScript;
-    }
+    device::~device(){}
 
     void device::appendAvailableDevices(std::vector<occa::device> &dList){
       std::stringstream ss;
@@ -313,8 +194,6 @@ namespace occa {
       mem->size    = bytes;
       mem->handle  = handle_;
 
-      mem->memInfo |= memFlag::isAWrapper;
-
       return mem;
     }
 
@@ -327,7 +206,7 @@ namespace occa {
 
       mem->handle = sys::malloc(bytes);
 
-      if(src != NULL)
+      if (src != NULL)
         ::memcpy(mem->handle, src, bytes);
 
       return mem;

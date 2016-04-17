@@ -69,7 +69,7 @@ namespace occa {
 
     virtual void* getHandle(const occa::properties &props) = 0;
 
-    virtual void copyTo(const void *dest,
+    virtual void copyTo(void *dest,
                         const uintptr_t bytes = 0,
                         const uintptr_t offset = 0,
                         const bool async = false) = 0;

@@ -56,10 +56,9 @@ namespace occa {
 
     device::~device(){}
 
-    void* device::getHandle(const occa::properties &props) {
-      if (props.get("type") == "context")
-        return (void*) clContext;
-      return NULL;
+    void device::free(){
+      OCCA_CL_CHECK("Device: Freeing Context",
+                    clReleaseContext(clContext) );
     }
 
     void device::getEnvironmentVariables(){
@@ -78,6 +77,12 @@ namespace occa {
       }
 
       properties["compilerFlags"] = compilerFlags;
+    }
+
+    void* device::getHandle(const occa::properties &props) {
+      if (props.get("type") == "context")
+        return (void*) clContext;
+      return NULL;
     }
 
     void device::appendAvailableDevices(std::vector<occa::device> &dList){
@@ -108,11 +113,7 @@ namespace occa {
       return true;
     }
 
-    void device::waitFor(streamTag tag){
-      OCCA_CL_CHECK("Device: Waiting For Tag",
-                    clWaitForEvents(1, &event(tag)));
-    }
-
+      //  |---[ Stream ]----------------
     stream_t device::createStream(){
       cl_int error;
 
@@ -151,6 +152,11 @@ namespace occa {
       return ret;
     }
 
+    void device::waitFor(streamTag tag){
+      OCCA_CL_CHECK("Device: Waiting For Tag",
+                    clWaitForEvents(1, &event(tag)));
+    }
+
     double device::timeBetween(const streamTag &startTag, const streamTag &endTag){
       cl_ulong start, end;
 
@@ -176,7 +182,9 @@ namespace occa {
 
       return (double) (1.0e-9 * (double)(end - start));
     }
+    //  |===============================
 
+    //  |---[ Kernel ]------------------
     kernel_v* device::buildKernelFromSource(const std::string &filename,
                                             const std::string &functionName,
                                             const occa::properties &props) {
@@ -212,17 +220,9 @@ namespace occa {
       k->buildFromBinary(filename, functionName);
       return k;
     }
+    //  |===============================
 
-    memory_v* device::wrapMemory(void *handle_,
-                                 const uintptr_t bytes){
-      opencl::memory *mem = new opencl::memory();
-      mem->dHandle = this;
-      mem->size    = bytes;
-      mem->handle  = new cl_mem;
-      ::memcpy(mem->handle, handle_, sizeof(cl_mem));
-      return mem;
-    }
-
+    //  |---[ Memory ]------------------
     memory_v* device::malloc(const uintptr_t bytes,
                              void *src,
                              const occa::properties &props){
@@ -293,14 +293,21 @@ namespace occa {
       return mem;
     }
 
+    memory_v* device::wrapMemory(void *handle_,
+                                 const uintptr_t bytes,
+                                 const occa::properties &props){
+      opencl::memory *mem = new opencl::memory();
+      mem->dHandle = this;
+      mem->size    = bytes;
+      mem->handle  = new cl_mem;
+      ::memcpy(mem->handle, handle_, sizeof(cl_mem));
+      return mem;
+    }
+
     uintptr_t device::memorySize(){
       return opencl::getDeviceMemorySize(clDeviceID);
     }
-
-    void device::free(){
-      OCCA_CL_CHECK("Device: Freeing Context",
-                    clReleaseContext(clContext) );
-    }
+    //  |===============================
   }
 }
 

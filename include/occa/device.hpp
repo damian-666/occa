@@ -69,11 +69,6 @@ namespace occa {
 
     virtual void appendAvailableDevices(std::vector<occa::device> &dList) = 0;
 
-    virtual void onPropertyChange(properties::Op op,
-                                  const std::string &prop,
-                                  strVector_t oldValues,
-                                  const std::string &newValue) = 0;
-
     virtual void flush()  = 0;
     virtual void finish() = 0;
 
@@ -105,7 +100,8 @@ namespace occa {
                              const occa::properties &props) = 0;
 
     virtual memory_v* wrapMemory(void *handle_,
-                                 const uintptr_t bytes) = 0;
+                                 const uintptr_t bytes,
+                                 const occa::properties &props) = 0;
 
     virtual uintptr_t memorySize() = 0;
     //  |===============================
@@ -190,6 +186,10 @@ namespace occa {
     void* managedAlloc(const uintptr_t bytes,
                        void *src = NULL,
                        const occa::properties &props = occa::properties());
+
+    occa::memory wrapMemory(void *handle_,
+                            const uintptr_t bytes,
+                            const occa::properties &props = occa::properties());
     //  |===============================
 
     void free();

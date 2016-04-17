@@ -23,6 +23,7 @@
 #include "occa/modes/serial/device.hpp"
 #include "occa/modes/serial/kernel.hpp"
 #include "occa/modes/serial/memory.hpp"
+#include "occa/tools/sys.hpp"
 #include "occa/base.hpp"
 
 namespace occa {
@@ -35,44 +36,7 @@ namespace occa {
       sys::addSharedBinaryFlagsTo(vendor, compilerFlags);
     }
 
-    device::device(const device &d){
-      *this = d;
-    }
-
-    device& device::operator = (const device &d){
-      initFrom(d);
-
-      vendor = d.vendor;
-      compiler = d.compiler;
-      compilerFlags = d.compilerFlags;
-      compilerEnvScript = d.compilerEnvScript;
-
-      return *this;
-    }
-
     device::~device(){}
-
-    void* device::getContextHandle(){
-      return NULL;
-    }
-
-    // [REFACTOR]
-    void device::addOccaHeadersToInfo(kernelInfo &info_){
-    }
-
-    // [REFACTOR]
-    std::string device::getInfoSalt(const kernelInfo &info_){
-      std::stringstream salt;
-
-      salt << mode()
-           << info_.salt()
-           << parserVersion
-           << compilerEnvScript
-           << compiler
-           << compilerFlags;
-
-      return salt.str();
-    }
 
     void device::getEnvironmentVariables(){
       if (properties.has("compiler")) {
@@ -152,6 +116,10 @@ namespace occa {
       properties["compilerEnvScript"] = compilerEnvScript;
     }
 
+    void* device::getHandle(const occa::properties &props) {
+      return NULL;
+    }
+
     void device::appendAvailableDevices(std::vector<occa::device> &dList){
       dList.push_back(occa::device(this));
     }
@@ -198,10 +166,10 @@ namespace occa {
 
     kernel_v* device::buildKernelFromSource(const std::string &filename,
                                             const std::string &functionName,
-                                            const kernelInfo &info_){
+                                            const occa::properties &props) {
       kernel *k = new kernel();
       k->dHandle = this;
-      k->buildFromSource(filename, functionName, info_);
+      k->buildFromSource(filename, functionName, props);
       return k;
     }
 
@@ -213,21 +181,9 @@ namespace occa {
       return k;
     }
 
-    memory_v* device::wrapMemory(void *handle_,
-                                 const uintptr_t bytes){
-      memory *mem = new memory();
-
-      mem->dHandle = this;
-      mem->size    = bytes;
-      mem->handle  = handle_;
-
-      mem->memInfo |= memFlag::isAWrapper;
-
-      return mem;
-    }
-
     memory_v* device::malloc(const uintptr_t bytes,
-                             void *src){
+                             void *src,
+                             const occa::properties &props){
       memory *mem = new memory();
 
       mem->dHandle = this;
@@ -241,11 +197,14 @@ namespace occa {
       return mem;
     }
 
-    memory_v* device::mappedAlloc(const uintptr_t bytes,
-                                  void *src){
-      memory_v *mem = malloc(bytes, src);
+    memory_v* device::wrapMemory(void *handle_,
+                                 const uintptr_t bytes,
+                                 const occa::properties &props){
+      memory *mem = new memory();
 
-      mem->mappedPtr = mem->handle;
+      mem->dHandle = this;
+      mem->size    = bytes;
+      mem->handle  = handle_;
 
       return mem;
     }

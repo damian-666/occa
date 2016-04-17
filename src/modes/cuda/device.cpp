@@ -372,8 +372,6 @@ namespace occa {
       mem->handle  = new CUdeviceptr;
       ::memcpy(mem->handle, handle_, sizeof(CUdeviceptr));
 
-      mem->memInfo |= memFlag::isAWrapper;
-
       return mem;
     }
 
@@ -386,8 +384,7 @@ namespace occa {
       mem->size    = ((dim == 1) ? dims.x : (dims.x * dims.y)) * type.bytes();
       mem->handle  = handle_;
 
-      mem->memInfo |= (memFlag::isATexture |
-                       memFlag::isAWrapper);
+      mem->memInfo |= memFlag::isATexture;
 
       mem->textureInfo.dim = dim;
 

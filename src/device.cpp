@@ -402,6 +402,18 @@ namespace occa {
 
     return mem.mHandle->uvaPtr;
   }
+
+  occa::memory device::wrapMemory(void *handle_,
+                                  const uintptr_t bytes,
+                                  const occa::properties &props) {
+    checkIfInitialized();
+
+    memory mem;
+    mem.mHandle          = dHandle->wrapMemory(handle_, bytes, props);
+    mem.mHandle->dHandle = dHandle;
+
+    return mem;
+  }
   //  |=================================
 
   void device::free() {

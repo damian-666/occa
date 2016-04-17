@@ -29,6 +29,8 @@
 
 namespace occa {
   namespace opencl {
+    class device;
+
     class memory : public occa::memory_v {
       friend class opencl::device;
 
@@ -41,7 +43,7 @@ namespace occa {
 
       void* getHandle(const occa::properties &properties_);
 
-      void copyTo(const void *dest,
+      void copyTo(void *dest,
                   const uintptr_t bytes = 0,
                   const uintptr_t destOffset = 0,
                   const bool async = false);

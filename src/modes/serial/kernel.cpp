@@ -25,33 +25,40 @@
 
 namespace occa {
   namespace serial {
-    kernel::kernel() : occa::kernel_v() {
+    kernel::kernel(const occa::properties &properties_) :
+      occa::kernel_v(properties_) {
       dlHandle = NULL;
       handle   = NULL;
     }
 
+    void* kernel::getHandle(const occa::properties &props) {
+      const std::string type = props["type"];
+
+      if (type == "dl_handle")
+        return dlHandle;
+      if (type == "function")
+        return &handle;
+
+      return NULL;
+    }
+
     void kernel::buildFromSource(const std::string &filename,
                                  const std::string &functionName,
-                                 const kernelInfo &info_){
+                                 const occa::properties &props) {
 
       name = functionName;
 
-      kernelInfo info = info_;
+      hash_t hash = occa::hashFile(filename);
+      hash ^= props.hash();
 
-      dHandle->addOccaHeadersToInfo(info);
-
-      const std::string hash = getFileContentHash(filename,
-                                                  dHandle->getInfoSalt(info));
-
-      const std::string hashDir    = hashDir(filename, hash);
-      const std::string sourceFile = hashDir + kc::sourceFile;
-      const std::string binaryFile = hashDir + binaryName(kc::binaryFile);
+      const std::string sourceFile = sourceFilename(filename, hash);
+      const std::string binaryFile = binaryFilename(filename, hash);
       bool foundBinary = true;
 
-      if (!haveHash(hash, 0))
-        waitForHash(hash, 0);
+      if (!io::haveHash(hash, 0))
+        io::waitForHash(hash, 0);
       else if (sys::fileExists(binaryFile))
-        releaseHash(hash, 0);
+        io::releaseHash(hash, 0);
       else
         foundBinary = false;
 
@@ -62,37 +69,41 @@ namespace occa {
         buildFromBinary(binaryFile, functionName);
       }
 
-      createSourceFileFrom(filename, hashDir, info);
+      std::stringstream ss;
+      ss << "#include \"" << occaModeHeader() << "\"\n"
+         << "#include \"" << sys::filename("[occa]/primitives.hpp") << "\"\n"
+         << props["header"] << '\n'
+         << "#if defined(OCCA_IN_KERNEL) && !OCCA_IN_KERNEL\n"
+         << "using namespace occa;\n"
+         << "#endif\n";
+
+      io::cacheFile(filename, hash, ss.str(), props["footer"]);
 
       std::stringstream command;
-      occa::device device(dHandle);
-      std::string compilerEnvScript = device.getCompilerEnvScript();
-      if(compilerEnvScript.size())
-        command << compilerEnvScript << " && ";
+      if (properties.has("compilerEnvScript"))
+        command << properties["compilerEnvScript"] << " && ";
 
 #if (OCCA_OS & (LINUX_OS | OSX_OS))
-      command << device.getCompiler()
-              << ' '    << device.getCompilerFlags()
-              << ' '    << info.flags
+      command << properties["compiler"]
+              << ' '    << properties["compilerFlags"]
               << ' '    << sourceFile
               << " -o " << binaryFile
-              << " -I"  << env::OCCA_DIR << "/include"
-              << " -L"  << env::OCCA_DIR << "/lib -locca"
+              << " -I"  << env::OCCA_DIR << "include"
+              << " -L"  << env::OCCA_DIR << "lib -locca"
               << std::endl;
 #else
 #  if (OCCA_DEBUG_ENABLED)
-      const std::string occaLib = env::OCCA_DIR + "/lib/libocca_d.lib ";
+      const std::string occaLib = env::OCCA_DIR + "lib/libocca_d.lib ";
 #  else
-      const std::string occaLib = env::OCCA_DIR + "/lib/libocca.lib ";
+      const std::string occaLib = env::OCCA_DIR + "lib/libocca.lib ";
 #  endif
 
-      command << dHandle->compiler
+      command << properties["compiler"]
               << " /D MC_CL_EXE"
               << " /D OCCA_OS=WINDOWS_OS"
               << " /EHsc"
               << " /wd4244 /wd4800 /wd4804 /wd4018"
-              << ' '       << dHandle->compilerFlags
-              << ' '       << info.flags
+              << ' '       << properties["compilerFlags"]
               << " /I"     << env::OCCA_DIR << "/include"
               << ' '       << sourceFile
               << " /link " << occaLib
@@ -112,14 +123,14 @@ namespace occa {
 #endif
 
       if(compileError){
-        releaseHash(hash, 0);
+        io::releaseHash(hash, 0);
         OCCA_CHECK(false, "Compilation error");
       }
 
       dlHandle = sys::dlopen(binaryFile, hash);
       handle   = sys::dlsym(dlHandle, functionName, hash);
 
-      releaseHash(hash, 0);
+      io::releaseHash(hash, 0);
     }
 
     void kernel::buildFromBinary(const std::string &filename,

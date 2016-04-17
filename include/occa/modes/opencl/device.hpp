@@ -39,7 +39,7 @@ namespace occa {
 
       std::string compilerFlags;
 
-      device(const occa::properties &properties_);
+      device(const occa::properties &properties_ = occa::properties());
       ~device();
       void free();
 
@@ -83,7 +83,8 @@ namespace occa {
                             void *src);
 
       memory_v* wrapMemory(void *handle_,
-                           const uintptr_t bytes);
+                           const uintptr_t bytes,
+                           const occa::properties &props);
 
       uintptr_t memorySize();
       //  |=============================

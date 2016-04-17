@@ -30,7 +30,10 @@
 namespace occa {
   typedef std::vector<int>                   intVector_t;
   typedef std::vector<intVector_t>           intVecVector_t;
+
   typedef std::vector<std::string>           strVector_t;
+  typedef strVector_t::iterator              strVectorIterator;
+  typedef strVector_t::const_iterator        cStrVectorIterator;
 
   typedef std::map<std::string, std::string> strToStrMap_t;
   typedef strToStrMap_t::iterator            strToStrMapIterator;

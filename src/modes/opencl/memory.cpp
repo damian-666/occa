@@ -29,16 +29,8 @@
 namespace occa {
   namespace opencl {
     memory::memory(const occa::properties &properties_) :
-      occa::kernel_v(properties_) {}
-
-    memory::memory(const memory &m){
-      *this = m;
-    }
-
-    memory& memory::operator = (const memory &m){
-      initFrom(m);
-      return *this;
-    }
+      occa::memory_v(properties_),
+      mappedPtr(NULL) {}
 
     memory::~memory(){}
 
@@ -111,35 +103,8 @@ namespace occa {
                                         0, NULL, NULL));
     }
 
-    void memory::copyTo(memory_v *dest,
-                        const uintptr_t bytes,
-                        const uintptr_t destOffset,
-                        const uintptr_t srcOffset,
-                        const bool async){
-
-      const cl_command_queue &stream = *((cl_command_queue*) dHandle->currentStream);
-
-      const uintptr_t bytes_ = (bytes == 0) ? size : bytes;
-
-      OCCA_CHECK((bytes_ + srcOffset) <= size,
-                 "Memory has size [" << size << "],"
-                 << "trying to access [ " << srcOffset << " , " << (srcOffset + bytes_) << " ]");
-
-      OCCA_CHECK((bytes_ + destOffset) <= dest->size,
-                 "Destination has size [" << dest->size << "],"
-                 << "trying to access [ " << destOffset << " , " << (destOffset + bytes_) << " ]");
-
-      OCCA_CL_CHECK("Memory: " << (async ? "Async " : "") << "Copy To",
-                    clEnqueueCopyBuffer(stream,
-                                        *((cl_mem*) handle),
-                                        *((cl_mem*) dest->handle),
-                                        srcOffset, destOffset,
-                                        bytes_,
-                                        0, NULL, NULL));
-    }
-
     void memory::free(){
-      if (isMapped()) {
+      if (mappedPtr != NULL) {
         cl_command_queue &stream = *((cl_command_queue*) dHandle->currentStream);
 
         OCCA_CL_CHECK("Mapped Free: clEnqueueUnmapMemObject",

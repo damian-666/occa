@@ -1,17 +1,17 @@
 /* The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2014 David Medina and Tim Warburton
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -29,19 +29,19 @@ namespace occa {
   namespace opencl {
     namespace info {
       std::string deviceType(int type) {
-        if(type & CPU)     return "CPU";
-        if(type & GPU)     return "GPU";
-        if(type & FPGA)    return "FPGA";
-        if(type & XeonPhi) return "Xeon Phi";
+        if (type & CPU)     return "CPU";
+        if (type & GPU)     return "GPU";
+        if (type & FPGA)    return "FPGA";
+        if (type & XeonPhi) return "Xeon Phi";
 
         return "N/A";
       }
 
       std::string vendor(int type) {
-        if(type & Intel)  return "Intel";
-        if(type & AMD)    return "AMD";
-        if(type & NVIDIA) return "NVIDIA";
-        if(type & Altera) return "Altera";
+        if (type & Intel)  return "Intel";
+        if (type & AMD)    return "AMD";
+        if (type & NVIDIA) return "NVIDIA";
+        if (type & Altera) return "Altera";
 
         return "N/A";
       }
@@ -50,10 +50,10 @@ namespace occa {
     cl_device_type deviceType(int type){
       cl_device_type ret = 0;
 
-      if(type & info::CPU)     ret |= CL_DEVICE_TYPE_CPU;
-      if(type & info::GPU)     ret |= CL_DEVICE_TYPE_GPU;
-      if(type & info::FPGA)    ret |= CL_DEVICE_TYPE_ACCELERATOR;
-      if(type & info::XeonPhi) ret |= CL_DEVICE_TYPE_ACCELERATOR;
+      if (type & info::CPU)     ret |= CL_DEVICE_TYPE_CPU;
+      if (type & info::GPU)     ret |= CL_DEVICE_TYPE_GPU;
+      if (type & info::FPGA)    ret |= CL_DEVICE_TYPE_ACCELERATOR;
+      if (type & info::XeonPhi) ret |= CL_DEVICE_TYPE_ACCELERATOR;
 
       return ret;
     }
@@ -84,7 +84,7 @@ namespace occa {
       int pCount = opencl::getPlatformCount();
       int ret = 0;
 
-      for(int p = 0; p < pCount; ++p)
+      for (int p = 0; p < pCount; ++p)
         ret += getDeviceCountInPlatform(p, type);
 
       return ret;
@@ -146,8 +146,8 @@ namespace occa {
 
       size_t i;
 
-      for(i = 0; i < ret.size(); ++i){
-        if((ret[i] != ' ') &&
+      for (i = 0; i < ret.size(); ++i){
+        if ((ret[i] != ' ') &&
            (ret[i] != '\t') &&
            (ret[i] != '\n')){
           firstNS = i;
@@ -155,11 +155,11 @@ namespace occa {
         }
       }
 
-      if(i == ret.size())
+      if (i == ret.size())
         return "";
 
-      for(i = (ret.size() - 1); i > firstNS; --i){
-        if((ret[i] != ' ') &&
+      for (i = (ret.size() - 1); i > firstNS; --i){
+        if ((ret[i] != ' ') &&
            (ret[i] != '\t') &&
            (ret[i] != '\n')){
           lastNS = i;
@@ -167,7 +167,7 @@ namespace occa {
         }
       }
 
-      if(i == firstNS)
+      if (i == firstNS)
         return "";
 
       return ret.substr(firstNS, (lastNS - firstNS + 1));
@@ -190,9 +190,9 @@ namespace occa {
                                     CL_DEVICE_TYPE,
                                     sizeof(clDeviceType), &clDeviceType, NULL));
 
-      if(clDeviceType & CL_DEVICE_TYPE_CPU)
+      if (clDeviceType & CL_DEVICE_TYPE_CPU)
         ret |= info::CPU;
-      else if(clDeviceType & CL_DEVICE_TYPE_GPU)
+      else if (clDeviceType & CL_DEVICE_TYPE_GPU)
         ret |= info::GPU;
 
       return ret;
@@ -204,19 +204,19 @@ namespace occa {
 
       std::string vendor = deviceStrInfo(clDID, CL_DEVICE_VENDOR);
 
-      if(vendor.find("AMD")                    != std::string::npos ||
+      if (vendor.find("AMD")                    != std::string::npos ||
          vendor.find("Advanced Micro Devices") != std::string::npos ||
          vendor.find("ATI")                    != std::string::npos){
 
         ret |= info::AMD;
       }
-      else if(vendor.find("Intel") != std::string::npos){
+      else if (vendor.find("Intel") != std::string::npos){
         ret |= info::Intel;
       }
-      else if(vendor.find("Altera") != std::string::npos){
+      else if (vendor.find("Altera") != std::string::npos){
         ret |= info::Altera;
       }
-      else if(vendor.find("Nvidia") != std::string::npos ||
+      else if (vendor.find("Nvidia") != std::string::npos ||
               vendor.find("NVIDIA") != std::string::npos){
 
         ret |= info::NVIDIA;
@@ -259,14 +259,14 @@ namespace occa {
 
       int platformCount = getPlatformCount();
 
-      for(int pID = 0; pID < platformCount; ++pID){
+      for (int pID = 0; pID < platformCount; ++pID){
         int deviceCount = getDeviceCountInPlatform(pID);
 
-        for(int dID = 0; dID < deviceCount; ++dID){
+        for (int dID = 0; dID < deviceCount; ++dID){
           uintptr_t bytes      = getDeviceMemorySize(pID, dID);
           std::string bytesStr = stringifyBytes(bytes);
 
-          if(pID || dID){
+          if (pID || dID){
             ss << "              |-----------------------+------------------------------------------\n"
                << "              |  Device Name          | " << deviceName(pID, dID) << '\n';
           }
@@ -290,7 +290,7 @@ namespace occa {
                                const size_t contentBytes,
                                const std::string &functionName,
                                const std::string &flags,
-                               const std::string &hash,
+                               hash_t hash,
                                const std::string &sourceFile){
       cl_int error;
 
@@ -299,15 +299,15 @@ namespace occa {
                                                   &contentBytes,
                                                   &error);
 
-      if(error && hash.size())
-        releaseHash(hash, 0);
+      if (error && hash.initialized)
+        io::releaseHash(hash, 0);
 
-      if(verboseCompilation_f){
-        if(hash.size()){
+      if (verboseCompilation_f){
+        if (hash.initialized) {
           std::cout << "OpenCL compiling " << functionName
                     << " from [" << sourceFile << "]";
 
-          if(flags.size())
+          if (flags.size())
             std::cout << " with flags [" << flags << "]";
 
           std::cout << '\n';
@@ -323,14 +323,14 @@ namespace occa {
                              flags.c_str(),
                              NULL, NULL);
 
-      if(error){
+      if (error){
         cl_int logError;
         char *log;
         uintptr_t logSize;
 
         clGetProgramBuildInfo(info_.clProgram, info_.clDeviceID, CL_PROGRAM_BUILD_LOG, 0, NULL, &logSize);
 
-        if(logSize > 2){
+        if (logSize > 2){
           log = new char[logSize+1];
 
           logError = clGetProgramBuildInfo(info_.clProgram, info_.clDeviceID, CL_PROGRAM_BUILD_LOG, logSize, log, NULL);
@@ -342,24 +342,24 @@ namespace occa {
           delete[] log;
         }
 
-        if(hash.size())
-          releaseHash(hash, 0);
+        if (hash.initialized)
+          io::releaseHash(hash, 0);
       }
 
       OCCA_CL_CHECK("Kernel (" + functionName + ") : Building Program", error);
 
       info_.clKernel = clCreateKernel(info_.clProgram, functionName.c_str(), &error);
 
-      if(error && hash.size())
-        releaseHash(hash, 0);
+      if (error && hash.initialized)
+        io::releaseHash(hash, 0);
 
       OCCA_CL_CHECK("Kernel (" + functionName + "): Creating Kernel", error);
 
-      if(verboseCompilation_f){
-        if(sourceFile.size()){
+      if (verboseCompilation_f){
+        if (sourceFile.size()){
           std::cout << "OpenCL compiled " << functionName << " from [" << sourceFile << "]";
 
-          if(flags.size())
+          if (flags.size())
             std::cout << " with flags [" << flags << "]";
 
           std::cout << '\n';
@@ -390,14 +390,14 @@ namespace occa {
                              flags.c_str(),
                              NULL, NULL);
 
-      if(error){
+      if (error){
         cl_int logError;
         char *log;
         uintptr_t logSize;
 
         clGetProgramBuildInfo(info_.clProgram, info_.clDeviceID, CL_PROGRAM_BUILD_LOG, 0, NULL, &logSize);
 
-        if(logSize > 2){
+        if (logSize > 2){
           log = new char[logSize+1];
 
           logError = clGetProgramBuildInfo(info_.clProgram, info_.clDeviceID, CL_PROGRAM_BUILD_LOG, logSize, log, NULL);
@@ -418,14 +418,14 @@ namespace occa {
 
     void saveProgramBinary(info_t &info_,
                            const std::string &binaryFile,
-                           const std::string &hash){
+                           hash_t hash){
       size_t binarySize;
       char *binary;
 
       cl_int error = clGetProgramInfo(info_.clProgram, CL_PROGRAM_BINARY_SIZES, sizeof(size_t), &binarySize, NULL);
 
-      if(error && hash.size())
-        releaseHash(hash, 0);
+      if (error && hash.initialized)
+        io::releaseHash(hash, 0);
 
       OCCA_CL_CHECK("saveProgramBinary: Getting Binary Sizes", error);
 
@@ -433,8 +433,8 @@ namespace occa {
 
       error = clGetProgramInfo(info_.clProgram, CL_PROGRAM_BINARIES, sizeof(char*), &binary, NULL);
 
-      if(error && hash.size())
-        releaseHash(hash, 0);
+      if (error && hash.initialized)
+        io::releaseHash(hash, 0);
 
       OCCA_CL_CHECK("saveProgramBinary: Getting Binary", error);
 

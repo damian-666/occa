@@ -96,12 +96,11 @@ namespace occa {
       io::cacheFile(filename, hash, ss.str(), props["footer"]);
 
       std::string cFunction = io::read(sourceFile);
-      std::string catFlags = info.flags + ((opencl::device*) dHandle)->compilerFlags;
       info_t clInfo = makeCLInfo();
       opencl::buildKernelFromSource(clInfo,
                                     cFunction.c_str(), cFunction.size(),
                                     functionName,
-                                    catFlags,
+                                    props["compilerFlags"],
                                     hash, sourceFile);
       clProgram = clInfo.clProgram;
       clKernel  = clInfo.clKernel;
@@ -189,17 +188,17 @@ namespace occa {
       occa::dim fullOuter = outer*inner;
 
       int argc = 0;
-      OCCA_CL_CHECK("Kernel (" + metaInfo.name + ") : Setting Kernel Argument [0]",
+      OCCA_CL_CHECK("Kernel (" + metadata.name + ") : Setting Kernel Argument [0]",
                     clSetKernelArg(clKernel, argc++, sizeof(void*), NULL));
 
       for(int i = 0; i < kArgc; ++i){
         for(int j = 0; j < kArgs[i].argc; ++j){
-          OCCA_CL_CHECK("Kernel (" + metaInfo.name + ") : Setting Kernel Argument [" << (i + 1) << "]",
+          OCCA_CL_CHECK("Kernel (" + metadata.name + ") : Setting Kernel Argument [" << (i + 1) << "]",
                         clSetKernelArg(clKernel, argc++, kArgs[i].args[j].size, kArgs[i].args[j].ptr()));
         }
       }
 
-      OCCA_CL_CHECK("Kernel (" + metaInfo.name + ") : Kernel Run",
+      OCCA_CL_CHECK("Kernel (" + metadata.name + ") : Kernel Run",
                     clEnqueueNDRangeKernel(*((cl_command_queue*) dHandle->currentStream),
                                            clKernel,
                                            (cl_int) dims,

@@ -1,17 +1,17 @@
 /* The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2014 David Medina and Tim Warburton
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -29,12 +29,15 @@ namespace occa {
   namespace serial {
     class memory : public occa::memory_v {
     public:
-      memory();
-      memory(const memory &m);
-      memory& operator = (const memory &m);
+      memory(const occa::properties &properties_ = occa::properties());
       ~memory();
 
-      void* getMemoryHandle();
+      void* getHandle(const occa::properties &props);
+
+      void copyTo(void *dest,
+                  const uintptr_t bytes,
+                  const uintptr_t destOffset,
+                  const bool async);
 
       void copyFrom(const void *src,
                     const uintptr_t bytes,
@@ -46,17 +49,6 @@ namespace occa {
                     const uintptr_t destOffset,
                     const uintptr_t srcOffset,
                     const bool async);
-
-      void copyTo(void *dest,
-                  const uintptr_t bytes,
-                  const uintptr_t destOffset,
-                  const bool async);
-
-      void copyTo(memory_v *dest,
-                  const uintptr_t bytes,
-                  const uintptr_t srcOffset,
-                  const uintptr_t offset,
-                  const bool async);
 
       void free();
     };
