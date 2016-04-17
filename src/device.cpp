@@ -34,7 +34,7 @@ namespace occa {
     mode = properties_["mode"];
     properties = properties_;
 
-    uvaEnabled_ = uvaEnabledByDefault_f;
+    uvaEnabled_ = (properties["uva"] == "enabled");
     currentStream = NULL;
     bytesAllocated = 0;
   }
@@ -297,14 +297,8 @@ namespace occa {
     kernel_v *&k = ker.kHandle;
 
     if(usingParser) {
-      if (mode() != "OpenMP") {
-        k          = newModeKernel("Serial");
-        k->dHandle = newModeDevice("Serial");
-      }
-      else {
-        k          = newModeKernel("OpenMP");
-        k->dHandle = dHandle;
-      }
+      k          = newModeKernel("Serial");
+      k->dHandle = newModeDevice("Serial");
 
       hash_t hash = occa::hashFile(realFilename);
       hash ^= occa::hash(*dHandle);
@@ -327,7 +321,7 @@ namespace occa {
       if (k->metadata.nestedKernels) {
         std::stringstream ss;
 
-        const int vc_f = verboseCompilation_f;
+        const bool vc_f = settings.get<bool>("verboseCompilation");
 
         for(int ki = 0; ki < k->metadata.nestedKernels; ++ki) {
           ss << ki;
@@ -349,10 +343,10 @@ namespace occa {
 
           // Only show compilation the first time
           if(ki == 0)
-            verboseCompilation_f = false;
+            settings.set<bool>("verboseCompilation", false);
         }
 
-        verboseCompilation_f = vc_f;
+        settings.set<bool>("verboseCompilation", vc_f);
       }
     }
     else{

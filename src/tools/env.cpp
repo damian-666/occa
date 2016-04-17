@@ -22,6 +22,7 @@
 
 #include <signal.h>
 
+#include "occa/base.hpp"
 #include "occa/tools/io.hpp"
 #include "occa/tools/env.hpp"
 #include "occa/tools/sys.hpp"
@@ -29,8 +30,6 @@
 
 namespace occa {
   namespace env {
-    bool isInitialized = false;
-
     std::string HOME, PWD;
     std::string PATH, LD_LIBRARY_PATH;
 
@@ -39,16 +38,34 @@ namespace occa {
     strVector_t OCCA_INCLUDE_PATH;
 
     void initialize() {
+      static bool isInitialized = false;
       if (isInitialized)
         return;
 
+      initSettings();
+      initSignalHandling();
+      initEnvironment();
+
+      isInitialized = true;
+    }
+
+    void initSettings() {
+      settings = occa::properties();
+      settings.set("parserVersion", "0.1");
+      settings.set<bool>("verboseCompilation", true);
+    }
+
+    void initSignalHandling() {
+      // Signal handling
       ::signal(SIGTERM, env::signalExit);
       ::signal(SIGINT , env::signalExit);
 #if (OCCA_OS & (LINUX_OS | OSX_OS))
       ::signal(SIGKILL, env::signalExit);
       ::signal(SIGQUIT, env::signalExit);
 #endif
+    }
 
+    void initEnvironment() {
       // Standard environment variables
 #if (OCCA_OS & (LINUX_OS | OSX_OS))
       HOME            = env::var("HOME");
@@ -95,8 +112,6 @@ namespace occa {
                     << OCCA_DEFAULT_MEM_BYTE_ALIGN << '\n';
         }
       }
-
-      isInitialized = true;
     }
 
     void initCachePath() {

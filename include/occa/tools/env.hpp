@@ -27,8 +27,6 @@
 
 namespace occa {
   namespace env {
-    extern bool isInitialized;
-
     extern std::string HOME, PWD;
     extern std::string PATH, LD_LIBRARY_PATH;
 
@@ -37,6 +35,9 @@ namespace occa {
     extern strVector_t OCCA_INCLUDE_PATH;
 
     void initialize();
+    void initSettings();
+    void initSignalHandling();
+    void initEnvironment();
     void initCachePath();
     void initIncludePath();
 

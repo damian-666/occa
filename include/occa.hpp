@@ -25,6 +25,5 @@
 
 #include "occa/base.hpp"
 #include "occa/defines/vector.hpp"
-#include "occa/miniLib.hpp"
 
 #endif

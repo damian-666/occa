@@ -65,7 +65,7 @@ namespace occa {
         foundBinary = false;
 
       if (foundBinary) {
-        if(verboseCompilation_f)
+        if (settings.get<bool>("verboseCompilation"))
           std::cout << "Found cached binary of [" << io::shortname(filename) << "] in [" << io::shortname(binaryFile) << "]\n";
 
         buildFromBinary(binaryFile, functionName);
@@ -115,7 +115,7 @@ namespace occa {
 
       const std::string &sCommand = command.str();
 
-      if(verboseCompilation_f)
+      if (settings.get<bool>("verboseCompilation"))
         std::cout << "Compiling [" << functionName << "]\n" << sCommand << "\n";
 
 #if (OCCA_OS & (LINUX_OS | OSX_OS))

@@ -31,18 +31,6 @@ namespace occa {
   ptrRangeMap_t uvaMap;
   memoryVector_t uvaDirtyMemory;
 
-  bool hasUvaEnabledByDefault(){
-    return uvaEnabledByDefault_f;
-  }
-
-  void enableUvaByDefault(){
-    uvaEnabledByDefault_f = true;
-  }
-
-  void disableUvaByDefault(){
-    uvaEnabledByDefault_f = false;
-  }
-
   ptrRange_t::ptrRange_t() :
     start(NULL),
     end(NULL) {}

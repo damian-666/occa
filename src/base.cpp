@@ -26,20 +26,11 @@
 namespace occa {
 
   //---[ Globals & Flags ]--------------
-  const int parserVersion = 100;
-
-  properties defaultProperties;
+  properties settings;
 
   const int autoDetect = (1 << 0);
   const int srcInUva   = (1 << 1);
   const int destInUva  = (1 << 2);
-
-  bool uvaEnabledByDefault_f = false;
-  bool verboseCompilation_f  = true;
-
-  void setVerboseCompilation(const bool value) {
-    verboseCompilation_f = value;
-  }
   //====================================
 
 

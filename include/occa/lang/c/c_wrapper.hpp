@@ -1,17 +1,17 @@
 /* The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2014 David Medina and Tim Warburton
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -44,21 +44,19 @@
 
 OCCA_START_EXTERN_C
 
-typedef void* occaDevice;
-typedef void* occaKernel;
-typedef void* occaStream;
-typedef void* occaDeviceInfo;
-typedef void* occaKernelInfo;
-
+struct occaType_t;
 struct occaTypePtr_t {
   struct occaType_t *ptr;
 };
 
-typedef struct occaTypePtr_t*      occaMemory;
+typedef struct occatypePtr_t* occaDevice;
+typedef struct occatypePtr_t* occaKernel;
+typedef struct occaTypePtr_t* occaMemory;
+typedef struct occatypePtr_t* occaStream;
+typedef struct occatypePtr_t* occaProperties;
+
 typedef struct occaTypePtr_t*      occaType;
 typedef struct occaArgumentList_t* occaArgumentList;
-
-struct occaType_t;
 
 typedef struct occaStreamTag_t {
   double tagTime;
@@ -70,14 +68,10 @@ typedef struct occaDim_t {
 } occaDim;
 
 //---[ Globals & Flags ]----------------
-extern OCCA_LFUNC occaKernelInfo occaNoKernelInfo;
+extern OCCA_LFUNC occaProperties occaNoProperties;
 
 extern OCCA_LFUNC const uintptr_t occaAutoSize;
 extern OCCA_LFUNC const uintptr_t occaNoOffset;
-
-extern OCCA_LFUNC const int occaUsingOKL;
-extern OCCA_LFUNC const int occaUsingOFL;
-extern OCCA_LFUNC const int occaUsingNative;
 
 OCCA_LFUNC void OCCA_RFUNC occaSetVerboseCompilation(const int value);
 //======================================
@@ -125,16 +119,6 @@ OCCA_LFUNC occaType OCCA_RFUNC occaString(const char *str);
 OCCA_LFUNC void OCCA_RFUNC occaSetDevice(occaDevice device);
 OCCA_LFUNC void OCCA_RFUNC occaSetDeviceFromInfo(const char *infos);
 
-OCCA_LFUNC occaDevice OCCA_RFUNC occaGetCurrentDevice();
-
-OCCA_LFUNC void OCCA_RFUNC occaSetCompiler(const char *compiler_);
-OCCA_LFUNC void OCCA_RFUNC occaSetCompilerEnvScript(const char *compilerEnvScript_);
-OCCA_LFUNC void OCCA_RFUNC occaSetCompilerFlags(const char *compilerFlags_);
-
-OCCA_LFUNC const char* OCCA_RFUNC occaGetCompiler();
-OCCA_LFUNC const char* OCCA_RFUNC occaGetCompilerEnvScript();
-OCCA_LFUNC const char* OCCA_RFUNC occaGetCompilerFlags();
-
 OCCA_LFUNC void OCCA_RFUNC occaFlush();
 OCCA_LFUNC void OCCA_RFUNC occaFinish();
 
@@ -160,7 +144,7 @@ OCCA_LFUNC occaKernel OCCA_RFUNC occaBuildKernelFromSource(const char *filename,
 OCCA_LFUNC occaKernel OCCA_RFUNC occaBuildKernelFromString(const char *str,
                                                            const char *functionName,
                                                            occaKernelInfo info,
-                                                           const int language);
+                                                           occaLanguage language);
 
 OCCA_LFUNC occaKernel OCCA_RFUNC occaBuildKernelFromBinary(const char *filename,
                                                            const char *functionName);
@@ -242,8 +226,7 @@ OCCA_LFUNC occaKernel OCCA_RFUNC occaDeviceBuildKernelFromSource(occaDevice devi
 OCCA_LFUNC occaKernel OCCA_RFUNC occaDeviceBuildKernelFromString(occaDevice device,
                                                                  const char *str,
                                                                  const char *functionName,
-                                                                 occaKernelInfo info,
-                                                                 const int language);
+                                                                 occaKernelInfo info);
 
 OCCA_LFUNC occaKernel OCCA_RFUNC occaDeviceBuildKernelFromBinary(occaDevice device,
                                                                  const char *filename,

@@ -45,17 +45,11 @@ namespace occa {
   class memory_v; class memory;
   class device_v; class device;
 
-
   //---[ Globals & Flags ]--------------
-  extern const int parserVersion;
+  extern properties settings;
 
   extern const int autoDetect;
   extern const int srcInUva, destInUva;
-
-  extern bool uvaEnabledByDefault_f;
-  extern bool verboseCompilation_f;
-
-  void setVerboseCompilation(const bool value);
   //====================================
 
 

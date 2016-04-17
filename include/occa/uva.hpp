@@ -33,10 +33,6 @@ namespace occa {
   class memory;
   class memory_v;
 
-  bool hasUvaEnabledByDefault();
-  void enableUvaByDefault();
-  void disableUvaByDefault();
-
   class ptrRange_t {
   public:
     char *start, *end;

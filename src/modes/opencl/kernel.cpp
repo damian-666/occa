@@ -76,7 +76,7 @@ namespace occa {
         foundBinary = false;
 
       if (foundBinary) {
-        if(verboseCompilation_f)
+        if(settings.get<bool>("verboseCompilation"))
           std::cout << "Found cached binary of [" << io::shortname(filename)
                     << "] in [" << io::shortname(binaryFile) << "]\n";
 
