@@ -39,8 +39,10 @@
 #include <fstream>
 #include <stddef.h>
 
+#include "occa/parser/parser.hpp"
 #include "occa/tools/env.hpp"
 #include "occa/tools/io.hpp"
+#include "occa/tools/sys.hpp"
 
 namespace occa {
   // Kernel Caching
@@ -50,7 +52,7 @@ namespace occa {
   }
 
   namespace io {
-    strToBoolMap_t fileLocks;
+    std::map<std::string, hash_t> fileLocks;
 
     std::string dirname(const std::string &filename) {
       const int chars = (int) filename.size();
@@ -168,9 +170,9 @@ namespace occa {
     }
 
     void clearLocks() {
-      strToBoolMapIterator it = fileLocks.begin();
+      hashMap_t::iterator it = fileLocks.begin();
       while (it != fileLocks.end()) {
-        releaseHash(it->first);
+        releaseHash(it->second);
         ++it;
       }
       fileLocks.clear();
@@ -186,7 +188,7 @@ namespace occa {
       if (mkdirStatus && (errno == EEXIST))
         return false;
 
-      fileLocks[lockDir] = true;
+      fileLocks[lockDir] = hash;
 
       return true;
     }
@@ -211,7 +213,7 @@ namespace occa {
     }
 
     bool fileNeedsParser(const std::string &filename) {
-      std::string ext = extension(filename);
+      std::string ext = io::extension(filename);
 
       return ((ext == "okl") ||
               (ext == "ofl") ||
@@ -227,22 +229,19 @@ namespace occa {
 
       parser fileParser;
 
-      const std::string extension = extension(filename);
+      const std::string ext = extension(filename);
 
-      flags_t parserFlags = info.getParserFlags();
+      occa::properties properties = props;
 
-      parserFlags["mode"]     = deviceMode;
-      parserFlags["language"] = ((extension != "ofl") ? "C" : "Fortran");
+      properties["mode"]     = deviceMode;
+      properties["language"] = ((ext != "ofl") ? "C" : "Fortran");
 
-      if ((extension == "oak") ||
-          (extension == "oaf")) {
-
-        parserFlags["magic"] = "enabled";
+      if ((ext == "oak") || (ext == "oaf")) {
+        properties["magic"] = "enabled";
       }
 
-      std::string parsedContent = fileParser.parseFile(info.header,
-                                                       filename,
-                                                       parserFlags);
+      std::string parsedContent = fileParser.parseFile(filename,
+                                                       properties);
 
       if (!sys::fileExists(parsedFile)) {
         sys::mkpath(dirname(parsedFile));
@@ -292,9 +291,8 @@ namespace occa {
                hash_t &hash,
                const bool deleteSource) {
 
-      std::string shash = hash.toString();
-      if(!haveHash(shash)){
-        waitForHash(shash);
+      if(!io::haveHash(hash)){
+        io::waitForHash(hash);
       } else {
         if (!sys::fileExists(filename)) {
           sys::mkpath(dirname(filename));
@@ -304,7 +302,7 @@ namespace occa {
           fs2 << source;
           fs2.close();
         }
-        releaseHash(shash);
+        io::releaseHash(hash);
       }
       if (deleteSource)
         delete [] source;
@@ -327,7 +325,7 @@ namespace occa {
       fs.open(sourceFile.c_str());
 
       fs << header             << '\n'
-         << readFile(filename) << '\n'
+         << io::read(filename) << '\n'
          << footer;
 
       fs.close();

@@ -21,29 +21,30 @@
  */
 
 #include "occa/tools/properties.hpp"
+#include "occa/parser/parser.hpp"
 
 namespace occa {
   //---[ properties ]-------------------
   properties::properties(hasProperties *holder_) :
     holder(holder_) {}
 
-  properties::properties(const std::string &props) {
-    if(props.size() == 0)
+  properties::properties(const std::string &props_) {
+    if(props_.size() == 0)
       return;
 
-    parserNS::expNode expRoot = parserNS::createOrganizedExpNodeFrom(props);
+    parserNS::expNode expRoot = parserNS::createOrganizedExpNodeFrom(props_);
     parserNS::expNode &csvFlatRoot = *(expRoot.makeCsvFlatHandle());
 
     for(int i = 0; i < csvFlatRoot.leafCount; ++i) {
       parserNS::expNode &leaf = csvFlatRoot[i];
-      std::string &info = (leaf.leafCount ? leaf[0].value : leaf.value);
+      std::string &prop = (leaf.leafCount ? leaf[0].value : leaf.value);
 
       if(leaf.value != "=") {
-        std::cout << "Flag [" << info << "] was not set, skipping it\n";
+        std::cout << "Property [" << prop << "] was not set, skipping it\n";
         continue;
       }
 
-      iMap[info] = leaf[1].toString();
+      set(prop, leaf[1].toString());
     }
 
     parserNS::expNode::freeFlatHandle(csvFlatRoot);
@@ -58,19 +59,19 @@ namespace occa {
     return *this;
   }
 
-  iter_t properties::iter(const std::string &prop) {
+  properties::iter_t properties::iter(const std::string &prop) {
     return props.find(prop);
   }
 
-  citer_t properties::iter(const std::string &prop) const {
+  properties::citer_t properties::iter(const std::string &prop) const {
     return props.find(prop);
   }
 
-  iter_t properties::end() {
+  properties::iter_t properties::end() {
     return props.end();
   }
 
-  citer_t properties::end() const {
+  properties::citer_t properties::end() const {
     return props.end();
   }
 
@@ -79,15 +80,15 @@ namespace occa {
   }
 
   bool properties::hasMultiple(const std::string &prop) const {
-    iter_t it = iter(prop);
+    citer_t it = iter(prop);
     return ((it != end()) && (it->second.size() > 1));
   }
 
-  std::string operator [] (const std::string &prop) const {
+  std::string properties::operator [] (const std::string &prop) const {
     return get(prop);
   }
 
-  std::string get(const std::string &prop, const std::string &default_) const {
+  std::string properties::get(const std::string &prop, const std::string &default_) const {
     return get<std::string>(prop, default_);
   }
 
@@ -101,12 +102,8 @@ namespace occa {
 
   void properties::clear(const std::string &prop) {
     strVector_t &oldValues = props[prop];
-    onChange(Op::Clear, prop, oldValues, "");
+    onChange(Clear, prop, oldValues, "");
     oldValues.clear();
-  }
-
-  void propertie::setHolder(hasProperties &holder_) {
-    holder = &holder_;
   }
 
   void properties::onChange(properties::Op op,
@@ -114,16 +111,16 @@ namespace occa {
                             strVector_t oldValues,
                             const std::string &newValue) const {
     if (holder){
-      holder->onChange(op, prop, oldValues, newValue);
+      holder->onPropertyChange(op, prop, oldValues, newValue);
     }
   }
 
   hash_t properties::hash() const {
-    iter_t it = iter(prop);
+    citer_t it = props.begin();
     hash_t hash;
     while (it != end()) {
-      hash ^= hash(it->first)
-      hash ^= hash(it->second)
+      hash ^= occa::hash(it->first);
+      hash ^= occa::hash(it->second);
     }
     return hash;
   }

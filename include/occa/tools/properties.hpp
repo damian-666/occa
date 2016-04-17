@@ -46,7 +46,7 @@ namespace occa {
 
   public:
     properties(hasProperties *holder_ = NULL);
-    properties(const std::string &props);
+    properties(const std::string &props_);
 
     properties(const properties &p);
     properties& operator = (const properties &p);
@@ -69,7 +69,7 @@ namespace occa {
       }
       return default_;
     }
-    std::string get(const std::string &prop, const std::string &default_) const;
+    std::string get(const std::string &prop, const std::string &default_ = "") const;
 
     template <class TM>
     std::vector<TM> getAll(const std::string &prop) const {

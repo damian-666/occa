@@ -31,6 +31,7 @@
 #include "occa/parser/statement.hpp"
 #include "occa/parser/analyzer.hpp"
 #include "occa/parser/magic.hpp"
+#include "occa/tools/properties.hpp"
 
 namespace occa {
   namespace parserNS {
@@ -49,7 +50,7 @@ namespace occa {
 
       int parsingLanguage;
 
-      flags_t parsingFlags;
+      occa::properties properties;
 
       macroMap_t macroMap;
       std::vector<macroInfo> macros;
@@ -72,20 +73,13 @@ namespace occa {
       parserBase();
       ~parserBase();
 
-      inline const std::string parseFile(const std::string &filename_,
-                                         const flags_t &flags_ = flags_t()){
-
-        return parseFile("", filename_, flags_);
-      }
-
-      const std::string parseFile(const std::string &header,
-                                  const std::string &filename,
-                                  const flags_t &flags_ = flags_t());
+      const std::string parseFile(const std::string &filename,
+                                  const occa::properties &properties_ = occa::properties());
 
       const std::string parseSource(const char *cRoot);
 
       //---[ Parser Warnings ]----------
-      void loadParserFlags(const flags_t &flags);
+      void loadParserFlags(const occa::properties &properties_);
 
       bool hasMagicEnabled();
       bool compilingForCPU();

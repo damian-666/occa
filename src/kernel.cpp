@@ -24,6 +24,7 @@
 #include "occa/device.hpp"
 #include "occa/memory.hpp"
 #include "occa/uva.hpp"
+#include "occa/tools/io.hpp"
 #include "occa/tools/sys.hpp"
 
 namespace occa {

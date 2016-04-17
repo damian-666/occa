@@ -24,6 +24,7 @@
 
 #include "occa/modes/opencl/kernel.hpp"
 #include "occa/modes/opencl/device.hpp"
+#include "occa/tools/io.hpp"
 #include "occa/tools/sys.hpp"
 #include "occa/base.hpp"
 

@@ -23,6 +23,8 @@
 #ifndef OCCA_TOOLS_MISC_HEADER
 #define OCCA_TOOLS_MISC_HEADER
 
+#include "stdint.h"
+
 namespace occa {
   int maxBase2Bit(const int value);
   int maxBase2(const int value);

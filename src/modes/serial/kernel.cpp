@@ -21,6 +21,8 @@
  */
 
 #include "occa/modes/serial/kernel.hpp"
+#include "occa/tools/env.hpp"
+#include "occa/tools/io.hpp"
 #include "occa/base.hpp"
 
 namespace occa {

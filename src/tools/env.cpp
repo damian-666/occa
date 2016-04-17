@@ -24,6 +24,8 @@
 
 #include "occa/tools/io.hpp"
 #include "occa/tools/env.hpp"
+#include "occa/tools/sys.hpp"
+#include "occa/parser/tools.hpp"
 
 namespace occa {
   namespace env {
@@ -170,7 +172,7 @@ namespace occa {
     }
 
     void signalExit(int sig) {
-      clearLocks();
+      io::clearLocks();
       ::exit(sig);
     }
 

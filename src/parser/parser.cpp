@@ -21,6 +21,9 @@
  */
 
 #include "occa/parser/parser.hpp"
+#include "occa/tools/env.hpp"
+#include "occa/tools/io.hpp"
+#include "occa/tools/string.hpp"
 #include "occa/tools/sys.hpp"
 
 namespace occa {
@@ -65,16 +68,15 @@ namespace occa {
       }
     }
 
-    const std::string parserBase::parseFile(const std::string &header,
-                                            const std::string &filename_,
-                                            const flags_t &flags_) {
+    const std::string parserBase::parseFile(const std::string &filename_,
+                                            const occa::properties &properties_) {
 
       filename = filename_;
 
-      loadParserFlags(flags_);
+      loadParserFlags(properties_);
 
       //---[ Language ]-------
-      if (parsingFlags.hasSet("language", "Fortran"))
+      if (properties["language"] == "Fortran")
         parsingLanguage = parserInfo::parsingFortran;
       else
         parsingLanguage = parserInfo::parsingC;
@@ -82,12 +84,13 @@ namespace occa {
       pushLanguage(parsingLanguage);
 
       //---[ Mode ]-----------
-      OCCA_CHECK(parsingFlags.has("mode"),
+      OCCA_CHECK(properties.has("mode"),
                  "Compilation mode must be passed to the parser");
 
       //---[ Magic ]----------
-      std::string content = header;
+      std::string content = properties["header"];
       content += io::read(filename);
+      content += properties["footer"];
 
       return parseSource(content.c_str());
     }
@@ -147,17 +150,17 @@ namespace occa {
     }
 
     //---[ Parser Warnings ]------------
-    void parserBase::loadParserFlags(const flags_t &flags) {
-      parsingFlags = flags;
+    void parserBase::loadParserFlags(const occa::properties &properties_) {
+      properties = properties_;
 
-      _hasMagicEnabled = flags.has("magic");
-      _compilingForCPU = ((flags["mode"] == "Serial")   ||
-                          (flags["mode"] == "Pthreads") ||
-                          (flags["mode"] == "OpenMP"));
+      _hasMagicEnabled = properties.has("magic");
+      _compilingForCPU = ((properties["mode"] == "Serial")   ||
+                          (properties["mode"] == "Pthreads") ||
+                          (properties["mode"] == "OpenMP"));
 
-      _warnForMissingBarriers      = flags.hasEnabled("warn-for-missing-barriers"    , true);
-      _warnForConditionalBarriers  = flags.hasEnabled("warn-for-conditional-barriers", true);
-      _insertBarriersAutomatically = flags.hasEnabled("automate-add-barriers"        , true);
+      _warnForMissingBarriers      = (properties["warn-for-missing-barriers"]     == "true");
+      _warnForConditionalBarriers  = (properties["warn-for-conditional-barriers"] == "true");
+      _insertBarriersAutomatically = (properties["automate-add-barriers"]         == "true");
     }
 
     bool parserBase::hasMagicEnabled() {

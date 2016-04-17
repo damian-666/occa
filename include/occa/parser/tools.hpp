@@ -23,9 +23,9 @@
 #ifndef OCCA_PARSER_TOOLS_HEADER
 #define OCCA_PARSER_TOOLS_HEADER
 
-#include "occa/parser/defines.hpp"
-
 #include <iomanip>
+
+#include "occa/parser/defines.hpp"
 
 namespace occa {
   //---[ Helper Functions ]-----------------------
@@ -136,37 +136,6 @@ namespace occa {
   //==============================================
 
   std::string getBits(const info_t value);
-
-  //---[ Flag Holder ]----------------------------
-  class flags_t {
-  public:
-    strToStrMap_t flags;
-
-    inline flags_t(){};
-    inline ~flags_t(){};
-
-    inline flags_t(const flags_t &f) :
-      flags(f.flags) {}
-
-    inline flags_t& operator = (const flags_t &f) {
-      flags = f.flags;
-      return *this;
-    }
-
-    inline std::string& operator [] (const std::string &flag) {
-      return flags[flag];
-    }
-
-    inline std::string operator [] (const std::string &flag) const {
-      cStrToStrMapIterator it = flags.find(flag);
-      return (it != flags.end()) ? it->second : "";
-    }
-
-    bool has(const std::string &flag) const ;
-    bool hasSet(const std::string &flag, const std::string &value) const ;
-    bool hasEnabled(const std::string &flag, bool defaultValue = false) const ;
-  };
-  //==============================================
 }
 
 #endif

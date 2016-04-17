@@ -1,17 +1,17 @@
 /* The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2014 David Medina and Tim Warburton
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -38,7 +38,7 @@ namespace occa {
       sh[i] = 0;
   }
 
-  hash_t::hash_t(int *h_) {
+  hash_t::hash_t(const int *h_) {
     initialized = true;
     for (int i = 0; i < 8; ++i)
       h[i] = h_[i];
@@ -59,7 +59,7 @@ namespace occa {
     return *this;
   }
 
-  bool hash_t::operator == (const hash_t &fo) {
+  bool hash_t::operator == (const hash_t &fo) const {
     for (int i = 0; i < 8; ++i) {
       if (h[i] != fo.h[i])
         return false;
@@ -67,7 +67,7 @@ namespace occa {
     return true;
   }
 
-  bool hash_t::operator != (const hash_t &fo) {
+  bool hash_t::operator != (const hash_t &fo) const {
     for (int i = 0; i < 8; ++i) {
       if (h[i] != fo.h[i])
         return true;
@@ -75,7 +75,7 @@ namespace occa {
     return false;
   }
 
-  hash_t hash_t::operator ^ (const hash_t hash) {
+  hash_t hash_t::operator ^ (const hash_t hash) const {
     hash_t mix;
     for (int i = 0; i < 8; ++i)
       mix.h[i] = (h[i] ^ hash.h[i]);
@@ -88,19 +88,30 @@ namespace occa {
     return *this;
   }
 
+  std::string hash_t::const_toString() const {
+    std::stringstream ss;
+    for (int i = 0; i < 8; ++i)
+      ss << std::hex << h[i];
+
+    std::string s = ss.str();
+    return (s.size() < 16) ? s : s.substr(0, 16);
+  }
+
   std::string hash_t::toString() {
     if (*this != hash_t(sh)) {
-      std::stringstream ss;
-      for (int i = 0; i < 8; ++i)
-        ss << std::hex << h[i];
-
-      std::string s = ss.str();
-      h_string = (s.size() < 16) ? s : s.substr(0, 16);
+      h_string = const_toString();
     }
     return h_string;
   }
 
-  hash_t::operator std::string () {
+  std::string hash_t::toString() const {
+    if (*this != hash_t(sh)) {
+      return const_toString();
+    }
+    return h_string;
+  }
+
+  hash_t::operator std::string () const {
     return toString();
   }
 

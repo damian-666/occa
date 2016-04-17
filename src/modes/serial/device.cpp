@@ -23,6 +23,7 @@
 #include "occa/modes/serial/device.hpp"
 #include "occa/modes/serial/kernel.hpp"
 #include "occa/modes/serial/memory.hpp"
+#include "occa/tools/env.hpp"
 #include "occa/tools/sys.hpp"
 #include "occa/base.hpp"
 
@@ -146,9 +147,7 @@ namespace occa {
 
     streamTag device::tagStream(){
       streamTag ret;
-
-      ret.tagTime = currentTime();
-
+      ret.tagTime = sys::currentTime();
       return ret;
     }
 
@@ -157,11 +156,7 @@ namespace occa {
     }
 
     std::string device::binaryName(const std::string &filename){
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
-      return filename;
-#else
-      return (filename + ".dll");
-#endif
+      return sys::binaryName(filename);
     }
 
     kernel_v* device::buildKernelFromSource(const std::string &filename,

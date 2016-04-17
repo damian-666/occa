@@ -22,9 +22,13 @@
 
 #if   (OCCA_OS & LINUX_OS)
 #  include <sys/time.h>
+#  include <sys/sysctl.h>
 #  include <unistd.h>
-#  include <sys/types.h>
+#  include <dlfcn.h>
 #elif (OCCA_OS & OSX_OS)
+#  include <mach/mach_host.h>
+#  include <sys/sysctl.h>
+#  include <dlfcn.h>
 #  ifdef __clang__
 #    include <CoreServices/CoreServices.h>
 #    include <mach/mach_time.h>
@@ -32,7 +36,6 @@
 #    include <mach/clock.h>
 #    include <mach/mach.h>
 #  endif
-#  include <sys/types.h>
 #else
 #  ifndef NOMINMAX
 #    define NOMINMAX     // NBN: clear min/max macros
@@ -40,8 +43,14 @@
 #  include <windows.h>
 #endif
 
-#include "occa/tools/sys.hpp"
+#include <sys/types.h>
+#include <fcntl.h>
+
 #include "occa/tools/env.hpp"
+#include "occa/tools/io.hpp"
+#include "occa/tools/misc.hpp"
+#include "occa/tools/string.hpp"
+#include "occa/tools/sys.hpp"
 #include "occa/parser/tools.hpp"
 
 namespace occa {
@@ -250,7 +259,7 @@ namespace occa {
       strip(filename);
 
       if (flags & flags::checkCacheDir)
-        return fileExists(filename(filename));
+        return fileExists(sys::filename(filename));
 
       struct stat statInfo;
 
@@ -280,6 +289,14 @@ namespace occa {
       }
 
       return ret;
+    }
+
+    std::string binaryName(const std::string &filename){
+#if (OCCA_OS & (LINUX_OS | OSX_OS))
+      return filename;
+#else
+      return (filename + ".dll");
+#endif
     }
 
     void absolutePathVec(const std::string &path_,
@@ -692,19 +709,19 @@ namespace occa {
       std::stringstream ss;
       int vendor_ = sys::vendor::notFound;
 
-      const std::string safeCompiler = removeSlashes(compiler);
-      const std::string &hash = safeCompiler;
+      const std::string safeCompiler = io::removeSlashes(compiler);
+      hash_t hash = occa::hash(safeCompiler);
 
       const std::string testFilename   = sys::filename("[occa]/testing/compilerVendorTest.cpp");
       const std::string binaryFilename = sys::filename("[occa]/testing/compilerVendor_" + safeCompiler);
       const std::string infoFilename   = sys::filename("[occa]/testing/compilerVendorInfo_" + safeCompiler);
 
-      cacheFile(testFilename,
+      io::cache(testFilename,
                 io::read(env::OCCA_DIR + "/scripts/compilerVendorTest.cpp"),
-                "compilerVendorTest");
+                hash);
 
-      if(!haveHash(hash)){
-        waitForHash(hash);
+      if(!io::haveHash(hash)){
+        io::waitForHash(hash);
       } else {
         if(!sys::fileExists(infoFilename)){
           ss << compiler
@@ -728,11 +745,11 @@ namespace occa {
           ss << vendor_;
 
           io::write(infoFilename, ss.str());
-          releaseHash(hash);
+          io::releaseHash(hash);
 
           return vendor_;
         }
-        releaseHash(hash);
+        io::releaseHash(hash);
       }
 
       ss << io::read(infoFilename);
@@ -812,13 +829,13 @@ namespace occa {
     }
 
     void* dlopen(const std::string &filename,
-                 const std::string &hash){
+                 hash_t &hash){
 
 #if (OCCA_OS & (LINUX_OS | OSX_OS))
       void *dlHandle = ::dlopen(filename.c_str(), RTLD_NOW);
 
-      if((dlHandle == NULL) && (0 < hash.size())){
-        releaseHash(hash, 0);
+      if((dlHandle == NULL) && hash.initialized){
+        io::releaseHash(hash, 0);
 
         OCCA_CHECK(false,
                    "Error loading binary [" << io::shortname(filename) << "] with dlopen");
@@ -826,8 +843,8 @@ namespace occa {
 #else
       void *dlHandle = LoadLibraryA(filename.c_str());
 
-      if((dlHandle == NULL) && (0 < hash.size())){
-        releaseHash(hash, 0);
+      if((dlHandle == NULL) && hash.initialized){
+        io::releaseHash(hash, 0);
 
         OCCA_CHECK(dlHandle != NULL,
                    "Error loading dll [" << io::shortname(filename) << "] (WIN32 error: " << GetLastError() << ")");
@@ -839,15 +856,15 @@ namespace occa {
 
     handleFunction_t dlsym(void *dlHandle,
                            const std::string &functionName,
-                           const std::string &hash){
+                           hash_t &hash){
 
 #if (OCCA_OS & (LINUX_OS | OSX_OS))
       void *sym = ::dlsym(dlHandle, functionName.c_str());
 
       char *dlError;
 
-      if(((dlError = dlerror()) != NULL) && (0 < hash.size())){
-        releaseHash(hash, 0);
+      if(((dlError = dlerror()) != NULL) && hash.initialized){
+        io::releaseHash(hash, 0);
 
         OCCA_CHECK(false,
                    "Error loading symbol from binary with dlsym (DL Error: " << dlError << ")");
@@ -855,7 +872,7 @@ namespace occa {
 #else
       void *sym = GetProcAddress((HMODULE) dlHandle, functionName.c_str());
 
-      if((sym == NULL) && (0 < hash.size())){
+      if((sym == NULL) && hash.initialized){
 
         OCCA_CHECK(false,
                    "Error loading symbol from binary with GetProcAddress");

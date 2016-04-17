@@ -129,7 +129,7 @@ namespace occa {
     //---[ Stream ]---------------------
     streamTag device::tagStream(){
       streamTag ret;
-      ret.tagTime = currentTime();
+      ret.tagTime = sys::currentTime();
       return ret;
     }
 

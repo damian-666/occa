@@ -25,6 +25,7 @@
 
 #include <iostream>
 #include "occa/types.hpp"
+#include "occa/tools/hash.hpp"
 #include "occa/tools/properties.hpp"
 #include "occa/parser/types.hpp"
 
@@ -36,7 +37,8 @@ namespace occa {
   }
 
   namespace io {
-    extern strToBoolMap_t fileLocks;
+    typedef std::map<std::string, hash_t> hashMap_t;
+    extern hashMap_t fileLocks;
 
     std::string dirname(const std::string &filename);
     std::string extension(const std::string &filename);

@@ -81,6 +81,7 @@ namespace occa {
                     const int flags = 0);
 
     std::string filename(const std::string &filename);
+    std::string binaryName(const std::string &filename);
 
     void absolutePathVec(const std::string &path_,
                          strVector_t &pathVec);

@@ -23,6 +23,7 @@
 #if OCCA_OPENCL_ENABLED
 
 #include "occa/modes/opencl/utils.hpp"
+#include "occa/tools/io.hpp"
 #include "occa/base.hpp"
 
 namespace occa {

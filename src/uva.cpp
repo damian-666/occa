@@ -20,8 +20,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  */
 
+#include <map>
+
+#include "occa/tools/misc.hpp"
 #include "occa/tools/sys.hpp"
 #include "occa/base.hpp"
+#include "occa/uva.hpp"
 
 namespace occa {
   ptrRangeMap_t uvaMap;
@@ -119,7 +123,7 @@ namespace occa {
     if(mem == NULL)
       return;
 
-    mem->memInfo &= ~memFlag::leftInDevice;
+    mem->memInfo &= ~uvaFlag::leftInDevice;
   }
 
   void stopManaging(void *ptr){
@@ -128,7 +132,7 @@ namespace occa {
     if(mem == NULL)
       return;
 
-    mem->memInfo |= memFlag::leftInDevice;
+    mem->memInfo |= uvaFlag::leftInDevice;
   }
 
   void syncToDevice(void *ptr, const uintptr_t bytes){

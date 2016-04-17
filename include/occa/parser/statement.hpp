@@ -28,6 +28,7 @@
 #include "occa/parser/tools.hpp"
 #include "occa/parser/nodes.hpp"
 #include "occa/parser/types.hpp"
+#include "occa/tools/hash.hpp"
 
 namespace occa {
   namespace parserNS {
