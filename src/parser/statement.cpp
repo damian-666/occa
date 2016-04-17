@@ -108,7 +108,7 @@ namespace occa {
 
     hash_t expNode::hash(){
       if(info & expType::hasInfo)
-        return fnv(leaves[0]);
+        return occa::hash(leaves[0]);
 
       hash_t hash = occa::hash(value);
 

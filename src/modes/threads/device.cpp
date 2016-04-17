@@ -44,7 +44,7 @@ namespace occa {
       }
 
       if (properties.has("pinnedCores")){
-        pinnedCores = properties.getVector<int>("pinnedCores");
+        pinnedCores = properties.getAll<int>("pinnedCores");
 
         if (pinnedCores.size() != (size_t) threads){
           threads = (int) pinnedCores.size();
@@ -54,8 +54,7 @@ namespace occa {
 
         for (size_t i = 0; i < pinnedCores.size(); ++i)
           if (pinnedCores[i] < 0){
-            const int newPC = (((pinnedCores[i] % coreCount)
-                                + pinnedCores[i]) % coreCount);
+            const int newPC = ((pinnedCores[i] % coreCount) + coreCount);
 
             std::cout << "Trying to pin thread on core ["
                       << pinnedCores[i] << "], changing it to ["
@@ -127,105 +126,19 @@ namespace occa {
       }
     }
 
-    bool device::fakesUva(){
-      return false;
-    }
-
-    void device::waitFor(streamTag tag){
-      finish(); // [-] Not done
-    }
-
-
     //---[ Stream ]---------------------
-    stream_t device::createStream(){
-      return NULL;
-    }
-
-    void device::freeStream(stream_t s){}
-
-    stream_t device::wrapStream(void *handle_){
-      return NULL;
-    }
-
     streamTag device::tagStream(){
       streamTag ret;
       ret.tagTime = currentTime();
       return ret;
     }
 
+    void device::waitFor(streamTag tag){
+      finish(); // [-] Not done
+    }
+
     double device::timeBetween(const streamTag &startTag, const streamTag &endTag){
       return (endTag.tagTime - startTag.tagTime);
-    }
-    //==================================
-
-    //---[ Kernel ]---------------------
-    std::string device::binaryName(const std::string &filename){
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
-      return filename;
-#else
-      return (filename + ".dll");
-#endif
-    }
-
-    kernel_v* device::buildKernelFromSource(const std::string &filename,
-                                            const std::string &functionName,
-                                            const kernelInfo &info_){
-      kernel *k = new kernel();
-      k->dHandle  = this;
-      k->buildFromSource(filename, functionName, info_);
-      return k;
-    }
-
-    kernel_v* device::buildKernelFromBinary(const std::string &filename,
-                                            const std::string &functionName){
-      kernel *k = new kernel();
-      k->dHandle  = this;
-      k->buildFromBinary(filename, functionName);
-      return k;
-    }
-    //==================================
-
-    //---[ Memory ]---------------------
-    memory_v* device::wrapMemory(void *handle_,
-                                 const uintptr_t bytes){
-      serial::memory *mem = new serial::memory();
-
-      mem->dHandle = this;
-      mem->size    = bytes;
-      mem->handle  = handle_;
-
-      return mem;
-    }
-
-    memory_v* device::malloc(const uintptr_t bytes,
-                             void *src){
-      serial::memory *mem = new serial::memory();
-
-      mem->dHandle = this;
-      mem->size    = bytes;
-
-      mem->handle = sys::malloc(bytes);
-
-      if (src != NULL)
-        ::memcpy(mem->handle, src, bytes);
-
-      return mem;
-    }
-
-    memory_v* device::mappedAlloc(const uintptr_t bytes,
-                                  void *src){
-      memory_v *mem = malloc(bytes, src);
-      mem->mappedPtr = mem->handle;
-      return mem;
-    }
-
-    uintptr_t device::memorySize(){
-      return sys::installedRAM();
-    }
-
-    void device::free(){
-      finish();
-      jobMutex.free();
     }
     //==================================
 

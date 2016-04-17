@@ -26,7 +26,7 @@
 #include <iostream>
 
 #include "occa/defines.hpp"
-#include "occa/typedefs.hpp"
+#include "occa/types.hpp"
 
 namespace occa {
   typedef void (*handleFunction_t)(const int *occaKernelInfoArgs,
@@ -39,6 +39,8 @@ namespace occa {
   }
 
   namespace sys {
+    double currentTime();
+
     namespace vendor {
       static const int notFound     = 0;
 
@@ -84,6 +86,7 @@ namespace occa {
                          strVector_t &pathVec);
 
     strVector_t absolutePathVec(const std::string &path);
+    //==================================
 
     //---[ Processor Info ]-------------
     std::string getFieldFrom(const std::string &command,
@@ -105,6 +108,7 @@ namespace occa {
 
     void addSharedBinaryFlagsTo(const std::string &compiler, std::string &flags);
     void addSharedBinaryFlagsTo(const int vendor_, std::string &flags);
+    //==================================
 
     //---[ Dynamic Methods ]------------
     void* malloc(uintptr_t bytes);
@@ -123,6 +127,7 @@ namespace occa {
                      const int *occaKernelInfoArgs,
                      int occaInnerId0, int occaInnerId1, int occaInnerId2,
                      int argc, void **args);
+    //==================================
   }
 
   class mutex_t {

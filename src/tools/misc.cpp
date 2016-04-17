@@ -20,56 +20,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  */
 
-#ifndef OCCA_TOOLS_HEADER
-#define OCCA_TOOLS_HEADER
-
-#include "occa/tools/hash.hpp"
-#include "occa/tools/env.hpp"
-#include "occa/tools/io.hpp"
-#include "occa/tools/properties.hpp"
-#include "occa/tools/string.hpp"
+#include "occa/tools/misc.hpp"
 
 namespace occa {
-  double currentTime();
-
-  //---[ Dim ]--------------------------
-  class dim {
-  public:
-    uintptr_t x, y, z;
-
-    dim();
-    dim(uintptr_t x_);
-    dim(uintptr_t x_, uintptr_t y_);
-    dim(uintptr_t x_, uintptr_t y_, uintptr_t z_);
-
-    dim(const dim &d);
-
-    dim& operator = (const dim &d);
-
-    dim operator + (const dim &d);
-    dim operator - (const dim &d);
-    dim operator * (const dim &d);
-    dim operator / (const dim &d);
-
-    bool hasNegativeEntries();
-
-    uintptr_t& operator [] (int i);
-    uintptr_t  operator [] (int i) const;
-  };
-  //====================================
-
   //---[ Misc Functions ]---------------
-  int maxBase2Bit(const int value);
-  int maxBase2(const int value);
+  int maxBase2Bit(const int value){
+    if(value <= 0)
+      return 0;
 
-  uintptr_t ptrDiff(void *start, void *end);
-  void* ptrOff(void *ptr, uintptr_t offset);
-  //====================================
+    const int maxBits = 8 * sizeof(value);
 
-  template <class TM>
-  void ignoreResult(const TM &t){
-    (void) t;
+    for(int i = 0; i < maxBits; ++i){
+      if(value <= (1 << i))
+        return i;
+    }
+
+    return 0;
   }
-}
 
-#endif
+  int maxBase2(const int value){
+    return (1 << maxBase2Bit(value));
+  }
+
+  uintptr_t ptrDiff(void *start, void *end){
+    if(start < end)
+      return (uintptr_t) (((char*) end) - ((char*) start));
+
+    return (uintptr_t) (((char*) start) - ((char*) end));
+  }
+
+  void* ptrOff(void *ptr, uintptr_t offset){
+    return (void*) (((char*) ptr) + offset);
+  }
+  //====================================
+}

@@ -20,32 +20,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  */
 
-#ifndef OCCA_TYPEDEFS_HEADER
-#define OCCA_TYPEDEFS_HEADER
-
-#include <iostream>
-#include <vector>
-#include <map>
+#ifndef OCCA_TOOLS_MISC_HEADER
+#define OCCA_TOOLS_MISC_HEADER
 
 namespace occa {
-  typedef std::vector<int>                   intVector_t;
-  typedef std::vector<intVector_t>           intVecVector_t;
+  int maxBase2Bit(const int value);
+  int maxBase2(const int value);
 
-  typedef std::vector<std::string>           strVector_t;
-  typedef strVector_t::iterator              strVectorIterator;
-  typedef strVector_t::const_iterator        cStrVectorIterator;
+  uintptr_t ptrDiff(void *start, void *end);
+  void* ptrOff(void *ptr, uintptr_t offset);
 
-  typedef std::map<std::string, std::string> strToStrMap_t;
-  typedef strToStrMap_t::iterator            strToStrMapIterator;
-  typedef strToStrMap_t::const_iterator      cStrToStrMapIterator;
-
-  typedef std::map<std::string,strVector_t>  strToStrsMap_t;
-  typedef strToStrsMap_t::iterator           strToStrsMapIterator;
-  typedef strToStrsMap_t::const_iterator     cStrToStrsMapIterator;
-
-  typedef std::map<std::string, bool>        strToBoolMap_t;
-  typedef strToBoolMap_t::iterator           strToBoolMapIterator;
-  typedef strToBoolMap_t::const_iterator     cStrToBoolMapIterator;
+  template <class TM>
+  void ignoreResult(const TM &t){
+    (void) t;
+  }
 }
 
 #endif

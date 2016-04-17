@@ -24,7 +24,7 @@
 #define OCCA_TOOLS_IO_HEADER
 
 #include <iostream>
-#include "occa/typedefs.hpp"
+#include "occa/types.hpp"
 #include "occa/tools/properties.hpp"
 #include "occa/parser/types.hpp"
 

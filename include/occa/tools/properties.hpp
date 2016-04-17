@@ -23,7 +23,7 @@
 #ifndef OCCA_TOOLS_PROPERTIES_HEADER
 #define OCCA_TOOLS_PROPERTIES_HEADER
 
-#include "occa/typedefs.hpp"
+#include "occa/types.hpp"
 #include "occa/tools/string.hpp"
 #include "occa/tools/hash.hpp"
 

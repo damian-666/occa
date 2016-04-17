@@ -46,7 +46,7 @@
 #include <sys/stat.h>
 
 #include "occa/defines.hpp"
-#include "occa/typedefs.hpp"
+#include "occa/types.hpp"
 
 namespace occa {
   namespace parserNS {

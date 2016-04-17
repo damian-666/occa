@@ -29,7 +29,7 @@
 namespace occa {
   namespace serial {
     class kernel : public occa::kernel_v {
-    private:
+    protected:
       void *dlHandle;
       handleFunction_t handle;
 

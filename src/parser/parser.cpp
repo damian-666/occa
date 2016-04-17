@@ -21,6 +21,7 @@
  */
 
 #include "occa/parser/parser.hpp"
+#include "occa/tools/sys.hpp"
 
 namespace occa {
   namespace parserNS {

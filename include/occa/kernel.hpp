@@ -27,7 +27,6 @@
 #include <stdint.h>
 
 #include "occa/defines.hpp"
-#include "occa/tools.hpp"
 
 namespace occa {
   class kernel_v; class kernel;

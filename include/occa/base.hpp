@@ -30,7 +30,7 @@
 #include <stdint.h>
 
 #include "occa/defines.hpp"
-#include "occa/typedefs.hpp"
+#include "occa/types.hpp"
 
 #if OCCA_SSE
 #  include <xmmintrin.h>

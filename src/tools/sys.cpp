@@ -20,19 +20,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  */
 
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
-#  if   (OCCA_OS == LINUX_OS)
-#    include <sys/sysinfo.h>
-#  elif (OCCA_OS == OSX_OS)
+#if   (OCCA_OS & LINUX_OS)
+#  include <sys/time.h>
+#  include <unistd.h>
+#  include <sys/types.h>
+#elif (OCCA_OS & OSX_OS)
+#  ifdef __clang__
+#    include <CoreServices/CoreServices.h>
+#    include <mach/mach_time.h>
+#  else
+#    include <mach/clock.h>
 #    include <mach/mach.h>
-#    include <mach/mach_host.h>
 #  endif
-#  if (OCCA_OS != WINUX_OS)
-#    include <sys/sysctl.h>
-#  endif
-#  include <sys/wait.h>
-#  include <dlfcn.h>
+#  include <sys/types.h>
 #else
+#  ifndef NOMINMAX
+#    define NOMINMAX     // NBN: clear min/max macros
+#  endif
 #  include <windows.h>
 #endif
 
@@ -46,6 +50,50 @@ namespace occa {
   }
 
   namespace sys {
+    double currentTime() {
+#if (OCCA_OS & LINUX_OS)
+
+      timespec ct;
+      clock_gettime(CLOCK_MONOTONIC, &ct);
+
+      return (double) (ct.tv_sec + (1.0e-9 * ct.tv_nsec));
+
+#elif (OCCA_OS == OSX_OS)
+#  ifdef __clang__
+      uint64_t ct;
+      ct = mach_absolute_time();
+
+      const Nanoseconds ct2 = AbsoluteToNanoseconds(*(AbsoluteTime *) &ct);
+
+      return ((double) 1.0e-9) * ((double) ( *((uint64_t*) &ct2) ));
+#  else
+      clock_serv_t cclock;
+      host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+
+      mach_timespec_t ct;
+      clock_get_time(cclock, &ct);
+
+      mach_port_deallocate(mach_task_self(), cclock);
+
+      return (double) (ct.tv_sec + (1.0e-9 * ct.tv_nsec));
+#  endif
+#elif (OCCA_OS == WINDOWS_OS)
+      static LARGE_INTEGER freq;
+      static bool haveFreq = false;
+
+      if (!haveFreq) {
+        QueryPerformanceFrequency(&freq);
+        haveFreq=true;
+      }
+
+      LARGE_INTEGER ct;
+
+      QueryPerformanceCounter(&ct);
+
+      return ((double) (ct.QuadPart)) / ((double) (freq.QuadPart));
+#endif
+    }
+
     //---[ System Calls ]---------------
     int call(const std::string &cmdline) {
 #if (OCCA_OS & (LINUX_OS | OSX_OS))
