@@ -310,7 +310,7 @@ namespace occa {
   }
 
   std::string kernel_v::occaModeHeader() {
-    return sys::filename("[occa]/defines/" + dHandle->mode + ".hpp");
+    return io::filename("occa://occa/defines/" + dHandle->mode + ".hpp");
   }
   //====================================
 

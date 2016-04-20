@@ -85,7 +85,7 @@ namespace occa {
 
       std::stringstream ss;
       ss << "#include \"" << occaModeHeader() << "\"\n"
-         << "#include \"" << sys::filename("[occa]/primitives.hpp") << "\"\n"
+         << "#include \"" << io::filename("occa://occa/primitives.hpp") << "\"\n"
          << props["header"];
 
       // if (info.mode & (Serial | OpenMP | Pthreads | CUDA)) {

@@ -61,17 +61,17 @@ cfFlags =
 
 
 #---[ OS Detection ]------------------------------
-LINUX_OS   = 1
-OSX_OS     = 2
-WINDOWS_OS = 4
-WINUX_OS   = 5 # (LINUX_OS | WINDOWS_OS)
+OCCA_LINUX_OS   = 1
+OCCA_OSX_OS     = 2
+OCCA_WINDOWS_OS = 4
+OCCA_WINUX_OS   = 5 # (OCCA_LINUX_OS | OCCA_WINDOWS_OS)
 
 usingLinux   = 0
 usingOSX     = 0
 usingWinux   = 0
 usingWindows = 0
 
-osFlags += -D LINUX_OS=$(LINUX_OS) -D OSX_OS=$(OSX_OS) -D WINDOWS_OS=$(WINDOWS_OS) -D WINUX_OS=$(WINUX_OS)
+osFlags += -D OCCA_LINUX_OS=$(OCCA_LINUX_OS) -D OCCA_OSX_OS=$(OCCA_OSX_OS) -D OCCA_WINDOWS_OS=$(OCCA_WINDOWS_OS) -D OCCA_WINUX_OS=$(OCCA_WINUX_OS)
 
 UNAME = $(shell uname)
 
@@ -198,24 +198,24 @@ fModDirFlag  = $(call fCompilerModuleDirFlag)
 ifeq ($(usingLinux),1)
 
   ifeq ($(usingWinux),0)
-    osFlags += -D OCCA_OS=LINUX_OS
+    osFlags += -D OCCA_OS=OCCA_LINUX_OS
   else
-    osFlags += -D OCCA_OS=WINUX_OS
+    osFlags += -D OCCA_OS=OCCA_WINUX_OS
   endif
 
   links += -lm -lrt -ldl
 
 else ifeq ($(usingOSX),1)
 
-  osFlags += -D OCCA_OS=OSX_OS -Wno-deprecated-declarations
+  osFlags += -D OCCA_OS=OCCA_OSX_OS -Wno-deprecated-declarations
   links += -framework accelerate -framework CoreServices
 
 else ifeq ($(usingWindows),1)
 
   ifeq ($(usingWinux),0)
-    osFlags += -D OCCA_OS=WINDOWS_OS -D OCCA_USING_VS=1
+    osFlags += -D OCCA_OS=OCCA_WINDOWS_OS -D OCCA_USING_VS=1
   else
-    osFlags += -D OCCA_OS=WINDOWS_OS -D OCCA_USING_VS=0
+    osFlags += -D OCCA_OS=OCCA_WINDOWS_OS -D OCCA_USING_VS=0
   endif
 
   links +=

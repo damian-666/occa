@@ -73,7 +73,7 @@ namespace occa {
 
       std::stringstream ss;
       ss << "#include \"" << occaModeHeader() << "\"\n"
-         << "#include \"" << sys::filename("[occa]/primitives.hpp") << "\"\n"
+         << "#include \"" << io::filename("occa://occa/primitives.hpp") << "\"\n"
          << props["header"] << '\n'
          << "#if defined(OCCA_IN_KERNEL) && !OCCA_IN_KERNEL\n"
          << "using namespace occa;\n"
@@ -85,7 +85,7 @@ namespace occa {
       if (properties.has("compilerEnvScript"))
         command << properties["compilerEnvScript"] << " && ";
 
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
       command << properties["compiler"]
               << ' '    << properties["compilerFlags"]
               << ' '    << sourceFile
@@ -102,7 +102,7 @@ namespace occa {
 
       command << properties["compiler"]
               << " /D MC_CL_EXE"
-              << " /D OCCA_OS=WINDOWS_OS"
+              << " /D OCCA_OS=OCCA_WINDOWS_OS"
               << " /EHsc"
               << " /wd4244 /wd4800 /wd4804 /wd4018"
               << ' '       << properties["compilerFlags"]
@@ -118,7 +118,7 @@ namespace occa {
       if (settings.get<bool>("verboseCompilation"))
         std::cout << "Compiling [" << functionName << "]\n" << sCommand << "\n";
 
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
       const int compileError = system(sCommand.c_str());
 #else
       const int compileError = system(("\"" +  sCommand + "\"").c_str());

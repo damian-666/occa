@@ -472,7 +472,7 @@ namespace occa {
 
           std::string includeFile = getMacroIncludeFile(c);
 
-          includeFile = sys::filename(includeFile);
+          includeFile = io::filename(includeFile);
 
           if (includeFile == "")
             return (state);

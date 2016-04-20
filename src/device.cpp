@@ -289,7 +289,7 @@ namespace occa {
                                        const occa::properties &props) {
     checkIfInitialized();
 
-    const std::string realFilename = sys::filename(filename);
+    const std::string realFilename = io::filename(filename);
     const bool usingParser         = io::fileNeedsParser(filename);
 
     kernel ker;

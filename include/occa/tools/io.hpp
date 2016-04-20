@@ -40,16 +40,60 @@ namespace occa {
     typedef std::map<std::string, hash_t> hashMap_t;
     extern hashMap_t fileLocks;
 
+    //---[ File Openers ]---------------
+    class fileOpener {
+    public:
+      fileOpener();
+      virtual bool handles(const std::string &filename) = 0;
+      virtual std::string expand(const std::string &filename) = 0;
+    };
+
+    std::vector<fileOpener*>& fileOpeners();
+    fileOpener& getFileOpener(const std::string &filename);
+
+    template <class fileOpener_t>
+    class registerFileOpener {
+    public:
+      registerFileOpener() {
+        fileOpeners().push_back(new fileOpener_t());
+      }
+    };
+
+    //  ---[ Default File Opener ]------
+    class defaultFileOpener_t : public fileOpener {
+    public:
+      defaultFileOpener_t();
+      bool handles(const std::string &filename);
+      std::string expand(const std::string &filename);
+    };
+    extern defaultFileOpener_t defaultFileOpener;
+    //  ================================
+
+    //  ---[ OCCA File Opener ]---------
+    class occaFileOpener_t : public fileOpener {
+    public:
+      occaFileOpener_t();
+      bool handles(const std::string &filename);
+      std::string expand(const std::string &filename);
+    };
+
+    extern registerFileOpener<occaFileOpener_t> occaFileOpener;
+    //  ================================
+    //==================================
+
+    bool isAbsolutePath(const std::string &filename);
+    std::string convertSlashes(const std::string &filename);
+    std::string filename(const std::string &filename, bool makeAbsolute = true);
+    std::string binaryName(const std::string &filename);
+
     std::string dirname(const std::string &filename);
     std::string extension(const std::string &filename);
 
     std::string shortname(const std::string &filename);
 
-    std::string read(const std::string &filename,
-                     const bool readingBinary = false);
+    std::string read(const std::string &filename, const bool readingBinary = false);
 
-    void write(const std::string &filename,
-               const std::string &content);
+    void write(const std::string &filename, const std::string &content);
 
     std::string getFileLock(const std::string &filename, const int n);
     void clearLocks();
@@ -88,8 +132,7 @@ namespace occa {
     std::string hashFrom(const std::string &filename);
 
     std::string hashDir(hash_t hash);
-    std::string hashDir(const std::string &filename,
-                        hash_t hash = hash_t());
+    std::string hashDir(const std::string &filename, hash_t hash = hash_t());
   }
 }
 

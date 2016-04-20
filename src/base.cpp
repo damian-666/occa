@@ -95,6 +95,10 @@ namespace occa {
   void freeModeMemory(memory_v *mHandle) {
     delete mHandle;
   }
+
+  std::string& mode_v::name() {
+    return modeName;
+  }
   //====================================
 
 

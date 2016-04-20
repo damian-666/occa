@@ -35,7 +35,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
 #  include <unistd.h>
 #else
 #  include <io.h>

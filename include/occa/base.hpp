@@ -83,20 +83,14 @@ namespace occa {
     std::string modeName;
 
   public:
-    std::string& name() {
-      return modeName;
-    }
-
+    std::string& name();
     virtual device_v* newDevice() = 0;
     virtual kernel_v* newKernel() = 0;
     virtual memory_v* newMemory() = 0;
   };
 
-  template <class device_t,
-            class kernel_t,
-            class memory_t>
+  template <class device_t, class kernel_t, class memory_t>
   class mode : public mode_v {
-
   public:
     mode(std::string modeName_) {
       modeName = modeName_;

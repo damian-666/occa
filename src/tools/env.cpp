@@ -59,7 +59,7 @@ namespace occa {
       // Signal handling
       ::signal(SIGTERM, env::signalExit);
       ::signal(SIGINT , env::signalExit);
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
       ::signal(SIGKILL, env::signalExit);
       ::signal(SIGQUIT, env::signalExit);
 #endif
@@ -67,7 +67,7 @@ namespace occa {
 
     void initEnvironment() {
       // Standard environment variables
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
       HOME            = env::var("HOME");
       PWD             = env::var("PWD");
       PATH            = env::var("PATH");
@@ -82,7 +82,7 @@ namespace occa {
       OCCA_DIR = env::var("OCCA_DIR");
 #ifdef OCCA_COMPILED_DIR
       if (OCCA_DIR.size() == 0) {
-#  if (OCCA_OS & (LINUX_OS | OSX_OS))
+#  if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
         OCCA_DIR = OCCA_STRINGIFY(OCCA_COMPILED_DIR);
 #  else
 		OCCA_DIR = OCCA_COMPILED_DIR;
@@ -120,10 +120,10 @@ namespace occa {
       if (env::OCCA_CACHE_DIR.size() == 0) {
         std::stringstream ss;
 
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
         ss << env::var("HOME") << "/._occa";
 #else
-        ss << env::var("USERPROFILE") << "\\AppData\\Local\\OCCA";
+        ss << env::var("USERPROFILE") << "/AppData/Local/OCCA";
 
 #  if OCCA_64_BIT
         ss << "_amd64";  // use different dir's fro 32 and 64 bit
@@ -140,7 +140,7 @@ namespace occa {
                  "Path to the OCCA caching directory is not set properly, "
                  "unset OCCA_CACHE_DIR to use default directory [~/._occa]");
 
-      env::OCCA_CACHE_DIR = sys::filename(env::OCCA_CACHE_DIR);
+      env::OCCA_CACHE_DIR = io::filename(env::OCCA_CACHE_DIR);
 
       if (!sys::dirExists(env::OCCA_CACHE_DIR))
         sys::mkpath(env::OCCA_CACHE_DIR);
@@ -157,7 +157,7 @@ namespace occa {
 
       while(cStart[0] != '\0') {
         cEnd = cStart;
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
         skipTo(cEnd, ':');
 #else
         skipTo(cEnd, ';');
@@ -165,7 +165,7 @@ namespace occa {
 
         if (0 < (cEnd - cStart)) {
           std::string newPath(cStart, cEnd - cStart);
-          newPath = sys::filename(newPath);
+          newPath = io::filename(newPath);
           endDirWithSlash(newPath);
 
           tmpOIP.push_back(newPath);

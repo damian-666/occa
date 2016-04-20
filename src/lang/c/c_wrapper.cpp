@@ -29,39 +29,40 @@
 namespace occa {
   namespace c {
     enum type {
-      memory_,
+      none_,
 
+      ptr_,
       int8_ , uint8_,
       int16_, uint16_,
       int32_, uint32_,
       int64_, uint64_,
-
       float_, double_,
 
       struct_,
       string_,
 
-      device,
-      kernel,
-      stream,
+      device_,
+      kernel_,
+      memory_,
+      stream_,
 
-      properties,
-      kernelInfo,
+      properties_,
+      kernelInfo_,
     };
   }
 }
 
 OCCA_START_EXTERN_C
 
-struct occaType_t {
+struct occaObject_t {
   occa::c::type type;
   occa::kernelArg_t value;
 
-  inline occaType_t() :
+  inline occaObject_t() :
     type(),
     value() {}
 
-  inline occaType_t(occa::c::type type_) :
+  inline occaObject_t(occa::c::type type_) :
     type(type_),
     value() {}
 };
@@ -125,7 +126,7 @@ namespace occa {
     inline occaType createOccaType(void *ptr, size_t bytes, occa::c::type type) {
       occaType ot = occa::c::newType(type);
       occa::kernelArg_t &kArg = occa::c::typeValue(ot);
-      if ((type == struct_) || (type == string_)) {
+      if ((type == ptr_) || (type == struct_) || (type == string_)) {
         kArg.info = occa::kArgInfo::usePointer;
       }
       kArg.size = bytes;
@@ -163,6 +164,10 @@ namespace occa {
 OCCA_START_EXTERN_C
 
 //  ---[ Known Types ]------------------
+OCCA_LFUNC occaType OCCA_RFUNC occaPtr(void *value) {
+  return occa::c::createOccaType(&value, sizeof(value), occa::c::ptr_);
+}
+
 OCCA_LFUNC occaType OCCA_RFUNC occaInt8(int value) {
   return occa::c::createOccaType(&value, sizeof(value), occa::c::int8_);
 }
@@ -911,26 +916,6 @@ void OCCA_RFUNC occaKernelInfoAddInclude(occaKernelInfo info,
 
 void OCCA_RFUNC occaKernelInfoFree(occaKernelInfo info) {
   delete (occa::kernelInfo*) info;
-}
-//======================================
-
-
-//---[ Helper Functions ]---------------
-int OCCA_RFUNC occaSysCall(const char *cmdline,
-                           char **output) {
-  if(output == NULL)
-    return occa::sys::call(cmdline);
-
-  std::string sOutput;
-  int ret = occa::sys::call(cmdline, sOutput);
-
-  const size_t chars = sOutput.size();
-  *output = (char*) ::malloc(chars + 1);
-
-  ::memcpy(*output, sOutput.c_str(), chars);
-  output[chars] = 0;
-
-  return ret;
 }
 //======================================
 

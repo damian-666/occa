@@ -28,7 +28,7 @@
 
 #include "occa/defines.hpp"
 
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
 #  define OCCA_RFUNC
 #  define OCCA_LFUNC
 #else
@@ -44,19 +44,18 @@
 
 OCCA_START_EXTERN_C
 
-struct occaType_t;
-struct occaTypePtr_t {
-  struct occaType_t *ptr;
+struct occaObject_t;
+struct occaObject {
+  struct occaObject_t *ptr;
 };
 
-typedef struct occatypePtr_t* occaDevice;
-typedef struct occatypePtr_t* occaKernel;
-typedef struct occaTypePtr_t* occaMemory;
-typedef struct occatypePtr_t* occaStream;
-typedef struct occatypePtr_t* occaProperties;
-
-typedef struct occaTypePtr_t*      occaType;
-typedef struct occaArgumentList_t* occaArgumentList;
+typedef struct occaObject occaType;
+typedef struct occaObject occaDevice;
+typedef struct occaObject occaKernel;
+typedef struct occaObject occaMemory;
+typedef struct occaObject occaStream;
+typedef struct occaObject occaProperties;
+typedef struct occaObject occaArgumentList;
 
 typedef struct occaStreamTag_t {
   double tagTime;
@@ -67,49 +66,47 @@ typedef struct occaDim_t {
   uintptr_t x, y, z;
 } occaDim;
 
+
 //---[ Globals & Flags ]----------------
-extern OCCA_LFUNC occaProperties occaNoProperties;
-
-extern OCCA_LFUNC const uintptr_t occaAutoSize;
-extern OCCA_LFUNC const uintptr_t occaNoOffset;
-
-OCCA_LFUNC void OCCA_RFUNC occaSetVerboseCompilation(const int value);
+extern OCCA_LFUNC occaObject occaDefault;
 //======================================
 
 
 //---[ TypeCasting ]--------------------
 //  ---[ Known Types ]------------------
-OCCA_LFUNC occaType OCCA_RFUNC occaInt8(int value);
-OCCA_LFUNC occaType OCCA_RFUNC occaUInt8(unsigned int value);
+OCCA_LFUNC occaObject OCCA_RFUNC occaPtr(void *value);
 
-OCCA_LFUNC occaType OCCA_RFUNC occaInt16(int value);
-OCCA_LFUNC occaType OCCA_RFUNC occaUInt16(unsigned int value);
+OCCA_LFUNC occaObject OCCA_RFUNC occaInt8(int value);
+OCCA_LFUNC occaObject OCCA_RFUNC occaUInt8(unsigned int value);
 
-OCCA_LFUNC occaType OCCA_RFUNC occaInt32(int value);
-OCCA_LFUNC occaType OCCA_RFUNC occaUInt32(unsigned int value);
+OCCA_LFUNC occaObject OCCA_RFUNC occaInt16(int value);
+OCCA_LFUNC occaObject OCCA_RFUNC occaUInt16(unsigned int value);
 
-OCCA_LFUNC occaType OCCA_RFUNC occaInt64(int value);
-OCCA_LFUNC occaType OCCA_RFUNC occaUInt64(unsigned int value);
+OCCA_LFUNC occaObject OCCA_RFUNC occaInt32(int value);
+OCCA_LFUNC occaObject OCCA_RFUNC occaUInt32(unsigned int value);
+
+OCCA_LFUNC occaObject OCCA_RFUNC occaInt64(int value);
+OCCA_LFUNC occaObject OCCA_RFUNC occaUInt64(unsigned int value);
 //  ====================================
 
 //  ---[ Ambiguous Types ]--------------
-OCCA_LFUNC occaType OCCA_RFUNC occaInt(int value);
-OCCA_LFUNC occaType OCCA_RFUNC occaUInt(unsigned int value);
+OCCA_LFUNC occaObject OCCA_RFUNC occaInt(int value);
+OCCA_LFUNC occaObject OCCA_RFUNC occaUInt(unsigned int value);
 
-OCCA_LFUNC occaType OCCA_RFUNC occaChar(char value);
-OCCA_LFUNC occaType OCCA_RFUNC occaUChar(unsigned char value);
+OCCA_LFUNC occaObject OCCA_RFUNC occaChar(char value);
+OCCA_LFUNC occaObject OCCA_RFUNC occaUChar(unsigned char value);
 
-OCCA_LFUNC occaType OCCA_RFUNC occaShort(short value);
-OCCA_LFUNC occaType OCCA_RFUNC occaUShort(unsigned short value);
+OCCA_LFUNC occaObject OCCA_RFUNC occaShort(short value);
+OCCA_LFUNC occaObject OCCA_RFUNC occaUShort(unsigned short value);
 
-OCCA_LFUNC occaType OCCA_RFUNC occaLong(long value);
-OCCA_LFUNC occaType OCCA_RFUNC occaULong(unsigned long value);
+OCCA_LFUNC occaObject OCCA_RFUNC occaLong(long value);
+OCCA_LFUNC occaObject OCCA_RFUNC occaULong(unsigned long value);
 
-OCCA_LFUNC occaType OCCA_RFUNC occaFloat(float value);
-OCCA_LFUNC occaType OCCA_RFUNC occaDouble(double value);
+OCCA_LFUNC occaObject OCCA_RFUNC occaFloat(float value);
+OCCA_LFUNC occaObject OCCA_RFUNC occaDouble(double value);
 
-OCCA_LFUNC occaType OCCA_RFUNC occaStruct(void *value, uintptr_t bytes);
-OCCA_LFUNC occaType OCCA_RFUNC occaString(const char *str);
+OCCA_LFUNC occaObject OCCA_RFUNC occaStruct(void *value, uintptr_t bytes);
+OCCA_LFUNC occaObject OCCA_RFUNC occaString(const char *str);
 //  ====================================
 //======================================
 
@@ -185,7 +182,7 @@ OCCA_LFUNC void OCCA_RFUNC occaDeviceInfoAppend(occaDeviceInfo info,
 
 OCCA_LFUNC void OCCA_RFUNC occaDeviceInfoAppendType(occaDeviceInfo info,
                                                     const char *key,
-                                                    occaType value);
+                                                    occaObject value);
 
 OCCA_LFUNC void OCCA_RFUNC occaDeviceInfoFree(occaDeviceInfo info);
 
@@ -298,7 +295,7 @@ OCCA_LFUNC void OCCA_RFUNC occaKernelRun_(occaKernel kernel,
                                           occaArgumentList list);
 
 OCCA_LFUNC void OCCA_RFUNC occaKernelRunN(occaKernel kernel,
-                                          const int argc, struct occaType_t **args);
+                                          const int argc, struct occaObject_t **args);
 
 #include "occa/operators/cKernelOperators.hpp"
 
@@ -308,18 +305,12 @@ OCCA_LFUNC occaKernelInfo OCCA_RFUNC occaCreateKernelInfo();
 
 OCCA_LFUNC void OCCA_RFUNC occaKernelInfoAddDefine(occaKernelInfo info,
                                                    const char *macro,
-                                                   occaType value);
+                                                   occaObject value);
 
 OCCA_LFUNC void OCCA_RFUNC occaKernelInfoAddInclude(occaKernelInfo info,
                                                     const char *filename);
 
 OCCA_LFUNC void OCCA_RFUNC occaKernelInfoFree(occaKernelInfo info);
-//======================================
-
-
-//---[ Helper Functions ]---------------
-OCCA_LFUNC int OCCA_RFUNC occaSysCall(const char *cmdline,
-                                      char **output);
 //======================================
 
 

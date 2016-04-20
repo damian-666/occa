@@ -79,14 +79,6 @@ namespace occa {
     bool dirExists(const std::string &dir_);
     bool fileExists(const std::string &filename_,
                     const int flags = 0);
-
-    std::string filename(const std::string &filename);
-    std::string binaryName(const std::string &filename);
-
-    void absolutePathVec(const std::string &path_,
-                         strVector_t &pathVec);
-
-    strVector_t absolutePathVec(const std::string &path);
     //==================================
 
     //---[ Processor Info ]-------------
@@ -133,7 +125,7 @@ namespace occa {
 
   class mutex_t {
   public:
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
     pthread_mutex_t mutexHandle;
 #else
     HANDLE mutexHandle;

@@ -62,7 +62,7 @@ namespace occa {
       workerData_t &data = *((workerData_t*) args);
 
       // Thread affinity
-#if (OCCA_OS == LINUX_OS) // Not WINUX
+#if (OCCA_OS == OCCA_LINUX_OS) // Not WINUX
       cpu_set_t cpuHandle;
       CPU_ZERO(&cpuHandle);
       CPU_SET(data.pinnedCore, &cpuHandle);

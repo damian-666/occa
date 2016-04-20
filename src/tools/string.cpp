@@ -171,7 +171,7 @@ namespace occa {
 
   double atod(const char *c){
     double ret;
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
     sscanf(c, "%lf", &ret);
 #else
     sscanf_s(c, "%lf", &ret);
@@ -206,5 +206,20 @@ namespace occa {
     }
 
     return "";
+  }
+
+  strVector_t split(const std::string &s, const char delimeter) {
+    strVector_t sv;
+    const char *c = s.c_str();
+
+    while (*c != '\0') {
+      const char *cStart = c;
+      skipTo(c, delimeter);
+      sv.push_back(std::string(cStart, c - cStart));
+      if (*c != '\0')
+        ++c;
+    }
+
+    return sv;
   }
 }

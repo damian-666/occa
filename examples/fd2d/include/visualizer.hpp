@@ -11,14 +11,14 @@
 
 #include "occa.hpp"
 
-#if   (OCCA_OS == LINUX_OS)
+#if   (OCCA_OS == OCCA_LINUX_OS)
 #  include <GL/glew.h>
 #  include <GL/gl.h>
 #  include <GL/glut.h>
-#elif (OCCA_OS == OSX_OS)
+#elif (OCCA_OS == OCCA_OSX_OS)
 #  include <OpenGL/gl.h>
 #  include <GLUT/glut.h>
-#elif (OCCA_OS == WINDOWS_OS)
+#elif (OCCA_OS == OCCA_WINDOWS_OS)
 #  include <gl/glut.h>
 #endif
 

@@ -20,12 +20,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  */
 
-#if   (OCCA_OS & LINUX_OS)
+#if   (OCCA_OS & OCCA_LINUX_OS)
 #  include <sys/time.h>
 #  include <sys/sysctl.h>
 #  include <unistd.h>
 #  include <dlfcn.h>
-#elif (OCCA_OS & OSX_OS)
+#elif (OCCA_OS & OCCA_OSX_OS)
 #  include <mach/mach_host.h>
 #  include <sys/sysctl.h>
 #  include <dlfcn.h>
@@ -60,14 +60,14 @@ namespace occa {
 
   namespace sys {
     double currentTime() {
-#if (OCCA_OS & LINUX_OS)
+#if (OCCA_OS & OCCA_LINUX_OS)
 
       timespec ct;
       clock_gettime(CLOCK_MONOTONIC, &ct);
 
       return (double) (ct.tv_sec + (1.0e-9 * ct.tv_nsec));
 
-#elif (OCCA_OS == OSX_OS)
+#elif (OCCA_OS == OCCA_OSX_OS)
 #  ifdef __clang__
       uint64_t ct;
       ct = mach_absolute_time();
@@ -86,7 +86,7 @@ namespace occa {
 
       return (double) (ct.tv_sec + (1.0e-9 * ct.tv_nsec));
 #  endif
-#elif (OCCA_OS == WINDOWS_OS)
+#elif (OCCA_OS == OCCA_WINDOWS_OS)
       static LARGE_INTEGER freq;
       static bool haveFreq = false;
 
@@ -105,7 +105,7 @@ namespace occa {
 
     //---[ System Calls ]---------------
     int call(const std::string &cmdline) {
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
       FILE *fp = popen(cmdline.c_str(), "r");
       return pclose(fp);
 #else
@@ -115,7 +115,7 @@ namespace occa {
     }
 
     int call(const std::string &cmdline, std::string &output) {
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
       FILE *fp = popen(cmdline.c_str(), "r");
 #else
       FILE *fp = _popen(cmdline.c_str(), "r");
@@ -127,7 +127,7 @@ namespace occa {
       while(fgets(lineBuffer, lineBytes, fp))
         output += lineBuffer;
 
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
       return pclose(fp);
 #else
       return _pclose(fp);
@@ -135,46 +135,45 @@ namespace occa {
     }
 
     std::string expandEnvVariables(const std::string &str) {
-      std::string ret;
+      const char *c = str.c_str();
+      const char *c0 = c;
+      std::string expstr;
 
-      const char *cRoot = str.c_str();
-      const char *c     = cRoot;
-
-      while(*c != '\0') {
-        const char C = c[0];
-
-        if ((C == '$')     &&
-           (c[1] != '\0') &&                   // Last $ doesn't expand
-           ((cRoot == c) || (c[-1] != '\\'))) { // Escape the '$'
-
-          ++c; // Skip $
-
-          const bool hasBrace = (*c == '{');
-          const char *c0 = (c + hasBrace);
-
-          if (hasBrace)
+      while (*c != '\0') {
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
+        if ((*c == '$') && ((c0 < c) || (*(c - 1) != '\\'))) {
+          if (*(c + 1) == '{') {
+            const char *cStart = c + 2;
             skipTo(c, '}');
-          else
-            skipToWhitespace(c);
 
-          std::string envVar = env::var(std::string(c0, c - c0));
+            if (*c == '\0')
+              return expstr;
 
-          ret += envVar;
-
-          if (hasBrace)
-            ++c;
+            expstr += env::var(std::string(cStart, c - cStart));
+          }
+          else {
+            const char *cStart = c + 1;
+            skipTo(c, '/');
+            expstr += env::var(std::string(cStart, c - cStart));
+          }
         }
-        else {
-          ret += C;
-          ++c;
+#else
+        if (*c == '%') {
+          const char *cStart = (++c);
+          skipTo(c, '%');
+          expstr += env::var(std::string(cStart, c - cStart));
         }
+#endif
+        else
+          expstr += *c;
+        ++c;
       }
 
-      return ret;
+      return expstr;
     }
 
     void rmdir(const std::string &dir) {
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
       ::rmdir(dir.c_str());
 #else
       ::_rmdir(dir.c_str());
@@ -184,7 +183,7 @@ namespace occa {
     int mkdir(const std::string &dir) {
       errno = 0;
 
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
       return ::mkdir(dir.c_str(), 0755);
 #else
       return ::_mkdir(dir.c_str());
@@ -192,42 +191,32 @@ namespace occa {
     }
 
     void mkpath(const std::string &dir) {
-      strVector_t path;
-
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
-      sys::absolutePathVec(dir, path);
-#else
-      // NBN: handle e.g. D:\my\path
-      // [TODO] Need to make this work for relative paths
-      std::string dir2 = dir;
-      std::string::iterator itA = dir2.begin();
-      itA += 4;
-      std::replace(itA, dir2.end(), '\\', '/');
-      sys::absolutePathVec(dir2, path);
-#endif
+      strVector_t path = split(io::filename(dir), '/');
 
       const int dirCount = (int) path.size();
+      std::string sPath;
       int makeFrom = -1;
 
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
+      const int firstDir = 0;
       if (dirCount == 0)
         return;
-
-      std::string sPath;
-
-      for(int d = 0; d < dirCount; ++d) {
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
-        sPath += '/';
+      sPath += '/';
 #else
-        // Don't want leading slash on absolute path
-        if (d > 0)
-          sPath += '/';
+      const int firstDir = 1;
+      if (dirCount <= 1)
+        return;
+      sPath += path[0];
+      sPath += '/';
 #endif
-        sPath += path[d];
 
+      for(int d = firstDir; d < dirCount; ++d) {
+        sPath += path[d];
         if (!dirExists(sPath)) {
           makeFrom = d;
           break;
         }
+        sPath += '/';
       }
 
       if (0 < makeFrom) {
@@ -247,7 +236,6 @@ namespace occa {
       strip(dir);
 
       struct stat statInfo;
-
       return ((stat(dir.c_str(), &statInfo) == 0) &&
               (statInfo.st_mode &S_IFDIR));
     }
@@ -259,146 +247,18 @@ namespace occa {
       strip(filename);
 
       if (flags & flags::checkCacheDir)
-        return fileExists(sys::filename(filename));
+        return fileExists(io::filename(filename));
 
       struct stat statInfo;
 
       return (stat(filename.c_str(), &statInfo) == 0);
     }
 
-    std::string filename(const std::string &filename) {
-      std::string ret;
-
-      strVector_t path;
-      absolutePathVec(filename, path);
-
-      const int dirCount = (int) path.size();
-
-      if (dirCount == 0)
-        return "";
-
-      for(int dir = 0; dir < dirCount; ++dir) {
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
-        ret += '/';
-#else
-        // Don't want leading slash on absolute path
-        if (dir > 0)
-          ret += '/';
-#endif
-        ret += path[dir];
-      }
-
-      return ret;
-    }
-
-    std::string binaryName(const std::string &filename){
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
-      return filename;
-#else
-      return (filename + ".dll");
-#endif
-    }
-
-    void absolutePathVec(const std::string &path_,
-                         strVector_t &pathVec) {
-
-      std::string path = expandEnvVariables(path_);
-      strip(path);
-
-      const int chars = (int) path.size();
-      const char *c   = path.c_str();
-
-      bool foundDir = false;
-
-      if (chars == 0)
-        return;
-
-      // Starts at home
-      if ((c[0] == '~') &&
-         ((c[1] == '/') || (c[1] == '\0'))) {
-
-        absolutePathVec(env::HOME, pathVec);
-
-        if (c[1] == '\0')
-          return;
-
-        foundDir = true;
-        c += 2;
-      }
-#if (OCCA_OS == WINDOWS_OS)
-      else if(c[1] == ':'){
-
-        const char *c0 = c;
-        c += 3;
-        skipTo(c, '/');
-        pathVec.push_back(std::string(c0, c - c0));
-
-        foundDir = true;
-        ++c;
-      }
-#endif
-      // OCCA path
-      else if (c[0] == '[') {
-        const char *c0 = (c + 1);
-        skipTo(c, ']');
-
-        if (c[0] == ']') {
-          absolutePathVec(env::OCCA_CACHE_DIR, pathVec);
-
-          pathVec.push_back("libraries");
-          pathVec.push_back(std::string(c0, c - c0));
-
-          foundDir = true;
-          ++c;
-        }
-      }
-
-      // Relative path
-      if ((!foundDir) &&
-         (c[0] != '/')) {
-
-        strVector_t::iterator it = env::OCCA_INCLUDE_PATH.begin();
-
-        while(it != env::OCCA_INCLUDE_PATH.end()) {
-          if (it->size() && sys::fileExists(*it + path)) {
-            absolutePathVec(*it, pathVec);
-            foundDir = true;
-            break;
-          }
-          ++it;
-        }
-
-        if (!foundDir)
-          absolutePathVec(env::PWD, pathVec);
-      }
-
-      while(c[0] != '\0') {
-        if (c[0] == '/') {
-          ++c;
-          continue;
-        }
-
-        const char *c0 = c;
-        skipTo(c, '/');
-
-        pathVec.push_back(std::string(c0, c - c0));
-
-        if (c[0] != '\0')
-          ++c;
-      }
-    }
-
-    strVector_t absolutePathVec(const std::string &path){
-      strVector_t pathVec;
-      absolutePathVec(path, pathVec);
-      return pathVec;
-    }
-
     //---[ Processor Info ]-------------
     std::string getFieldFrom(const std::string &command,
                              const std::string &field){
 #if (OCCA_OS & LINUX)
-      std::string shellToolsFile = sys::filename("[occa]/scripts/shellTools.sh");
+      std::string shellToolsFile = io::filename("occa://occa/scripts/shellTools.sh");
 
       if(!sys::fileExists(shellToolsFile)){
         sys::mkpath(dirname(shellToolsFile));
@@ -445,9 +305,9 @@ namespace occa {
     }
 
     std::string getProcessorName(){
-#if   (OCCA_OS & LINUX_OS)
+#if   (OCCA_OS & OCCA_LINUX_OS)
       return getFieldFrom("getCPUINFOField", "model name");
-#elif (OCCA_OS == OSX_OS)
+#elif (OCCA_OS == OCCA_OSX_OS)
       size_t bufferSize = 100;
       char buffer[100];
 
@@ -456,7 +316,7 @@ namespace occa {
                    NULL, 0);
 
       return std::string(buffer);
-#elif (OCCA_OS == WINDOWS_OS)
+#elif (OCCA_OS == OCCA_WINDOWS_OS)
       char buffer[MAX_COMPUTERNAME_LENGTH + 1];
       int bytes;
 
@@ -467,9 +327,9 @@ namespace occa {
     }
 
     int getCoreCount(){
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
       return sysconf(_SC_NPROCESSORS_ONLN);
-#elif (OCCA_OS == WINDOWS_OS)
+#elif (OCCA_OS == OCCA_WINDOWS_OS)
       SYSTEM_INFO sysinfo;
       GetSystemInfo(&sysinfo);
       return sysinfo.dwNumberOfProcessors;
@@ -477,7 +337,7 @@ namespace occa {
     }
 
     int getProcessorFrequency(){
-#if   (OCCA_OS & LINUX_OS)
+#if   (OCCA_OS & OCCA_LINUX_OS)
       std::stringstream ss;
       int freq;
 
@@ -486,7 +346,7 @@ namespace occa {
       ss >> freq;
 
       return freq;
-#elif (OCCA_OS == OSX_OS)
+#elif (OCCA_OS == OCCA_OSX_OS)
       uint64_t frequency = 0;
       size_t size = sizeof(frequency);
 
@@ -496,7 +356,7 @@ namespace occa {
                  "Error getting CPU Frequency.\n");
 
       return frequency/1.0e6;
-#elif (OCCA_OS == WINDOWS_OS)
+#elif (OCCA_OS == OCCA_WINDOWS_OS)
       LARGE_INTEGER performanceFrequency;
       QueryPerformanceFrequency(&performanceFrequency);
 
@@ -505,7 +365,7 @@ namespace occa {
     }
 
     std::string getProcessorCacheSize(int level){
-#if   (OCCA_OS & LINUX_OS)
+#if   (OCCA_OS & OCCA_LINUX_OS)
       std::stringstream field;
 
       field << 'L' << level;
@@ -516,7 +376,7 @@ namespace occa {
       field << " cache";
 
       return getFieldFrom("getLSCPUField", field.str());
-#elif (OCCA_OS == OSX_OS)
+#elif (OCCA_OS == OCCA_OSX_OS)
       std::stringstream ss;
       ss << "hw.l" << level;
 
@@ -536,7 +396,7 @@ namespace occa {
                  "Error getting L" << level << " Cache Size.\n");
 
       return stringifyBytes(cache);
-#elif (OCCA_OS == WINDOWS_OS)
+#elif (OCCA_OS == OCCA_WINDOWS_OS)
       std::stringstream ss;
       DWORD cache = 0;
       int bytes = 0;
@@ -581,7 +441,7 @@ namespace occa {
     }
 
     uintptr_t installedRAM(){
-#if   (OCCA_OS & LINUX_OS)
+#if   (OCCA_OS & OCCA_LINUX_OS)
       struct sysinfo info;
 
       const int error = sysinfo(&info);
@@ -590,7 +450,7 @@ namespace occa {
         return 0;
 
       return info.totalram;
-#elif (OCCA_OS == OSX_OS)
+#elif (OCCA_OS == OCCA_OSX_OS)
       int64_t ram;
 
       int mib[2]   = {CTL_HW, HW_MEMSIZE};
@@ -599,13 +459,13 @@ namespace occa {
       sysctl(mib, 2, &ram, &bytes, NULL, 0);
 
       return ram;
-#elif (OCCA_OS == WINDOWS_OS)
+#elif (OCCA_OS == OCCA_WINDOWS_OS)
       return 0;
 #endif
     }
 
     uintptr_t availableRAM(){
-#if   (OCCA_OS & LINUX_OS)
+#if   (OCCA_OS & OCCA_LINUX_OS)
       struct sysinfo info;
 
       const int error = sysinfo(&info);
@@ -614,7 +474,7 @@ namespace occa {
         return 0;
 
       return info.freeram;
-#elif (OCCA_OS == OSX_OS)
+#elif (OCCA_OS == OCCA_OSX_OS)
       mach_msg_type_number_t infoCount = HOST_VM_INFO_COUNT;
       mach_port_t hostPort = mach_host_self();
 
@@ -636,7 +496,7 @@ namespace occa {
         return 0;
 
       return (hostInfo.free_count * pageSize);
-#elif (OCCA_OS == WINDOWS_OS)
+#elif (OCCA_OS == OCCA_WINDOWS_OS)
       return 0;
 #endif
     }
@@ -705,16 +565,16 @@ namespace occa {
     }
 
     int compilerVendor(const std::string &compiler){
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
       std::stringstream ss;
       int vendor_ = sys::vendor::notFound;
 
       const std::string safeCompiler = io::removeSlashes(compiler);
       hash_t hash = occa::hash(safeCompiler);
 
-      const std::string testFilename   = sys::filename("[occa]/testing/compilerVendorTest.cpp");
-      const std::string binaryFilename = sys::filename("[occa]/testing/compilerVendor_" + safeCompiler);
-      const std::string infoFilename   = sys::filename("[occa]/testing/compilerVendorInfo_" + safeCompiler);
+      const std::string testFilename   = io::filename("occa://occa/testing/compilerVendorTest.cpp");
+      const std::string binaryFilename = io::filename("occa://occa/testing/compilerVendor_" + safeCompiler);
+      const std::string infoFilename   = io::filename("occa://occa/testing/compilerVendorInfo_" + safeCompiler);
 
       io::cache(testFilename,
                 io::read(env::OCCA_DIR + "/scripts/compilerVendorTest.cpp"),
@@ -757,7 +617,7 @@ namespace occa {
 
       return vendor_;
 
-#elif (OCCA_OS == WINDOWS_OS)
+#elif (OCCA_OS == OCCA_WINDOWS_OS)
 #  if OCCA_USING_VS
       return sys::vendor::VisualStudio;
 #  endif
@@ -815,9 +675,9 @@ namespace occa {
     void* malloc(uintptr_t bytes){
       void* ptr;
 
-#if   (OCCA_OS & (LINUX_OS | OSX_OS))
+#if   (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
       ignoreResult( posix_memalign(&ptr, env::OCCA_MEM_BYTE_ALIGN, bytes) );
-#elif (OCCA_OS == WINDOWS_OS)
+#elif (OCCA_OS == OCCA_WINDOWS_OS)
       ptr = ::malloc(bytes);
 #endif
 
@@ -831,7 +691,7 @@ namespace occa {
     void* dlopen(const std::string &filename,
                  hash_t &hash){
 
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
       void *dlHandle = ::dlopen(filename.c_str(), RTLD_NOW);
 
       if((dlHandle == NULL) && hash.initialized){
@@ -858,7 +718,7 @@ namespace occa {
                            const std::string &functionName,
                            hash_t &hash){
 
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
       void *sym = ::dlsym(dlHandle, functionName.c_str());
 
       char *dlError;
@@ -887,7 +747,7 @@ namespace occa {
     }
 
     void dlclose(void *dlHandle) {
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
       ::dlclose(dlHandle);
 #else
       FreeLibrary((HMODULE) (dlHandle));
@@ -904,7 +764,7 @@ namespace occa {
   }
 
   mutex_t::mutex_t() {
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
     int error = pthread_mutex_init(&mutexHandle, NULL);
 
     OCCA_CHECK(error == 0,
@@ -915,7 +775,7 @@ namespace occa {
   }
 
   void mutex_t::free() {
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
     int error = pthread_mutex_destroy(&mutexHandle);
 
     OCCA_CHECK(error == 0,
@@ -926,7 +786,7 @@ namespace occa {
   }
 
   void mutex_t::lock() {
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
     pthread_mutex_lock(&mutexHandle);
 #else
     WaitForSingleObject(mutexHandle, INFINITE);
@@ -934,7 +794,7 @@ namespace occa {
   }
 
   void mutex_t::unlock() {
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
     pthread_mutex_unlock(&mutexHandle);
 #else
     ReleaseMutex(mutexHandle);

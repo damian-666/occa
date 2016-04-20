@@ -69,6 +69,11 @@ namespace occa {
     return (('0' <= c) && (c <= '9'));
   }
 
+  inline bool isAlpha(const char c){
+    return ((('a' <= c) && (c <= 'z')) ||
+            (('A' <= c) && (c <= 'Z')));
+  }
+
   void skipInt(const char *&c);
 
   void skipNumber(const char *&c,
@@ -121,17 +126,17 @@ namespace occa {
 
   int countDelimiters(const char *c, const char delimiter);
 
-  void skipTo(const char *&c, const char delimiter);
-  void skipTo(const char *&c, std::string delimiters);
+  void skipTo(const char *&c, const char delimiter, const bool checkEscape = false);
+  void skipTo(const char *&c, std::string delimiters, const bool checkEscape = false);
   void skipToWord(const char *&c, std::string word);
 
   std::string findFileInPath(const std::string &filename);
 
   template <class TM>
   inline void swapValues(TM &a, TM &b){
-    TM tmp = a;
-    a      = b;
-    b      = tmp;
+    TM a_ = a;
+    a = b;
+    b = a_;
   }
   //==============================================
 

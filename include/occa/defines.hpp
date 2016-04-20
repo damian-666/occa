@@ -23,26 +23,26 @@
 #ifndef OCCA_DEFINES_HEADER
 #define OCCA_DEFINES_HEADER
 
-#ifndef LINUX_OS
-#  define LINUX_OS 1
+#ifndef OCCA_LINUX_OS
+#  define OCCA_LINUX_OS 1
 #endif
 
-#ifndef OSX_OS
-#  define OSX_OS 2
+#ifndef OCCA_OSX_OS
+#  define OCCA_OSX_OS 2
 #endif
 
-#ifndef WINDOWS_OS
-#  define WINDOWS_OS 4
+#ifndef OCCA_WINDOWS_OS
+#  define OCCA_WINDOWS_OS 4
 #endif
 
-#ifndef WINUX_OS
-#  define WINUX_OS (LINUX_OS | WINDOWS_OS)
+#ifndef OCCA_WINUX_OS
+#  define OCCA_WINUX_OS (OCCA_LINUX_OS | OCCA_WINDOWS_OS)
 #endif
 
 #ifndef OCCA_USING_VS
 #  ifdef _MSC_VER
 #    define OCCA_USING_VS 1
-#    define OCCA_OS WINDOWS_OS
+#    define OCCA_OS OCCA_WINDOWS_OS
 #  else
 #    define OCCA_USING_VS 0
 #  endif
@@ -51,14 +51,14 @@
 #ifndef OCCA_OS
 #  if defined(WIN32) || defined(WIN64)
 #    if OCCA_USING_VS
-#      define OCCA_OS WINDOWS_OS
+#      define OCCA_OS OCCA_WINDOWS_OS
 #    else
-#      define OCCA_OS WINUX_OS
+#      define OCCA_OS OCCA_WINUX_OS
 #    endif
 #  elif __APPLE__
-#    define OCCA_OS OSX_OS
+#    define OCCA_OS OCCA_OSX_OS
 #  else
-#    define OCCA_OS LINUX_OS
+#    define OCCA_OS OCCA_LINUX_OS
 #  endif
 #endif
 
@@ -82,9 +82,9 @@
 #  define OCCA_END_EXTERN_C
 #endif
 
-#if   (OCCA_OS == LINUX_OS) || (OCCA_OS == OSX_OS)
+#if   (OCCA_OS == OCCA_LINUX_OS) || (OCCA_OS == OCCA_OSX_OS)
 #  define OCCA_INLINE inline __attribute__ ((always_inline))
-#elif (OCCA_OS == WINDOWS_OS)
+#elif (OCCA_OS == OCCA_WINDOWS_OS)
 #  define OCCA_INLINE __forceinline
 #endif
 
@@ -108,7 +108,7 @@
 #if OCCA_ARM
 #  define OCCA_LFENCE __asm__ __volatile__ ("dmb")
 #else
-#  if (OCCA_OS & (LINUX_OS | OSX_OS))
+#  if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
 #    define OCCA_LFENCE __asm__ __volatile__ ("lfence")
 #  else
 #    define OCCA_LFENCE MemoryBarrier()

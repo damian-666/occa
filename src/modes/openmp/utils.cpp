@@ -60,16 +60,16 @@ namespace occa {
     std::string compilerFlag(const int vendor_,
                              const std::string &compiler){
 
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
       std::stringstream ss;
       std::string flag = omp::notSupported;
 
       const std::string safeCompiler = removeSlashes(compiler);
       const std::string &hash = safeCompiler;
 
-      const std::string testFilename   = sys::filename("[occa]/testing/ompTest.cpp");
-      const std::string binaryFilename = sys::filename("[occa]/testing/omp_" + safeCompiler);
-      const std::string infoFilename   = sys::filename("[occa]/testing/ompInfo_" + safeCompiler);
+      const std::string testFilename   = io::filename("occa://occa/testing/ompTest.cpp");
+      const std::string binaryFilename = io::filename("occa://occa/testing/omp_" + safeCompiler);
+      const std::string infoFilename   = io::filename("occa://occa/testing/ompInfo_" + safeCompiler);
 
       cacheFile(testFilename,
                 io::read(env::OCCA_DIR + "/scripts/ompTest.cpp"),
@@ -106,7 +106,7 @@ namespace occa {
       ss >> flag;
 
       return flag;
-#elif (OCCA_OS == WINDOWS_OS)
+#elif (OCCA_OS == OCCA_WINDOWS_OS)
       return "/openmp"; // VS Compilers support OpenMP
 #endif
     }

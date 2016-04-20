@@ -24,6 +24,7 @@
 #include "occa/modes/serial/kernel.hpp"
 #include "occa/modes/serial/memory.hpp"
 #include "occa/tools/env.hpp"
+#include "occa/tools/io.hpp"
 #include "occa/tools/sys.hpp"
 #include "occa/base.hpp"
 
@@ -50,7 +51,7 @@ namespace occa {
         compiler = env::var("CXX");
       }
       else{
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
         compiler = "g++";
 #else
         compiler = "cl.exe";
@@ -67,7 +68,7 @@ namespace occa {
         compilerFlags = env::var("CXXFLAGS");
       }
       else{
-#if (OCCA_OS & (LINUX_OS | OSX_OS))
+#if (OCCA_OS & (OCCA_LINUX_OS | OCCA_OSX_OS))
         compilerFlags = "-g";
 #else
 #  if OCCA_DEBUG_ENABLED
@@ -82,7 +83,7 @@ namespace occa {
         compilerEnvScript = properties["compilerEnvScript"];
       }
       else {
-#if (OCCA_OS == WINDOWS_OS)
+#if (OCCA_OS == OCCA_WINDOWS_OS)
         std::string byteness;
 
         if(sizeof(void*) == 4)
@@ -156,7 +157,7 @@ namespace occa {
     }
 
     std::string device::binaryName(const std::string &filename){
-      return sys::binaryName(filename);
+      return io::binaryName(filename);
     }
 
     kernel_v* device::buildKernelFromSource(const std::string &filename,
